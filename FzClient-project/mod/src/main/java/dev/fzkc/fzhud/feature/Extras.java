@@ -52,12 +52,32 @@ public final class Extras {
     private static float zoomExtra = 1f;
     private static long lastFrame;
 
+    private static boolean ofZoomChecked;
+
+    /**
+     * OptiFine has its own zoom, also on C by default. With both on the same key the picture zooms twice, so
+     * OptiFine's key is unbound (it can be bound again in the controls; only the very same key is taken away).
+     */
+    private static void unbindOptiFineZoom(Minecraft mc) {
+        ofZoomChecked = true;
+        for (KeyBinding k : mc.gameSettings.keyBindings) {
+            if (!"of.key.zoom".equals(k.getKeyDescription())) continue;
+            if (k.getKeyCode() != 0 && k.getKeyCode() == zoomKey.getKeyCode()) {
+                k.setKeyCode(0);
+                KeyBinding.resetKeyBindingArrayAndHash();
+                mc.gameSettings.saveOptions();
+            }
+            return;
+        }
+    }
+
     private static boolean zooming() {
         Minecraft mc = Minecraft.getMinecraft();
         if (!Modules.zoom.enabled || mc.thePlayer == null) {
             zoomToggled = false;
             return false;
         }
+        if (!ofZoomChecked) unbindOptiFineZoom(mc);
         boolean down = zoomKey.getKeyCode() != 0 && mc.currentScreen == null && zoomKey.isKeyDown();
         if (Modules.zoomToggle.get()) {
             if (down && !zoomWasDown) zoomToggled = !zoomToggled;

@@ -33,7 +33,7 @@ document.querySelectorAll('.nav').forEach(b => b.onclick = () => {
   if (b.dataset.page === 'mods') { loadMods(true); fz.settings.get().then(st => { $('modAuto').checked = st.autoUpdateMods !== false; }); }
   if (b.dataset.page === 'shots') loadShots();
   if (b.dataset.page === 'skins') loadSkins();
-  if (b.dataset.page === 'opt') loadOpt();
+  if (b.dataset.page === 'opt') { loadOpt(); loadOptiFine(); }
   if (b.dataset.page !== 'shots') closeShot();
 });
 
@@ -558,7 +558,80 @@ $('logsOpen').onclick = () => fz.open.folder('logs');
   }
   await loadAccounts();
   await loadSettings();
+  // first start without OptiFine: offer it once
+  try {
+    const of = await fz.optifine.status();
+    if (!of.installed && !st.ofAsked) $('ofModal').classList.add('on');
+  } catch { /* fine */ }
 })();
+
+// ---------------------------------------------------------------- OptiFine (最適化 page + first-start dialog)
+let ofWaiting = false;
+async function loadOptiFine() {
+  let s;
+  try { s = await fz.optifine.status(); } catch (e) { $('ofState').textContent = errText(e); return; }
+  const i = s.installed;
+  if (ofWaiting) {
+    $('ofState').textContent = t('ダウンロードを待っています…');
+    $('ofNote').textContent = t('開いたページで「Download」を押してください。終わると自動で入ります');
+  } else if (i) {
+    $('ofState').textContent = t('OptiFine {0} が入っています', i.version || '') + (i.enabled ? '' : t('（OFF）'));
+    $('ofNote').textContent = i.preview
+      ? t('プレビュー版です。不安定なときは安定版の {0} を入れてください', s.latest)
+      : t('FPS を大きく上げる定番の MOD です');
+  } else {
+    $('ofState').textContent = t('OptiFine は入っていません');
+    $('ofNote').textContent = t('FPS を大きく上げる定番の MOD です');
+  }
+  $('ofInstall').textContent = ofWaiting ? t('やめる') : i ? t('入れ直す') : t('OptiFine を入れる');
+  $('ofPvp').classList.toggle('on-preset', s.preset === 'pvp');
+  $('ofFps').classList.toggle('on-preset', s.preset === 'fps');
+  $('ofRevert').disabled = !s.canRevert;
+}
+
+async function startOptiFine() {
+  if (ofWaiting) {
+    ofWaiting = false;
+    await fz.optifine.cancel();
+  } else {
+    ofWaiting = true;
+    await fz.optifine.install();
+    toast(t('optifine.net を開きました。「Download」を押してください'));
+  }
+  loadOptiFine();
+}
+
+fz.optifine.onInstalled(r => {
+  ofWaiting = false;
+  if (r.ok) toast(t('OptiFine {0} を入れました', r.version || ''));
+  else toast(t(r.error || 'OptiFine を入れられませんでした'), true);
+  loadOptiFine();
+  if ($('page-mods').classList.contains('on')) loadMods();
+});
+$('ofInstall').onclick = startOptiFine;
+$('ofFile').onclick = async () => {
+  try {
+    const r = await fz.optifine.addFile();
+    if (r) { toast(t('OptiFine {0} を入れました', r.version || '')); loadOptiFine(); }
+  } catch (e) { toast(errText(e), true); }
+};
+async function ofPreset(id) {
+  try {
+    await fz.optifine.preset(id);
+    toast(t('OptiFine の設定を変えました。次にゲームを起動すると効きます'));
+  } catch (e) { toast(errText(e), true); }
+  loadOptiFine();
+}
+$('ofPvp').onclick = () => ofPreset('pvp');
+$('ofFps').onclick = () => ofPreset('fps');
+$('ofRevert').onclick = async () => {
+  try { await fz.optifine.revert(); toast(t('OptiFine の設定を元に戻しました')); } catch (e) { toast(errText(e), true); }
+  loadOptiFine();
+};
+const ofAsked = () => { $('ofModal').classList.remove('on'); fz.settings.set({ ofAsked: true }); };
+$('ofLater').onclick = ofAsked;
+$('ofNever').onclick = ofAsked;
+$('ofModalInstall').onclick = () => { ofAsked(); if (!ofWaiting) startOptiFine(); };
 
 // ---------------------------------------------------------------- automatic updates
 (function updates() {

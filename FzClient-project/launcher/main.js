@@ -11,6 +11,7 @@ const curseforge = require('./src/core/curseforge');
 const skins = require('./src/core/skins');
 const optimize = require('./src/core/optimize');
 const shots = require('./src/core/shots');
+const optifine = require('./src/core/optifine');
 
 shots.registerScheme();   // fzshot: pictures for the screenshot page (must happen before "ready")
 const modsDir = () => path.join(dirs().gameDir, 'mods');
@@ -203,6 +204,36 @@ ipcMain.handle('mods:update', (e, files) => {
 ipcMain.handle('mods:remove', async (e, file) => {
   if (!plainFile(file) || /^fzclient/i.test(file)) throw new Error('bad file');
   await shell.trashItem(path.join(modsDir(), file));   // Recycle Bin: can be restored
+});
+
+// ---------------------------------------------------------------- OptiFine (installed through optifine.net only)
+ipcMain.handle('optifine:status', () => ({
+  installed: optifine.installed(modsDir()), latest: optifine.VERSION.replace(/_/g, ' '),
+  preset: settings.get().ofPreset || '', canRevert: optifine.hasBackup(),
+}));
+ipcMain.handle('optifine:install', () => {
+  optifine.startInstall(modsDir(), r => {
+    log('[optifine] ' + JSON.stringify(r));
+    send('optifine:installed', r);
+  });
+});
+ipcMain.handle('optifine:cancel', () => optifine.cancelInstall());
+ipcMain.handle('optifine:addFile', async () => {
+  const { dialog } = require('electron');
+  const r = await dialog.showOpenDialog(win, { properties: ['openFile'], filters: [{ name: 'OptiFine (.jar)', extensions: ['jar'] }] });
+  if (r.canceled) return null;
+  return optifine.addJar(r.filePaths[0], modsDir());
+});
+ipcMain.handle('optifine:preset', (e, id) => {
+  // Minecraft writes its option files when it closes, which would undo the change
+  if (running) throw new Error('Minecraft を閉じてから変更してください');
+  optifine.applyPreset(dirs().gameDir, String(id));
+  settings.set({ ofPreset: String(id) });
+});
+ipcMain.handle('optifine:revert', () => {
+  if (running) throw new Error('Minecraft を閉じてから変更してください');
+  optifine.revertPresets(dirs().gameDir);
+  settings.set({ ofPreset: '' });
 });
 
 // ---------------------------------------------------------------- screenshots

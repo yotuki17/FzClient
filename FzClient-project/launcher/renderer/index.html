@@ -51,9 +51,9 @@
       <div class="status" id="status"></div>
     </div>
     <div class="news">
-      <div class="news-h">FzClient 1.0.9</div>
+      <div class="news-h">FzClient 1.0.10</div>
       <ul>
-        <li>NEW：Patcher 風の軽量化とバグ修正（Optimization / Bug Fixes）</li>
+        <li>NEW：OptiFine の導入と PvP 向け設定</li>
         <li>最適化：Windows・ネットワーク・NVIDIA・Java の設定と FPS 計測</li>
         <li>スキン・マントの切り替え、スクショを見る</li>
         <li>Modrinth と CurseForge から MOD を探して入れる・自動で更新</li>
@@ -154,6 +154,21 @@
       <pre id="optDebugText"></pre>
     </details>
 
+    <h2 class="opt-h">OptiFine</h2>
+    <div class="card of-card">
+      <img src="assets/icon.png" alt="" class="of-ico">
+      <div><b id="ofState">確認中…</b><small id="ofNote">FPS を大きく上げる定番の MOD です</small></div>
+      <button class="btn primary" id="ofInstall">OptiFine を入れる</button>
+      <button class="btn" id="ofFile">ファイルから</button>
+    </div>
+    <div class="card of-card">
+      <div><b>OptiFine の設定をまとめて変える</b><small id="ofPresetNote">OptiFine の設定画面で 1 つずつ変える代わりに、PvP 向けの組み合わせを一度に入れます</small></div>
+      <button class="btn" id="ofPvp">PvP おすすめ</button>
+      <button class="btn" id="ofFps">最大 FPS</button>
+      <button class="btn" id="ofRevert">元に戻す</button>
+    </div>
+    <p class="credit">OptiFine は作者（sp614x）のライセンスで optifine.net からしか配れないため、公式ページを開いてダウンロードしてもらい、ダウンロードフォルダに来たものをランチャーが mods に入れます。</p>
+
     <h2 class="opt-h">FPS を計測</h2>
     <div class="card measure">
       <div>
@@ -227,6 +242,18 @@
     <div class="d-sec">
       <div class="note">オフライン（シングルプレイ用・サーバーには入れません）</div>
       <div class="inline"><input type="text" id="offName" placeholder="名前（英数字 3〜16 文字）" maxlength="16"><button class="btn" id="offAdd">追加</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="ofModal">
+  <div class="dialog">
+    <div class="d-h">OptiFine を入れますか？<button class="x" id="ofLater">×</button></div>
+    <p class="note">OptiFine を入れると FPS が大きく上がります（ズームは FzClient のものが使われます）。</p>
+    <p class="note">公式サイト（optifine.net）が開くので、広告ページの右上の「Download」を押してください。ダウンロードが終わると、ランチャーが自動で入れます。</p>
+    <div class="d-sec md-actions">
+      <button class="btn primary" id="ofModalInstall">OptiFine を入れる</button>
+      <button class="btn" id="ofNever">あとで</button>
     </div>
   </div>
 </div>

@@ -41,6 +41,15 @@ contextBridge.exposeInMainWorld('fz', {
     debug: () => ipcRenderer.invoke('opt:debug'),
     measure: seconds => ipcRenderer.invoke('opt:measure', seconds),
   },
+  optifine: {
+    status: () => ipcRenderer.invoke('optifine:status'),
+    install: () => ipcRenderer.invoke('optifine:install'),
+    cancel: () => ipcRenderer.invoke('optifine:cancel'),
+    addFile: () => ipcRenderer.invoke('optifine:addFile'),
+    preset: id => ipcRenderer.invoke('optifine:preset', id),
+    revert: () => ipcRenderer.invoke('optifine:revert'),
+    onInstalled: cb => ipcRenderer.on('optifine:installed', (e, d) => cb(d)),
+  },
   skins: {
     list: () => ipcRenderer.invoke('skins:list'),
     current: () => ipcRenderer.invoke('skins:current'),

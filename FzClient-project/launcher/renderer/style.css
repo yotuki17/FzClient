@@ -322,3 +322,9 @@ input[type=range] { flex: 1; accent-color: var(--cyan); }
 #mdVer { flex: 1; min-width: 0; height: 34px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--line); background: rgba(5,10,12,.6); color: var(--text); outline: none; }
 #mdVer:focus { border-color: var(--cyan); }
 .md-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- OptiFine (最適化 page) */
+.of-card { flex-wrap: wrap; }
+.of-card .of-ico { width: 32px; height: 32px; border-radius: 8px; }
+.of-card .btn { flex: none; }
+.of-card .on-preset { border-color: var(--cyan); color: var(--cyan); }
