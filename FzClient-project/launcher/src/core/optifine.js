@@ -112,7 +112,9 @@ const PVP = {
   of: {
     ofFastRender: 'true', ofFastMath: 'true', ofSmartAnimations: 'true', ofRenderRegions: 'true', ofSmoothFps: 'false',
     ofChunkUpdates: '1', ofChunkUpdatesDynamic: 'false', ofLazyChunkLoading: 'true', ofDynamicLights: '3',
-    ofClouds: '3', ofTrees: '1', ofRain: '3', ofFogType: '3', ofBetterGrass: '3', ofDroppedItems: '1', ofVignette: '1',
+    // fog stays on (fast): 1.8.9 fills the sky below the horizon with the fog colour, so with fog off the lower
+    // half of custom skies disappears
+    ofClouds: '3', ofTrees: '1', ofRain: '3', ofFogType: '1', ofBetterGrass: '3', ofDroppedItems: '1', ofVignette: '1',
     ofVoidParticles: 'false', ofWaterParticles: 'false', ofPortalParticles: 'false', ofDrippingWaterLava: 'false',
     ofRainSplash: 'false', ofAnimatedPortal: 'false', ofAnimatedRedstone: 'false', ofAnimatedSmoke: 'false',
     ofLagometer: 'false', ofProfiler: 'false', ofAaLevel: '0', ofAfLevel: '1',
