@@ -1,0 +1,83 @@
+{
+  "name": "fzclient-launcher",
+  "productName": "FzClient Launcher",
+  "version": "1.0.6",
+  "description": "FzClient Launcher - Minecraft 1.8.9 PvP client",
+  "main": "main.js",
+  "author": "fuzuki",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --win dir",
+    "dist": "electron-builder --win nsis --x64 --publish never && node build/releaseFiles.js"
+  },
+  "dependencies": {
+    "adm-zip": "0.5.16",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "resedit": "2.0.3",
+    "skinview3d": "^3.4.2"
+  },
+  "build": {
+    "appId": "dev.fzkc.fzclient.launcher",
+    "productName": "FzClient Launcher",
+    "executableName": "FzClient Launcher",
+    "copyright": "FzClient",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/fzclient.jar",
+        "to": "fzclient.jar"
+      }
+    ],
+    "afterPack": "./build/afterPack.js",
+    "win": {
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "shortcutName": "FzClient Launcher",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "FzClient-Launcher-Setup.exe"
+    },
+    "portable": {
+      "artifactName": "FzClient-Launcher-${version}-portable.exe"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "yotuki17",
+        "repo": "FzClient",
+        "releaseType": "release"
+      }
+    ]
+  }
+}

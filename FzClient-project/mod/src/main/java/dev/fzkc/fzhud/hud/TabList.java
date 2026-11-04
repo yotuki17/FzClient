@@ -1,0 +1,355 @@
+package dev.fzkc.fzhud.hud;
+
+import com.google.common.collect.ComparisonChain;
+import dev.fzkc.fzhud.FzHud;
+import dev.fzkc.fzhud.config.BoolSetting;
+import dev.fzkc.fzhud.config.SliderSetting;
+import dev.fzkc.fzhud.config.TextSetting;
+import dev.fzkc.fzhud.render.R;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiPlayerTabOverlay;
+import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.world.WorldSettings;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+/** Compact tab list: player heads, names and numeric ping, in a themed panel. */
+public class TabList extends HudElement {
+    private static final float PAD = 5f, ROW = 10f, HEAD = 8f, COL_GAP = 8f;
+    /** FzClient bird shown next to your own name (128x71, transparent). */
+    private static final net.minecraft.util.ResourceLocation ICON =
+            new net.minecraft.util.ResourceLocation("fzclient", "textures/tab_icon.png");
+    private static final float ICON_H = 6f, ICON_W = ICON_H * 128f / 71f, ICON_GAP = 2f;
+    private static final int MAX_PLAYERS = 80;
+    private static Field headerField, footerField;
+    private float lastW = 120f, lastH = 40f;
+
+    private final BoolSetting heads, fzIcon, pingNumbers, stripes, showHeader, showFooter, blockAds;
+    public final BoolSetting toggleMode;
+    private final TextSetting customHeader, customFooter, blockWords;
+    private final SliderSetting rowsPerColumn;
+
+    public TabList(float defX, float defY) {
+        super("tab", "Tab List", "Tabキーのプレイヤー一覧", defX, defY, LEFT);
+        withBackground();
+        heads = add(new BoolSetting("heads", "頭のアイコンを表示", true));
+        fzIcon = add(new BoolSetting("fzicon", "FzClient ユーザー（自分・ほかの人）の名前の横にアイコンを表示", true));
+        pingNumbers = add(new BoolSetting("ping", "Pingを数字で表示", true));
+        stripes = add(new BoolSetting("stripes", "行を縞模様にする", true));
+        rowsPerColumn = add(new SliderSetting("rows", "1列の行数", 10, 40, 1, 20, ""));
+        toggleMode = add(new BoolSetting("toggle", "Tabキーで開閉（押しっぱなし不要・アニメなし）", false));
+        showHeader = add(new BoolSetting("header", "サーバーのヘッダーを表示", true));
+        showFooter = add(new BoolSetting("footer", "サーバーのフッターを表示", true));
+        customHeader = add(new TextSetting("customheader", "追加ヘッダー（| で改行、& で色）", "", 120));
+        customFooter = add(new TextSetting("customfooter", "追加フッター（| で改行、& で色）", "", 120));
+        blockAds = add(new BoolSetting("blockads", "広告の行を隠す", true));
+        blockWords = add(new TextSetting("blockwords", "隠す言葉（; で区切る）", "hypixel.net;Ranks, Boosters", 160));
+    }
+
+    @Override public float width() { return lastW; }
+    @Override public float height() { return lastH; }
+
+    @Override
+    public boolean active() {
+        return FzHud.tabActive;
+    }
+
+    private static final Comparator<NetworkPlayerInfo> ORDER = (a, b) -> {
+        ScorePlayerTeam ta = a.getPlayerTeam(), tb = b.getPlayerTeam();
+        return ComparisonChain.start()
+                .compareTrueFirst(a.getGameType() != WorldSettings.GameType.SPECTATOR,
+                        b.getGameType() != WorldSettings.GameType.SPECTATOR)
+                .compare(ta != null ? ta.getRegisteredName() : "", tb != null ? tb.getRegisteredName() : "")
+                .compare(a.getGameProfile().getName(), b.getGameProfile().getName())
+                .result();
+    };
+
+    private static void findFields() {
+        if (headerField != null || footerField != null) return;
+        headerField = field("header", "field_175256_i");
+        footerField = field("footer", "field_175255_h");
+        if (headerField == null || footerField == null) {
+            // fall back to declaration order: footer, then header
+            List<Field> comps = new ArrayList<>();
+            for (Field f : GuiPlayerTabOverlay.class.getDeclaredFields()) {
+                if (f.getType() == IChatComponent.class) {
+                    f.setAccessible(true);
+                    comps.add(f);
+                }
+            }
+            if (comps.size() >= 2) {
+                footerField = comps.get(0);
+                headerField = comps.get(1);
+            }
+        }
+    }
+
+    private static Field field(String... names) {
+        for (String n : names) {
+            try {
+                Field f = GuiPlayerTabOverlay.class.getDeclaredField(n);
+                f.setAccessible(true);
+                return f;
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static List<String> text(Field f, GuiPlayerTabOverlay tab) {
+        List<String> out = new ArrayList<>();
+        if (f == null || tab == null) return out;
+        try {
+            Object o = f.get(tab);
+            if (o instanceof IChatComponent) {
+                String s = ((IChatComponent) o).getFormattedText();
+                for (String line : s.split("\n")) {
+                    String plain = EnumChatFormatting.getTextWithoutFormattingCodes(line);
+                    if (plain != null && !plain.trim().isEmpty()) out.add(line);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
+    /** Drops lines containing any of the blocked words (colour codes ignored, case-insensitive). */
+    private List<String> filter(List<String> lines) {
+        if (!blockAds.get()) return lines;
+        String[] words = blockWords.get().toLowerCase().split(";");
+        List<String> out = new ArrayList<>();
+        for (String line : lines) {
+            String plain = EnumChatFormatting.getTextWithoutFormattingCodes(line);
+            String low = plain == null ? line.toLowerCase() : plain.toLowerCase();
+            boolean blocked = false;
+            for (String w : words) {
+                String t = w.trim();
+                if (!t.isEmpty() && low.contains(t)) {
+                    blocked = true;
+                    break;
+                }
+            }
+            if (!blocked) out.add(line);
+        }
+        return out;
+    }
+
+    private static List<String> custom(TextSetting t) {
+        List<String> out = new ArrayList<>();
+        if (t.get().trim().isEmpty()) return out;
+        Collections.addAll(out, t.formatted().split("\\|"));
+        return out;
+    }
+
+    /** Built header/footer lines, rebuilt only when their inputs change (not every frame). */
+    private static final class Lines {
+        Object src;
+        boolean show, block;
+        String words, custom;
+        List<String> out = Collections.emptyList();
+    }
+
+    private final Lines headerCache = new Lines(), footerCache = new Lines();
+
+    private List<String> lines(Lines c, Field f, GuiPlayerTabOverlay tab, boolean show, TextSetting cust) {
+        Object src = null;
+        if (show && f != null && tab != null) {
+            try {
+                src = f.get(tab);
+            } catch (Exception ignored) {
+            }
+        }
+        boolean block = blockAds.get();
+        String words = blockWords.get(), custom = cust.get();
+        if (src != c.src || show != c.show || block != c.block || !words.equals(c.words) || !custom.equals(c.custom)) {
+            c.src = src;
+            c.show = show;
+            c.block = block;
+            c.words = words;
+            c.custom = custom;
+            List<String> out = show ? filter(text(f, tab)) : new ArrayList<>();
+            out.addAll(custom(cust));
+            c.out = out;
+        }
+        return c.out;
+    }
+
+    // ---- players, names and pings: sorted and measured at most once per tick (the list only changes when
+    //      packets arrive), not every frame while the tab list is open
+    private final List<NetworkPlayerInfo> players = new ArrayList<>();
+    private final List<String> names = new ArrayList<>();
+    private int[] pingMs = new int[0];
+    private String[] pingText = new String[0];
+    private boolean[] isMe = new boolean[0];
+    private float nameW, pingW;
+    private int builtTick = Integer.MIN_VALUE, builtWidthGen = Integer.MIN_VALUE;
+    private boolean builtIcon, builtPing, builtEnglish;
+
+    private void build(Minecraft mc, GuiPlayerTabOverlay overlay) {
+        boolean icon = fzIcon.get(), ping = pingNumbers.get(), english = dev.fzkc.fzhud.util.Lang.english();
+        if (builtTick == dev.fzkc.fzhud.util.Stamp.ticks && builtIcon == icon && builtPing == ping
+                && builtEnglish == english && builtWidthGen == R.widthGen) {
+            return;
+        }
+        players.clear();
+        players.addAll(mc.thePlayer.sendQueue.getPlayerInfoMap());
+        players.sort(ORDER);
+        while (players.size() > MAX_PLAYERS) players.remove(players.size() - 1);
+
+        int n = players.size();
+        if (pingMs.length < n) {
+            pingMs = new int[n];
+            pingText = new String[n];
+            isMe = new boolean[n];
+        }
+        names.clear();
+        float nw = 0, pw = 0;
+        java.util.UUID me = mc.thePlayer.getUniqueID();
+        for (int i = 0; i < n; i++) {
+            NetworkPlayerInfo info = players.get(i);
+            String s = overlay.getPlayerName(info);
+            if (info.getGameType() == WorldSettings.GameType.SPECTATOR) s = EnumChatFormatting.ITALIC + s;
+            names.add(s);
+            isMe[i] = me.equals(info.getGameProfile().getId()) || dev.fzkc.fzhud.integration.FzUsers.uses(info.getGameProfile().getId());
+            float iw = icon && isMe[i] ? ICON_W + ICON_GAP : 0f;
+            nw = Math.max(nw, iw + R.width(s));
+            pingMs[i] = info.getResponseTime();
+            pingText[i] = dev.fzkc.fzhud.util.Fmt.num(pingMs[i]);
+            if (ping) pw = Math.max(pw, R.width(pingText[i]) * 0.5f);
+        }
+        nameW = nw;
+        pingW = ping ? pw : 0;
+        builtTick = dev.fzkc.fzhud.util.Stamp.ticks;
+        builtWidthGen = R.widthGen;
+        builtIcon = icon;
+        builtPing = ping;
+        builtEnglish = english;
+    }
+
+    private static int pingColor(int ms) {
+        if (ms < 0) return R.MUTED;
+        if (ms < 100) return 0xFF55FF55;
+        if (ms < 200) return 0xFFC6F35A;
+        if (ms < 300) return 0xFFFFAA00;
+        return 0xFFFF5555;
+    }
+
+    @Override
+    public void draw(float alpha, boolean preview) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
+        findFields();
+        GuiPlayerTabOverlay overlay = mc.ingameGUI.getTabList();
+
+        build(mc, overlay);
+        List<NetworkPlayerInfo> players = this.players;
+
+        List<String> header = lines(headerCache, headerField, overlay, showHeader.get(), customHeader);
+        List<String> footer = lines(footerCache, footerField, overlay, showFooter.get(), customFooter);
+        if (preview && header.isEmpty() && footer.isEmpty()) {
+            if (showHeader.get()) header = Arrays.asList("§bYou are playing on §e§lMC.HYPIXEL.NET", "§7Lobby");
+            if (showFooter.get()) footer = Arrays.asList("§aRanks, Boosters & MORE!", "§c§lSTORE.HYPIXEL.NET");
+        }
+
+        int n = players.size();
+        int maxRows = (int) rowsPerColumn.get();
+        int cols = Math.max(1, (n + maxRows - 1) / maxRows);
+        int rows = n == 0 ? 0 : (n + cols - 1) / cols;
+
+        List<String> names = this.names;
+        float nameW = this.nameW, pingW = this.pingW;
+        float headW = heads.get() ? HEAD + 3 : 0;
+        float colW = headW + nameW + (pingNumbers.get() ? 6 + pingW : 0);
+        float bodyW = cols * colW + (cols - 1) * COL_GAP;
+        float w = bodyW;
+        for (String s : header) w = Math.max(w, R.width(s));
+        for (String s : footer) w = Math.max(w, R.width(s));
+        w += PAD * 2;
+        float h = PAD + header.size() * ROW + (header.isEmpty() ? 0 : 3) + rows * ROW
+                + (footer.isEmpty() ? 0 : 3) + footer.size() * ROW + PAD - 1;
+        lastW = w;
+        lastH = h;
+
+        bg(0, 0, w, h, alpha);
+        float y = PAD;
+        for (String s : header) {
+            R.textCentered(s, w / 2f, y, R.alpha(0xFFFFFFFF, alpha));
+            y += ROW;
+        }
+        if (!header.isEmpty()) y += 3;
+
+        float bodyX = (w - bodyW) / 2f;
+        // row stripes all in one draw (a stripe never overlaps another row's head or text)
+        if (stripes.get()) {
+            R.batchBegin();
+            for (int i = 0; i < n; i++) {
+                int col = i / rows, row = i % rows;
+                if (row % 2 != 0) continue;
+                float x = bodyX + col * (colW + COL_GAP);
+                R.batchRect(x - 2, y + row * ROW - 1, colW + 4, ROW, R.alpha(0x14FFFFFF, alpha));
+            }
+            R.batchEnd();
+        }
+        for (int i = 0; i < n; i++) {
+            int col = i / rows, row = i % rows;
+            float x = bodyX + col * (colW + COL_GAP);
+            float ry = y + row * ROW;
+            NetworkPlayerInfo info = players.get(i);
+
+            if (heads.get() && info.getLocationSkin() != null) {
+                mc.getTextureManager().bindTexture(info.getLocationSkin());
+                GlStateManager.enableBlend();
+                GlStateManager.color(1f, 1f, 1f, alpha);
+                Gui.drawScaledCustomSizeModalRect((int) x, (int) ry, 8, 8, 8, 8, 8, 8, 64f, 64f);
+                Gui.drawScaledCustomSizeModalRect((int) x, (int) ry, 40, 8, 8, 8, 8, 8, 64f, 64f);
+                GlStateManager.color(1f, 1f, 1f, 1f);
+            }
+            float nx = x + headW;
+            if (fzIcon.get() && isMe[i]) {
+                // FzClient bird in front of your own name
+                mc.getTextureManager().bindTexture(ICON);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+                GlStateManager.color(1f, 1f, 1f, alpha);
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(nx, ry + (8f - ICON_H) / 2f, 0);
+                GlStateManager.scale(ICON_W / 128f, ICON_H / 71f, 1f);
+                Gui.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, 128, 71, 128, 71);
+                GlStateManager.popMatrix();
+                GlStateManager.color(1f, 1f, 1f, 1f);
+                nx += ICON_W + ICON_GAP;
+            }
+            R.text(names.get(i), nx, ry, R.alpha(0xFFFFFFFF, alpha));
+            if (pingNumbers.get()) {
+                int ms = pingMs[i];
+                String ping = pingText[i];
+                // half-size ping, right aligned and vertically centred in the row
+                GlStateManager.pushMatrix();
+                GlStateManager.translate(x + colW - R.width(ping) * 0.5f, ry + 2f, 0);
+                GlStateManager.scale(0.5f, 0.5f, 1f);
+                R.text(ping, 0, 0, R.alpha(pingColor(ms), alpha));
+                GlStateManager.popMatrix();
+            }
+
+        }
+        y += rows * ROW;
+
+        if (!footer.isEmpty()) y += 3;
+        for (String s : footer) {
+            R.textCentered(s, w / 2f, y, R.alpha(0xFFFFFFFF, alpha));
+            y += ROW;
+        }
+    }
+}

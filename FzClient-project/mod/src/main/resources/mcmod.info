@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "${modid}",
+    "description": "FzClient - animated PvP client: keystrokes, CPS, FPS, ping, TPS, compass, potions and more. Right Shift to edit.",
+    "name": "FzClient",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["Fzkc"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

@@ -1,0 +1,765 @@
+FzClient メニュー	FzClient Menu
+サーバーとの通信の遅さ	Latency to the server
+1秒あたりのフレーム数	Frames per second
+サーバーの処理速度（推定）	Server tick rate (estimated)
+最後に殴った時の距離	Distance of your last hit
+「blocks」の文字を表示	Show the word "blocks"
+殴っていない時（--）は隠す	Hide when you haven't hit anything (--)
+相手に連続で当てた回数	Hits in a row on your opponent
+Minecraftのメモリ使用量	Minecraft memory usage
+ダッシュ・しゃがみを押しっぱなしにしなくてよくなる	No need to hold sprint / sneak
+ダッシュを切り替え式にする	Toggle sprint
+しゃがみを切り替え式にする（操作設定で「Toggle Sneak」のキーを決めると使える）	Toggle sneak (set the "Toggle Sneak" key in Controls first)
+暗い場所でも明るく見える	See clearly in the dark
+明るさ	Brightness
+着火したTNTの上に残り時間を表示	Shows the fuse time above lit TNT
+小数の桁数	Decimal places
+大きさ	Size
+1.7風のモーションとしゃがみの動き	1.7-style animations and sneaking
+ブロックヒット（殴った腕振りをガード中も続ける）	Block hit (keep swinging while blocking)
+ガード中にブロックを左クリックで腕を振る（1.7風・自分の画面だけ）	Swing when left-clicking a block while blocking (1.7, client only)
+ガード中の腕の形を補正（三人称・他プレイヤー）	Fix blocking arm pose (3rd person, other players)
+他プレイヤーの腕振りの大きさ	Other players' swing size
+食べる・飲む時も腕を振る	Swing while eating / drinking
+弓を引く時も腕を振る	Swing while drawing a bow
+腕振りの速さ	Swing speed
+なめらかにしゃがむ	Smooth sneaking
+しゃがみの深さ	Sneak depth
+ ブロック	 blocks
+しゃがみの速さ	Sneak speed
+落ちたアイテムが地面に平らに置かれる	Dropped items lie flat on the ground
+落下中の回転の速さ	Spin speed while falling
+プレイヤー名の見た目を変える（他のネームタグMODと併用するならOFF推奨）	Restyle player nametags (turn off if you use another nametag mod)
+背景の色	Background color
+背景の濃さ	Background opacity
+角の丸さ（0で四角）	Corner radius (0 = square)
+枠線を表示	Show border
+枠線の色	Border color
+枠線の濃さ	Border opacity
+枠線の太さ	Border width
+文字に影をつける	Text shadow
+F5で自分の名前も表示	Show your own name in F5
+満腹度に隠し満腹度（Saturation）を表示	Shows hidden saturation on the hunger bar
+枠の濃さ	Outline opacity
+枠の色	Outline color
+画面に残像をつける	Adds a motion trail to the screen
+強さ	Strength
+ロビーやゲームを移る時のロード画面を出さない	Skip loading screens when switching lobbies / games
+「地形をダウンロード中」の画面を出さない	Skip the "Downloading terrain" screen
+切り替え時の一瞬の暗転を出さない	Skip the brief dark flash when switching
+自分の画面だけ時間・天気を変える	Change time / weather on your screen only
+モード	Mode
+時刻を固定	Fixed time
+速く・遅く進める	Faster / slower
+現実の時刻に合わせる	Real-world time
+時刻（固定モード）	Time (fixed mode)
+時	h
+進む速さ（速く・遅くモード）	Speed (faster / slower mode)
+雨・雷を止める	No rain / thunder
+F11の全画面を枠なしウィンドウにする（Alt+Tabが速い）	F11 uses a borderless window (fast Alt+Tab)
+ホイールで動くホットバーの範囲を決める	Limit which hotbar slots the scroll wheel reaches
+左端のスロット	Leftmost slot
+右端のスロット	Rightmost slot
+端まで行ったら反対側にループ	Wrap around at the ends
+ホイールの向きを逆にする	Invert scroll direction
+MinecraftのGUIの大きさを ×4 以上にもできる	Allows GUI scale x4 and above
+GUIの大きさ	GUI scale
+キーを押している間ズーム（ホイールで倍率変更）	Zoom while holding the key (scroll to change)
+ズーム倍率	Zoom level
+ズーム中にホイールで倍率を変える	Scroll to change zoom
+なめらかにズーム	Smooth zoom
+ズームの速さ	Zoom speed
+ズーム中は感度を倍率に合わせて下げる	Lower sensitivity while zoomed
+ズーム中はシネマティックカメラ	Cinematic camera while zoomed
+押すたびにON/OFF（トグル）	Toggle on each press
+見ているブロックの枠の色・太さ・塗りつぶし	Color, width and fill of the block outline
+枠の太さ	Outline width
+中を塗りつぶす	Fill
+塗りつぶしの色	Fill color
+塗りつぶしの濃さ	Fill opacity
+壁越しにも枠を見せる	Show through walls
+ダメージ時の画面の揺れ・視野の広がりと、燃えている時の炎の表示を調整	Hurt camera shake, hit FOV widening and the fire overlay
+ダメージ時の画面の揺れ	Hurt camera shake
+炎の表示	Fire overlay
+そのまま	Normal
+低くする	Low
+消す	Hidden
+カボチャをかぶった時の視界のフタを消す	Remove the pumpkin overlay
+上のボスバー（Hypixelの広告）を消す	Hide the boss bar (Hypixel ads)
+炎を下げる量	Fire height offset
+Hypixelでゲームが終わったら自動でggを送る	Sends gg automatically when a Hypixel game ends
+送る言葉	Message
+送るまでの時間	Delay
+秒	s
+Hypixelでだけ動かす	Only on Hypixel
+別のウィンドウを触っている間はFPSを下げてPCを軽くする（最小化中は5FPS）	Lower FPS while another window is focused (5 FPS while minimized)
+その間のFPS上限	FPS limit while unfocused
+ウィンドウの名前・アイコン、起動時のロゴ、タイトル画面をFzClientにする	FzClient window title, icon, loading logo and title screen
+ウィンドウの名前	Window title
+起動時のロゴと色をFzClientにする（次回の起動から）	FzClient loading logo and colors (from next launch)
+ウィンドウのアイコンを変える（次回の起動から）	Change the window icon (from next launch)
+タイトル画面をFzClientオリジナルにする（アニメーション背景）	FzClient title screen (animated background)
+バニラのタイトル画面の MINECRAFT を FzClient にする	Replace MINECRAFT with FzClient on the vanilla title screen
+バニラのタイトル画面の文字の色	Title text color (vanilla title screen)
+タイトル画面に FzClient のバージョンを表示	Show the FzClient version on the title screen
+切断された画面に「再接続」ボタン。自動で再接続もできる	Reconnect button on the disconnect screen, optional auto reconnect
+自動で再接続する	Reconnect automatically
+自動再接続までの秒数	Seconds before reconnecting
+F2のスクショをカクつかずに保存して、そのままクリップボードにコピー（Discordに貼れる）	F2 screenshots without the freeze, copied to the clipboard (paste into Discord)
+クリップボードにコピーする	Copy to clipboard
+体力が少なくなると画面のふちが赤くなる	Red screen edges when your health is low
+ハートがいくつ以下で出すか	Show at or below (hearts)
+個	
+ドクドク点滅させる	Pulse
+殴った時のパーティクルを増やす（自分の画面だけ）	More hit particles (client only)
+量	Amount
+毎回ダメージ増加（青い）パーティクル	Always show sharpness particles
+毎回クリティカルのパーティクル	Always show critical particles
+死んだ時にその場所の座標をチャットに出す	Shows your death coordinates in chat
+Discordに「FzClient をプレイ中」と表示する	Shows "Playing FzClient" on Discord
+サーバーのアドレスを表示	Show server address
+スコアボードのタイトル（BED WARS など）を表示	Show the scoreboard title (BED WARS etc.)
+チャットの便利機能まとめ：なめらか表示・時刻・まとめ表示・コピー・通知音・翻訳・履歴・日本語入力	Everything chat: smooth chat, timestamps, compact, copy, sounds, translation, history, Japanese input
+なめらか表示	Smooth chat
+新しいチャットを下からスッと出す	New messages slide in from below
+その速さ	Speed
+表示・操作	Display & controls
+時刻を表示 [12:34]	Timestamps [12:34]
+時刻に秒も付ける	Include seconds
+同じメッセージが続いたら1行にまとめる (x2)	Stack repeated messages (x2)
+Ctrl+クリックでメッセージをコピー	Ctrl+click to copy a message
+翻訳（/tr en こんにちは で翻訳して送信）	Translation (/tr en hello to translate and send)
+外国語のチャットを翻訳する	Translate foreign chat
+翻訳のしかた	How to translate
+[訳] ボタンを押した時だけ	Only when [TL] is clicked
+自動で翻訳して下に表示	Automatically, shown below
+対象	Target
+プレイヤーのチャットだけ	Player chat only
+すべてのメッセージ	All messages
+翻訳先の言語	Translate into
+/tr で送る時の言語（省略時）	Default language for /tr
+翻訳サービス	Translation service
+Google（キー不要）	Google (no key needed)
+DeepL（APIキーが必要）	DeepL (API key required)
+DeepLのAPIキー	DeepL API key
+履歴（/fzhistory でコマンド履歴、/chatlog でログ）	History (/fzhistory for commands, /chatlog for logs)
+チャットとコマンドの履歴を残す	Keep chat and command history
+メニューに戻ってもサーバーを移動してもチャットを消さない	Keep chat when leaving to the menu or switching servers
+送ったメッセージ・コマンドの履歴（↑キー）を次回の起動に引き継ぐ	Keep sent messages / commands (Up key) across restarts
+前回のチャットを起動時に復元する	Restore the last chat on startup
+復元する行数	Lines to restore
+行	 lines
+チャットを日付ごとのファイルに保存（logs/fzclient-chat）	Save chat to a file per day (logs/fzclient-chat)
+日本語入力	Japanese input
+チャットで日本語（IME）を打てるようにする	Type Japanese (IME) in chat
+入力のしかた	Input method
+チャットに直接打つ	Directly in chat
+別ウィンドウの入力欄	Separate input window
+「/」でチャットを開いた時は英数入力にする	Switch to alphanumeric when chat is opened with /
+[別ウィンドウ] チャットを開いたら自動で入力欄を出す	[Window] Open the input box with the chat
+[別ウィンドウ] Enterでそのまま送信（OFFならチャット欄に入れるだけ）	[Window] Enter sends (off: just fills the chat box)
+クロマ（虹色）の流れる速さ	Speed of the chroma (rainbow) color
+1周にかかる秒数	Seconds per cycle
+ここまで前回のチャット	End of previous chat
+最近送ったメッセージ	Recent messages
+最近使ったコマンド	Recent commands
+（クリックでチャット欄に入れる）	 (click to put it in the chat box)
+  まだありません	  Nothing yet
+クリックでチャット欄に入れる	Click to put it in the chat box
+チャットのログ: 	Chat logs: 
+[フォルダを開く]	[Open folder]
+FzClient 日本語入力	FzClient Japanese input
+日本語入力  Enter: 送信   Esc: 閉じる	Japanese input  Enter: send   Esc: close
+日本語	Japanese
+中文	Chinese
+ [訳]	 [TL]
+クリックで	Click to translate into 
+に翻訳	
+同じ言語なので翻訳しませんでした	Already in that language, not translated
+翻訳できませんでした: 	Could not translate: 
+[訳] 	[TL] 
+[翻訳] 	[Translate] 
+DeepLのAPIキーが設定されていません	No DeepL API key set
+APIキーが正しくありません (	Invalid API key (
+DeepLの今月の上限に達しました	DeepL monthly limit reached
+翻訳の回数が多すぎます。少し待ってください	Too many translations, please wait a moment
+古いメッセージなので翻訳できません	That message is too old to translate
+/tr [en|ja|ko|zh|...] メッセージ	/tr [en|ja|ko|zh|...] message
+Chat の「翻訳」がOFFです（右シフト → チャット → Chat）	Translation is off (Right Shift > Chat)
+使い方: /tr [言語] メッセージ   例: /tr en こんにちは	Usage: /tr [language] message   e.g. /tr ja hello
+再接続	Reconnect
+再接続 (	Reconnect (
+ネザー	Nether
+エンド	End
+オーバーワールド	Overworld
+死んだ場所: 	You died at: 
+スクショをクリップボードにコピーしました 	Screenshot copied to clipboard 
+チャットをコピーしました	Chat message copied
+ドラッグ: 移動  右クリック: ON/OFF  ホイール: 大きさ  ホイールクリック: 設定	Drag: move  Right click: on/off  Scroll: size  Middle click: settings
+R: 位置をリセット   Esc: 戻る	R: reset position   Esc: back
+シングルプレイ	Singleplayer
+マルチプレイ	Multiplayer
+設定	Options
+Esc: 閉じる	Esc: close
+すべて	All
+HUD編集はワールド内で	Edit HUD in a world
+HUD編集	Edit HUD
+閉じる	Close
+⌕ 検索	⌕ Search
+設定 ›	Settings ›
+見つかりません	Nothing found
+‹ MODS一覧	‹ All mods
+有効	On
+無効	Off
+リセット	Reset
+位置を動かす	Move
+この機能に設定はありません	This feature has no settings
+クリックして入力（右クリックで消去）	Click to type (right click to clear)
+クロマ	Chroma
+おすすめ	Presets
+HEXは文字欄に #RRGGBB で入力	Type a HEX color as #RRGGBB
+防具と道具の残り耐久	Armor and tool durability
+手に持っている道具も表示	Show the held item too
+耐久を%で表示	Durability in %
+残りに応じて色を変える	Color by remaining durability
+時計と移動速度	Clock and movement speed
+時計を表示	Show clock
+24時間表記	24-hour clock
+速度を表示	Show speed
+文字の色	Text color
+画面上の方角コンパス	Compass at the top of the screen
+幅	Width
+目盛りの間隔	Tick spacing
+回転の追従の速さ	Follow speed
+角度の数字を表示	Show degree numbers
+中央に現在の角度	Current angle in the middle
+今いる座標・向き・バイオーム	Your coordinates, facing and biome
+向きを表示	Show facing
+バイオームを表示	Show biome
+X/Y/Z の色	X/Y/Z color
+数字の色	Number color
+1秒あたりのクリック数	Clicks per second
+右クリックも表示	Show right clicks
+クリックで光る	Flash on click
+シェブロン ^	Chevron ^
+十字	Cross
+十字＋点	Cross + dot
+点	Dot
+円	Circle
+円＋点	Circle + dot
+四角	Square
+T字	T
+カッコ [ ]	Brackets [ ]
+画面中央の照準（種類を選べる）	Custom crosshair (several styles)
+種類	Style
+色	Color
+線の長さ	Line length
+線の太さ	Line thickness
+中心からの隙間	Gap
+シェブロンの開き具合	Chevron spread
+中心の点（シェブロン）	Center dot (chevron)
+線の中を白くする（シェブロン）	White core (chevron)
+黒いフチをつける	Outline
+フチの色	Outline color
+背景を表示	Show background
+矢	Arrows
+金リンゴ	Golden apples
+パール	Pearls
+ブロック	Blocks
+ポーション	Potions
+雪玉	Snowballs
+持っている矢・金リンゴ・パール・ブロックなどの数	How many arrows, gapples, pearls, blocks... you carry
+表示するもの	Show
+選んだアイテム	Chosen items
+手に持っているアイテム	Held item
+エンダーパール	Ender pearls
+ブロック（合計）	Blocks (total)
+雪玉・卵	Snowballs / eggs
+アイコンを表示	Show icons
+名前を表示	Show names
+横に並べる	Horizontal
+名前の色	Name color
+WASDとスペースの押下表示	Shows WASD and space presses
+スペースキーを表示	Show space bar
+押した時の色	Pressed color
+色が変わる速さ	Fade speed
+ポーション効果の一覧	Active potion effects
+効果の名前を表示	Show effect names
+切れそうになったら点滅	Blink when about to run out
+悪い効果を赤くする	Bad effects in red
+右側のスコアボード	Sidebar scoreboard
+赤い数字を隠す	Hide red numbers
+タイトルの字間をあける	Spaced-out title
+www.hypixel.net の行を隠す	Hide the www.hypixel.net line
+接続中のサーバーを表示	Shows the server you are on
+表示する内容	Show
+アドレス	Address
+サーバーリストの名前	Server list name
+両方	Both
+[ ] で囲む	Wrap in [ ]
+シングルプレイでは隠す	Hide in singleplayer
+Spotifyで再生中の曲（Windows・Spotifyアプリ）	Now playing on Spotify (Windows app)
+最大の幅	Max width
+アーティスト名を表示	Show artist
+Spotifyを開いていない時は隠す	Hide when Spotify is closed
+一時停止中は隠す	Hide when paused
+曲名の色	Title color
+アーティストの色	Artist color
+アイコンの色	Icon color
+Spotifyが開いていません	Spotify is not open
+Flying・Sprintingなどの移動状態	Movement state (Flying, Sprinting...)
+(Toggled) を表示	Show (Toggled)
+止まっている時は隠す	Hide when standing still
+Tabキーのプレイヤー一覧	Tab player list
+頭のアイコンを表示	Show player heads
+Pingを数字で表示	Show ping numbers
+行を縞模様にする	Striped rows
+1列の行数	Rows per column
+Tabキーで開閉（押しっぱなし不要・アニメなし）	Tab toggles the list (no holding, no animation)
+サーバーのヘッダーを表示	Show server header
+サーバーのフッターを表示	Show server footer
+追加ヘッダー（| で改行、& で色）	Custom header (| = new line, & = color)
+追加フッター（| で改行、& で色）	Custom footer (| = new line, & = color)
+広告の行を隠す	Hide ad lines
+隠す言葉（; で区切る）	Words to hide (separate with ;)
+メニュー	In the menu
+ でプレイ中	
+Spotify 再生/一時停止	Spotify play/pause
+Spotify 次の曲	Spotify next
+Spotify 前の曲	Spotify previous
+言語 / Language	Language / 言語
+クライアントの表示言語（日本語 / English）	Client language (Japanese / English)
+英語	English
+ワールド内で	In a world
+裏で保存して、撮る瞬間のカクつきをなくす	Save in the background (no freeze when taking one)
+左クリック中でも右クリックを優先（ブロックを掘りながらでもガード・設置できる）	Right click over left click (block / place even while digging)
+通知音	Sounds
+パーティチャットで音を鳴らす	Ping on party chat
+自分の名前が呼ばれたら音を鳴らす	Ping when someone mentions your name
+名前以外に反応する言葉（, 区切り）	Extra words that ping (comma separated)
+呼ばれたメッセージの頭に @ を付ける	Mark mentions with @
+音の種類	Sound
+ピコン	Pling
+ポロン（経験値）	Orb (XP)
+ハープ	Harp
+音量	Volume
+攻撃を受けた時に視野(FOV)を広げてKBを感じにくくする（0でオフ）	Widen the FOV when hit so knockback feels smaller (0 = off)
+広げている時間	Widening time
+自分の名前の横に FzClient のアイコンを表示	Show the FzClient icon next to your name
+自分の名前の横に FzClient のアイコン（F5で見える）	FzClient icon next to your own name (visible in F5)
+プリセット	Presets
+プリセット・共有コード	Presets & share codes
+設定とHUDの位置を1つのコードに。共有やバックアップに使えます	Your settings and HUD layout as one code, to share or back up
+コードをコピー	Copy code
+もう一度押すと上書き	Click again to overwrite
+貼り付けて読み込む	Paste & load
+今の設定を保存	Save current setup
+保存したプリセット	Saved presets
+まだありません。「今の設定を保存」で追加できます	None yet. Use "Save current setup" to add one
+もう一度押す	Click again
+読み込む	Load
+コピー	Copy
+本当?	Sure?
+削除	Delete
+今の設定は上書きされます（自動でバックアップを取ります）。もう一度押すと読み込みます	This overwrites your setup (a backup is saved first). Click again to load
+クリップボードに FzClient のコード（FZ で始まる文字）がありません	No FzClient code (starting with FZ) in the clipboard
+コードを読み込みました	Code loaded
+今の設定を保存しました	Current setup saved
+このプリセットは壊れているようです	This preset seems to be broken
+削除しました	Deleted
+プリセットの名前	Preset name
+保存	Save
+名前	Name
+保存したプリセット（名前をクリックで変更）	Saved presets (click a name to rename)
+曲のジャケット画像を表示	Show the album cover
+お気に入りから外す	Remove from favourites
+お気に入りに追加（タイトル画面に表示）	Add to favourites (shown on the title screen)
+★ お気に入り	★ Favourites
+マルチプレイの一覧で ☆ を	Press ☆ in the multiplayer
+押すとここに出ます	list to pin servers here
+確認中…	Checking…
+オフライン	Offline
+曲の進み具合のバーを表示	Show the song progress bar
+ダッシュ・しゃがみ切替	Toggle sprint / sneak
+しゃがみを切り替え式にする	Toggle sneak (set its key first)
+TNTの残り時間を表示	Fuse time above TNT
+1.7風の動きとしゃがみ	1.7 animations & sneaking
+ブロックヒット（ガード中も腕振り）	Block hit (swing while blocking)
+左クリック中も右クリックを優先	Right click over left click
+ガード中にブロックを叩くと腕を振る	Swing when hitting blocks while blocking
+ガード中の腕の形を補正（三人称）	Fix blocking arm pose (3rd person)
+落ちたアイテムを平らに	Dropped items lie flat
+ネームタグの見た目を変更	Restyle nametags
+自分の名前にFzClientアイコン（F5）	FzClient icon by your name (F5)
+隠し満腹度を表示	Show hidden saturation
+ワールド移動の読込画面を省略	Skip world-swap loading screens
+時間・天気を自分だけ変更	Change time / weather (you only)
+F11を枠なし全画面に	F11 = borderless window
+ホットバーの範囲を制限	Limit hotbar scroll range
+GUIを×4以上にできる	GUI scale x4 and above
+キーを押してズーム	Hold a key to zoom
+ブロック枠の色・太さ	Block outline style
+被ダメ時の揺れ・FOV・炎	Hurt cam, hit FOV, fire
+被弾時のFOV（＋広げる/－狭める/0オフ）	Hit FOV (+ widen / - narrow / 0 off)
+ゲーム終了時に自動でgg	Auto gg after games
+非アクティブ時にFPSを下げる	Lower FPS when unfocused
+名前・アイコン・タイトル画面	Window title, icon, menu
+起動ロゴと色をFzClientに（次回起動）	FzClient loading logo & colors (next launch)
+ウィンドウアイコンを変える（次回起動）	Change the window icon (next launch)
+オリジナルのタイトル画面（動く背景）	FzClient title screen (animated)
+バニラ画面の題字をFzClientに	Replace MINECRAFT on the vanilla menu
+タイトル画面にバージョンを表示	Show the version on the title screen
+切断時の再接続ボタン	Reconnect button
+スクショを保存＆コピー	Save & copy screenshots
+低体力で画面が赤くなる	Red edges at low health
+殴った時の粒子を増やす	More hit particles
+死亡座標をチャットに表示	Death coords in chat
+Discordにプレイ中表示	Show on Discord
+スコアボードの題名（BED WARSなど）を表示	Show the scoreboard title (BED WARS...)
+チャットの便利機能	Chat tools
+メニューやサーバー移動でチャットを消さない	Keep chat across menus / servers
+送信履歴（↑キー）を次回に引き継ぐ	Keep sent history (Up key) next launch
+チャットを日付別ファイルに保存	Save chat to daily files
+[別窓] チャットを開いたら入力欄を出す	[Window] Open the input box with chat
+[別窓] Enterで直接送信（OFFは入力のみ）	[Window] Enter sends (off: fill chat only)
+表示言語を切り替え	Display language
+撮ったスクショのプレビューを出す	Show a preview of each screenshot
+プレビューを出す秒数	Preview duration
+Hitbox	Hitbox
+当たり判定の枠を表示	Show hitboxes
+プレイヤーだけ表示	Players only
+攻撃の判定の余白（0.1）を含める	Include the 0.1 hit margin
+表示する距離	Range
+三人称で自分も表示	Show yourself in 3rd person
+目の高さと向きの線	Eye height and look lines
+しゃがみ切替を切り替え式にする	Toggle sneak
+hitregを良くする	Improve hitreg
+殴った相手の体力	Health of the player you hit
+表示する秒数	Show for
+体力の数字を表示	Show health numbers
+距離を表示	Show distance
+体力に応じて色を変える	Color by health
+バーの色	Bar color
+プレイヤーに重なると色を変える	Change color over a player
+重なった時の色	Color over a player
+遠くのものを描かない	Skip drawing far-away things
+アイテム・経験値の描画距離	Item / XP orb draw distance
+モブ・アーマースタンドの描画距離	Mob / armor stand draw distance
+パーティチャットをDiscordへ	Send party chat to Discord
+残り時間で色を変える	Color by time left
+Discordへ転送（/fzrelay test でテスト）	Relay to Discord (/fzrelay test to test)
+パーティチャットを送る	Relay party chat
+Webhook URL（人に見せない）	Webhook URL (keep it private)
+描画を軽くする	Lighter rendering
+額縁・絵画の描画距離	Item frame / painting draw distance
+壁の向こうのモブ・アイテムを描かない	Skip mobs and items behind walls
+雨・雪を描かない	Do not draw rain / snow
+雲を描かない	Do not draw clouds
+メニュー中のFPS上限（240で無制限）	FPS limit in menus (240 = no limit)
+コマンド候補	Command suggestions
+コマンドの候補を出す（Tab決定・↑↓選択）	Show command suggestions (Tab = accept, Up/Down = pick)
+Hypixelの主なコマンドも候補に入れる	Include common Hypixel commands
+候補の最大数	Max suggestions
+履歴	History
+パーティチャットをDiscordへ	Send party chat to Discord
+自分の発言も送る	Send my own messages too
+VCの参加者を表示	Show who is in your voice chat
+Client Secret（人に見せない）	Client Secret (keep it private)
+表示する人数	People to show
+話している人だけ表示	Only show who is talking
+自分も表示	Show yourself
+チャンネル名を表示	Show the channel name
+人	human
+メニューのクリック音	Menu click sound
+ボタン	Button
+ポコッ	Pop
+カチッ	Click
+音の高さ	Pitch
+決定	Confirm
+キャンセル音（戻る・閉じる・OFFにする時）	Cancel sound (back / close / turning off)
+Windowsのマウス加速を通さず、マウスの生の動きで視点を動かす（Windowsのみ）	Raw mouse input (Windows only)
+メニューをリキッドグラス風にする	Make the menu in a liquid glass style
+ゲーム画面をぼかす	Blur the game screen
+ぼかしの強さ	Blur strength
+ガラスの明るさ	Brightness of glass
+ガンマ	Gamma
+壁越しにも表示	Show through walls
+手持ちに合わせる	Match the held item
+読み込み前	Before loading
+「{0}」として保存しました	Saved as "{0}"
+コピーしました（{0} 文字）。Discord などに貼り付けて共有できます	Copied ({0} characters). Paste it in Discord or anywhere to share
+「{0}」を読み込みました	Loaded "{0}"
+「{0}」のコードをコピーしました	Copied the code of "{0}"
+もう一度「本当?」を押すと「{0}」を削除します	Press "Sure?" again to delete "{0}"
+プリセット {0}	Preset {0}
+Webhook URL が正しくありません（設定の Party Relay に、DiscordのWebhook URLを入れてください）	The Webhook URL is not valid (put your Discord Webhook URL in the Party Relay settings)
+テストメッセージを送っています...	Sending a test message...
+FzClient の Party Relay のテストです。これが見えれば設定は成功です。	This is a test from FzClient Party Relay. If you can see this, it is set up correctly.
+送れました。Discordのチャンネルを確認してください	Sent. Check your Discord channel
+送れませんでした（HTTP {0}）。URLが正しいか、Webhookが消されていないか確認してください	Could not send (HTTP {0}). Check that the URL is right and the Webhook still exists
+送れませんでした: 	Could not send: 
+Discordから返事がありません（{0}）。Discordアプリを再起動してから、もう一度お試しください	Discord is not answering ({0}). Restart the Discord app and try again
+最初のあいさつ	handshake
+返事がないので止めます。Discordを再起動して、HUDを一度OFFにしてからONにしてください	Stopped because Discord does not answer. Restart Discord, then turn the HUD off and on again
+認証できませんでした: 	Could not authorize: 
+認証がうまくいかないので止めます。設定を確認して、HUDを一度OFFにしてからONにしてください	Stopped because authorization keeps failing. Check the settings, then turn the HUD off and on again
+接続が切れました。15秒後にやり直します: 	Disconnected. Retrying in 15 seconds: 
+Discordのデスクトップアプリが見つかりません（開いているか、通常の権限で起動しているか確認してください）	Discord desktop app not found (check that it is open and not running as administrator)
+Client ID が正しくないようです: 	The Client ID seems to be wrong: 
+Discordがトークンを受け付けません: 	Discord does not accept the token: 
+つながりました	Connected
+ブラウザにDiscordの許可画面が出ます。「認証」を押してください（3分以内）。開かないときは下のリンクを押してください	Discord's permission page opens in your browser. Press "Authorize" (within 3 minutes). If it does not open, click the link below
+ブラウザで許可したあと、アドレス欄のURLを /fzvc の後ろに貼ってください（ポート80が使えませんでした）	After allowing it in the browser, paste the URL from the address bar after /fzvc (port 80 was not available)
+[許可画面を開く]	[Open the permission page]
+許可が拒否されました ({0})	Permission was denied ({0})
+3分以内に許可されませんでした	Not allowed within 3 minutes
+許可されました	Allowed
+認証できました。Minecraftに戻ってください。このタブは閉じて大丈夫です。	Authorized. Go back to Minecraft. You can close this tab.
+許可されませんでした。このタブは閉じて大丈夫です。	Not allowed. You can close this tab.
+コードは届きましたが、FzClientが開いた許可画面からの認証ではないようです。	A code arrived, but it does not seem to come from the permission page FzClient opened.
+ゲームのチャットに出る [許可画面を開く] からもう一度お試しください。	Try again from [Open the permission page] in the game chat.
+（手動で渡すなら、このページのアドレスを、チャットで /fzvc の後ろに貼ってください）	(To pass it by hand, paste this page's address after /fzvc in the chat)
+FzClient: 認証の待ち受け中です。	FzClient: waiting for authorization.
+/fzvc <ブラウザのURL> | /fzvc reset	/fzvc <browser URL> | /fzvc reset
+使い方: /fzvc <ブラウザのアドレス欄のURL>   または   /fzvc reset（保存した認証を消してやり直す）	Usage: /fzvc <URL from the browser's address bar>   or   /fzvc reset (forget the saved login and start over)
+保存した認証を消しました。つなぎ直します	Forgot the saved login. Reconnecting
+コードを受け取りました。続きを進めます	Got the code. Continuing
+トークンの取得に失敗 (HTTP {0}): 	Could not get a token (HTTP {0}): 
+ （Client Secret と、OAuth2のRedirectsの http://localhost を確認）	 (check the Client Secret and http://localhost in the OAuth2 Redirects)
+メニューの見た目・色・配置を調整する	Adjust the look, colors and layout of the menus
+スタイル	Style
+リキッドグラス風にする	Liquid glass style
+角の丸み	Corner roundness
+アクセント色	Accent color
+パネルの色	Panel color
+パネルの濃さ	Panel opacity
+後ろの画面の暗さ	Background dimming
+配置	Layout
+メニューの位置	Menu position
+中央	Center
+左寄せ	Left
+右寄せ	Right
+サイドバーの位置	Sidebar side
+左	Left
+右	Right
+メニューの大きさ	Menu size
+カードの列数	Card columns
+自動	Auto
+カードの高さ	Card height
+カードの間隔	Card spacing
+メニューの隅にロゴを出す	Show the logo in the corner
+アカウント	Accounts
+アカウントを切り替え	Switch account
+クリックで切り替え（次に入るサーバーから反映）	Click to switch (applies to the next server you join)
+ランチャー	Launcher
+ランチャー（オフライン）	Launcher (offline)
+使用中	In use
+Microsoft でログイン	Sign in with Microsoft
+オフラインを追加	Add offline
+オフラインの名前	Offline name
+追加	Add
+ブラウザで {0} を開いて、このコードを入力してください	Open {0} in your browser and enter this code
+コードはコピー済みです。入力が終わると自動で切り替わります	The code is copied. You will be switched automatically when done
+ブラウザを開く	Open browser
+キャンセル	Cancel
+キャンセルしました	Cancelled
+ワールドから出てから切り替えてください	Leave the world before switching
+切り替え中…	Switching…
+{0} に切り替えました	Switched to {0}
+{0} に切り替えました（オフライン）	Switched to {0} (offline)
+{0} でログインしました	Signed in as {0}
+{0} を追加しました	Added {0}
+{0} を削除しました	Removed {0}
+使用中のアカウントは削除できません	You cannot remove the account in use
+Microsoft に接続中…	Connecting to Microsoft…
+Microsoft のログインを始められませんでした	Could not start the Microsoft sign-in
+Microsoft のログインに失敗しました	Microsoft sign-in failed
+時間切れです。もう一度ログインしてください	Timed out. Please sign in again
+もう一度ログインしてください	Please sign in again
+Xbox Live のログインに失敗しました	Xbox Live sign-in failed
+この Microsoft アカウントには Xbox のプロフィールがありません	This Microsoft account has no Xbox profile
+18歳未満のアカウントはファミリーに追加が必要です	Accounts under 18 must be added to a family
+XSTS のログインに失敗しました	XSTS sign-in failed
+このアプリは Minecraft のログイン許可がまだありません	This app is not yet allowed to sign in to Minecraft
+Minecraft のログインに失敗しました	Minecraft sign-in failed
+このアカウントは Minecraft Java 版を持っていません	This account does not own Minecraft Java Edition
+接続できませんでした。ネットにつながっているか確認してください	Could not connect. Check your internet connection
+名前は英数字と _ の3〜16文字にしてください	Names must be 3–16 letters, digits or _
+クライアント全体の設定	Settings for the whole client
+ロゴ	Logo
+ロゴを出す場所	Where to show the logo
+すべての画面	All screens
+FzClient のメニューだけ	FzClient menus only
+出さない	Hidden
+ロゴの文字色	Logo text color
+鳥の色（白 = 元の色）	Bird color (white = original)
+ロゴの大きさ	Logo size
+カテゴリの位置	Category position
+上（横並び）	Top (tabs)
+パーティ	Party
+ギルド	Guild
+個人	DMs
+見た目・タブ・チャットヘッド	Look, tabs & chat heads
+FzClient のチャット表示を使う（OFF = いつもの表示）	Use the FzClient chat box (OFF = vanilla)
+チャットを開いた時にタブを出す（すべて / パーティ / ギルド / 個人）	Show tabs when the chat is open (All / Party / Guild / DMs)
+発言の左にスキンの顔を出す	Show the sender's skin face
+背景の形	Background shape
+行ごと	Per line
+まとめて1枚	One panel
+角の丸み（まとめて1枚の時）	Corner roundness (one panel)
+行の高さ	Line height
+文字に影を付ける	Text shadow
+ショートカット（「略語=送る文」で書く。略語だけ打って Enter で置き換え）	Shortcuts (write "short=text"; type the short word and press Enter)
+ショートカットを使う	Use shortcuts
+ショートカット 1	Shortcut 1
+ショートカット 2	Shortcut 2
+ショートカット 3	Shortcut 3
+ショートカット 4	Shortcut 4
+ショートカット 5	Shortcut 5
+ショートカット 6	Shortcut 6
+鉄・金・エメラルド・ダイヤ・ブロック以外を捨てないようにする	Only lets you drop iron, gold, emeralds, diamonds and blocks
+Bed Wars の時だけ（スコアボードで判定）	Only in Bed Wars (detected from the scoreboard)
+捨ててもいいもの	Allowed to drop
+鉄インゴット	Iron ingots
+金インゴット	Gold ingots
+エメラルド	Emeralds
+ダイヤモンド	Diamonds
+ブロック（羊毛・粘土・エンドストーンなど）	Blocks (wool, clay, end stone...)
+そのほか	Other
+Alt を押している間は何でも捨てられる	Hold Alt to drop anything
+止めた時に画面に知らせる	Show a notice when a drop is stopped
+ドロップ保護: このアイテムは捨てられません（Alt を押しながらなら捨てられます）	Drop Protection: this item can't be dropped (hold Alt to drop it)
+タブで送り先も変える（パーティ = /pc、ギルド = /gc、個人 = /r）	Tabs also choose where you send (Party = /pc, Guild = /gc, DMs = /r)
+空の下半分（地平線より下）も表示する。カスタムスカイの下が切れる時に	Also show the sky below the horizon (when a custom sky is cut off at the bottom)
+リキッドグラス	Liquid glass
+クラシック	Classic
+ダッシュボード	Dashboard
+‹ ホーム	‹ Home
+表示	Show
+最近の変更	Recent changes
+まだ変更はありません	No changes yet
+まとめて変更	Bulk change
+{0} 件	{0} changes
+たった今	just now
+{0}分前	{0} min ago
+{0}時間前	{0} h ago
+{0}日前	{0} days ago
+待機ロビーで同時に入ってきた人たち（パーティっぽい）をチャットで知らせる	Tells you in chat when several players join a waiting lobby at once (likely a party)
+同時とみなす間隔	Joins closer than this count as together
+知らせる人数	Minimum group size
+人以上	+ players
+見つけた時に音を鳴らす	Play a sound when one is found
+パーティかも（{0}人・このロビー{1}組目）: 	Possible party ({0} players, #{1} in this lobby): 
+パーティかも（{0}人・このロビー{1}組目）	Possible party ({0} players, #{1} in this lobby)
+{0}Qパーティの可能性	Possible {0}Q party
+待機ロビーで見つけたパーティの数（2Q・3Q・4Q…）	Parties found in the waiting lobby (2Q, 3Q, 4Q...)
+なし	none
+{0}Qパーティが抜けました	A {0}Q party left
+{0}Qパーティから{1}人抜けました（今は{2}人）	{1} left the {0}Q party (now {2})
+入ってくる時の間隔（これより近いと同時）	Join gap (closer joins count as together)
+抜ける時の間隔（これより近いと同時）	Quit gap (closer quits count as together)
+明るくする方法	How to brighten
+ガンマ（影MODなし向け）	Gamma (without shaders)
+暗視の効果（影MODでも効く）	Night Vision effect (works with shaders)
+明るさ（ガンマの時）	Brightness (gamma mode)
+タイトル画面のFPS上限（常に有効・260で無制限）	Title screen FPS limit (always on, 260 = unlimited)
+自分が FzClient を使っていることをほかの FzClient ユーザーに見せる	Let other FzClient users see that you use FzClient
+ほかの FzClient ユーザーの名前の横にもロゴを出す	Show the logo next to other FzClient users too
+FzClient ユーザー（自分・ほかの人）の名前の横にアイコンを表示	Show the FzClient icon next to FzClient users (you and others)
+FzClient ユーザーの名前にアイコン（自分は F5 で見える）	FzClient icon on FzClient users' name tags (yours in F5)
+フレンド	Friend
+オンライン	Online
+招待する	Invite
+メンバー一覧	List members
+全員を自分のロビーへ	Warp everyone to you
+抜ける	Leave
+解散する	Disband
+追い出す	Kick
+オフラインの人を追い出す	Kick offline members
+リーダーを渡す	Transfer leader
+昇格する	Promote
+降格する	Demote
+招待を受ける	Accept invite
+パーティチャットで送る	Send in party chat
+投票を作る	Start a poll
+チャットをミュート	Mute chat
+フレンド申請	Send request
+申請を承認	Accept request
+申請を拒否	Deny request
+フレンドから外す	Remove friend
+フレンド一覧	Friend list
+届いている申請	Incoming requests
+ベストフレンドにする	Mark as best friend
+ニックネームを付ける	Set nickname
+参加・退出の通知	Join/leave alerts
+全員外す	Remove all
+オンラインのメンバー	Online members
+ギルドチャットで送る	Send in guild chat
+オフィサーチャットで送る	Send in officer chat
+オンラインの全員とパーティ	Party with online members
+ミュート	Mute
+ミュート解除	Unmute
+メンバーの情報	Member info
+ギルドの情報	Guild info
+今日のメッセージ	Message of the day
+今日のトップ	Today's top
+ギルドクエスト	Guild quest
+ログ	Log
+無視する	Ignore
+無視をやめる	Stop ignoring
+無視している人	Ignored players
+全体チャット	All chat
+パーティチャット	Party chat
+ギルドチャット	Guild chat
+オフィサーチャット	Officer chat
+Bed Wars ソロ	Bed Wars Solo
+Bed Wars ダブルス	Bed Wars Doubles
+SkyWars ソロ ノーマル	SkyWars Solo Normal
+SkyWars ソロ インセイン	SkyWars Solo Insane
+SkyWars チーム ノーマル	SkyWars Teams Normal
+SkyWars チーム インセイン	SkyWars Teams Insane
+Build Battle ソロ	Build Battle Solo
+メインロビー	Main lobby
+マント・翼・頭のアクセ・オーラ。ほかの FzClient ユーザーにも見えます	Capes, wings, head accessories and auras. Other FzClient users see them too
+マント	Cape
+自作（PNG）	Custom (PNG)
+オーロラ	Aurora
+ミッドナイト	Midnight
+サクラ	Sakura
+自作: .minecraft/config/fzclient-cape.png（横:縦 = 2:1、例 64×32）	Custom: .minecraft/config/fzclient-cape.png (2:1, e.g. 64×32)
+翼	Wings
+ドラゴン	Dragon
+天使	Angel
+翼の色	Wing color
+翼の大きさ	Wing size
+頭	Head
+頭のアクセ	Head accessory
+シルクハット	Top hat
+王冠	Crown
+ヘイロー	Halo
+猫耳	Cat ears
+頭のアクセの色	Accessory color
+オーラ	Aura
+ハート	Hearts
+炎	Flames
+魔法	Magic
+音符	Notes
+雪	Snow
+虹	Rainbow
+ほかの FzClient ユーザーのコスメを表示	Show other FzClient users' cosmetics
+ほかの人の自作マントも表示	Show other people's custom capes
+ワールドに入ると	Join a world
+プレビューが出ます	to see the preview
+プレビュー	Preview
+PNG を読めませんでした	Couldn't read the PNG
+横:縦 = 2:1 の画像にしてください（64×32 など）	Use a 2:1 image (e.g. 64×32)
+config/fzclient-cape.png がありません	config/fzclient-cape.png not found
+ファイルが大きすぎます（256KB まで）	File too large (256 KB max)
+ドラッグで回転	Drag to turn
+フォルダを開く	Open folder
+自作	Custom
+マントとオーラ。ほかの FzClient ユーザーにも見えます	Capes and auras. Other FzClient users see them too
+設定・MOD	Settings & mods
+マント・オーラ	Capes & auras
+ファイルが大きすぎます（8MB まで）	File too large (8 MB max)
+画像を読めませんでした（PNG / JPG）	Couldn't read the picture (PNG / JPG)

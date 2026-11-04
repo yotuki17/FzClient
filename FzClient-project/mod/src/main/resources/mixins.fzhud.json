@@ -1,0 +1,22 @@
+{
+  "package": "dev.fzkc.fzhud.mixin",
+  "refmap": "mixins.fzhud.refmap.json",
+  "minVersion": "0.7",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinEntity",
+    "MixinEntityLivingBase",
+    "MixinEntityRenderer",
+    "MixinGuiMainMenu",
+    "MixinItemRenderer",
+    "MixinMinecraft",
+    "MixinModelBiped",
+    "MixinRenderEntityItem",
+    "MixinRenderGlobal",
+    "MixinSplashProgress",
+    "MixinSplashThread",
+    "MixinEntityPlayerSP",
+    "MixinPlayerControllerMP",
+    "MixinAbstractClientPlayer"
+  ]
+}

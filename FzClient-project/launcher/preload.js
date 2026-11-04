@@ -1,0 +1,81 @@
+'use strict';
+// The only bridge between the page and the launcher: a fixed list of calls, nothing else.
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('fz', {
+  win: {
+    min: () => ipcRenderer.send('win:min'),
+    max: () => ipcRenderer.send('win:max'),
+    close: () => ipcRenderer.send('win:close'),
+  },
+  info: () => ipcRenderer.invoke('info'),
+  settings: {
+    get: () => ipcRenderer.invoke('settings:get'),
+    set: patch => ipcRenderer.invoke('settings:set', patch),
+  },
+  open: {
+    folder: which => ipcRenderer.invoke('open:folder', which),
+    url: url => ipcRenderer.invoke('open:url', url),
+  },
+  pickFolder: () => ipcRenderer.invoke('pick:folder'),
+  mods: {
+    list: () => ipcRenderer.invoke('mods:list'),
+    toggle: file => ipcRenderer.invoke('mods:toggle', file),
+    add: () => ipcRenderer.invoke('mods:add'),
+    installed: checkUpdates => ipcRenderer.invoke('mods:installed', checkUpdates),
+    search: (query, offset, src) => ipcRenderer.invoke('mods:search', query, offset, src),
+    installedProjects: src => ipcRenderer.invoke('mods:installedProjects', src),
+    install: (projectId, src) => ipcRenderer.invoke('mods:install', projectId, src),
+    update: files => ipcRenderer.invoke('mods:update', files),
+    remove: file => ipcRenderer.invoke('mods:remove', file),
+    onAutoUpdated: cb => ipcRenderer.on('mods:autoUpdated', (e, n) => cb(n)),
+  },
+  opt: {
+    status: () => ipcRenderer.invoke('opt:status'),
+    recommended: nvidia => ipcRenderer.invoke('opt:recommended', nvidia),
+    change: want => ipcRenderer.invoke('opt:change', want),
+    flushDns: () => ipcRenderer.invoke('opt:flushDns'),
+    debug: () => ipcRenderer.invoke('opt:debug'),
+    measure: seconds => ipcRenderer.invoke('opt:measure', seconds),
+  },
+  skins: {
+    list: () => ipcRenderer.invoke('skins:list'),
+    current: () => ipcRenderer.invoke('skins:current'),
+    addFile: variant => ipcRenderer.invoke('skins:addFile', variant),
+    addData: (base64, name, variant) => ipcRenderer.invoke('skins:addData', base64, name, variant),
+    addPlayer: name => ipcRenderer.invoke('skins:addPlayer', name),
+    update: (id, patch) => ipcRenderer.invoke('skins:update', id, patch),
+    remove: id => ipcRenderer.invoke('skins:remove', id),
+    apply: (id, variant) => ipcRenderer.invoke('skins:apply', id, variant),
+    reset: () => ipcRenderer.invoke('skins:reset'),
+    cape: id => ipcRenderer.invoke('skins:cape', id),
+  },
+  shots: {
+    list: () => ipcRenderer.invoke('shots:list'),
+    copy: file => ipcRenderer.invoke('shots:copy', file),
+    reveal: file => ipcRenderer.invoke('shots:reveal', file),
+    remove: file => ipcRenderer.invoke('shots:remove', file),
+  },
+  accounts: {
+    list: () => ipcRenderer.invoke('accounts:list'),
+    select: uuid => ipcRenderer.invoke('accounts:select', uuid),
+    remove: uuid => ipcRenderer.invoke('accounts:remove', uuid),
+    offline: name => ipcRenderer.invoke('accounts:offline', name),
+    msaStart: () => ipcRenderer.invoke('accounts:msaStart'),
+    msaCancel: () => ipcRenderer.invoke('accounts:msaCancel'),
+    onMsaDone: cb => ipcRenderer.on('accounts:msaDone', (e, d) => cb(d)),
+  },
+  update: {
+    status: () => ipcRenderer.invoke('update:status'),
+    install: () => ipcRenderer.invoke('update:install'),
+    onLauncher: cb => ipcRenderer.on('update:launcher', (e, d) => cb(d)),
+    onMod: cb => ipcRenderer.on('update:mod', (e, d) => cb(d)),
+  },
+  game: {
+    launch: () => ipcRenderer.invoke('game:launch'),
+    kill: () => ipcRenderer.invoke('game:kill'),
+    onProgress: cb => ipcRenderer.on('game:progress', (e, d) => cb(d)),
+    onState: cb => ipcRenderer.on('game:state', (e, d) => cb(d)),
+    onLog: cb => ipcRenderer.on('game:log', (e, d) => cb(d)),
+  },
+});
