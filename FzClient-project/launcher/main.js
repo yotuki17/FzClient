@@ -115,7 +115,7 @@ ipcMain.handle('mods:list', () => {
 });
 ipcMain.handle('mods:toggle', (e, file) => {
   const dir = path.join(dirs().gameDir, 'mods');
-  if (file.includes('/') || file.includes('\\')) return;
+  if (!plainFile(file)) throw new Error('bad file');
   const from = path.join(dir, file);
   const to = /\.disabled$/i.test(file) ? from.replace(/\.disabled$/i, '') : from + '.disabled';
   fs.renameSync(from, to);
@@ -295,7 +295,7 @@ async function launchGame() {
   let lastSent = 0;
   const child = await game.launch({
     account: acc, memoryMb: s.memoryMb, width: s.width, height: s.height, fullscreen: s.fullscreen,
-    jvmArgs: s.jvmArgs, bundledJar: mod.jar,
+    jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
     optimizeJvm: !!s.optimizeJvm, jvmExtras: s.optimizeJvm ? optimize.jvmExtras() : [], highPriority: s.gamePriority === 'high',
     onProgress: (stage, done, total, bytesDone, bytesTotal) => {
       const now = Date.now();
@@ -313,9 +313,12 @@ async function launchGame() {
     send('game:state', { running: false, code });
     if (win && !win.isDestroyed()) { win.show(); win.restore(); }
   });
-  // hide the launcher once the game window is up
-  if (s.afterLaunch === 'close') setTimeout(() => win.hide(), 4000);
-  else if (s.afterLaunch === 'minimize') setTimeout(() => win.minimize(), 4000);
+  // hide the launcher once the game window is up (not when the game already quit, or the launcher would stay hidden)
+  setTimeout(() => {
+    if (running !== child || !win || win.isDestroyed()) return;
+    if (s.afterLaunch === 'close') win.hide();
+    else if (s.afterLaunch === 'minimize') win.minimize();
+  }, 4000);
   return true;
 }
 ipcMain.handle('game:kill', () => { if (running) running.kill(); });

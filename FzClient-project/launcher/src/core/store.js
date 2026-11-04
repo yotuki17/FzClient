@@ -51,6 +51,8 @@ const accounts = {
       const text = safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(raw) : raw.toString('utf8');
       return JSON.parse(text);
     } catch {
+      // unreadable (e.g. Windows can no longer decrypt it): keep a copy before the next save overwrites it
+      try { if (fs.existsSync(f) && !fs.existsSync(f + '.bak')) fs.copyFileSync(f, f + '.bak'); } catch { /* ignore */ }
       return [];
     }
   },

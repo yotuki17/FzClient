@@ -290,7 +290,7 @@ class Game {
       '-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump',
       `-Djava.library.path=${this.nativesDir}`,
       '-Dfml.ignoreInvalidMinecraftCertificates=true', '-Dfml.ignorePatchDiscrepancies=true',
-      '-Dminecraft.launcher.brand=FzClient', '-Dminecraft.launcher.version=1.0.0',
+      '-Dminecraft.launcher.brand=FzClient', `-Dminecraft.launcher.version=${opts.launcherVersion || '1.0.0'}`,
       ...(opts.jvmExtras || []),
       ...(opts.jvmArgs ? opts.jvmArgs.split(/\s+/).filter(Boolean) : []),
       '-cp', this.buildClasspath(vanilla, forge).join(';'),
