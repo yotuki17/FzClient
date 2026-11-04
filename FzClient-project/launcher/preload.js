@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('fz', {
     install: (projectId, src) => ipcRenderer.invoke('mods:install', projectId, src),
     update: files => ipcRenderer.invoke('mods:update', files),
     remove: file => ipcRenderer.invoke('mods:remove', file),
+    versions: file => ipcRenderer.invoke('mods:versions', file),
+    setVersion: (file, versionId, pin) => ipcRenderer.invoke('mods:setVersion', file, versionId, pin),
+    pin: (file, on) => ipcRenderer.invoke('mods:pin', file, on),
     onAutoUpdated: cb => ipcRenderer.on('mods:autoUpdated', (e, n) => cb(n)),
   },
   opt: {

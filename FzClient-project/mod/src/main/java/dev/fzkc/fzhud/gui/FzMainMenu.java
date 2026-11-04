@@ -78,35 +78,52 @@ public class FzMainMenu extends FzScreen {
     private float favX() { return 14; }
     private float favY() { return Math.max(logoY() + 10, vh * 0.30f); }
 
-    // ---- the two quick cards on the right, mirroring the favourites: FzClient (settings / MODS) and Cosmetics
-    private static final float QH = 40;
-    private float quickW() { return FAV_W; }
-    private float quickX() { return vw - 14 - FAV_W; }
-    private float quickY(int i) { return favY() + 16 + i * (QH + 6); }
+    // ---- the FzClient shortcuts on the right: the same rows as the favourites, mirrored (header, size, spacing)
+    private static final String[][] QUICK = {
+            // id, icon, title, subtitle
+            {"quick_fz", "menu_fz", "設定・MOD", "FzClient の機能"},
+            {"quick_cos", "menu_account", "コスメティック", "マント・オーラ"},
+            {"quick_acc", "menu_multi", "アカウント", "アカウントを切り替え"},
+    };
+    private static final int[] QUICK_TINT = {CYAN, MAGENTA, 0xFFD84A};
+    private float quickX() { return vw - favX() - FAV_W; }
+    private float quickY(int i) { return favRowY(i); }
 
     private void drawQuick(int mx, int my, float o) {
-        R.text("FzClient", quickX() + 2, favY(), R.alpha(Ui.accent, o));
-        quickCard(0, "quick_fz", "menu_fz", "FzClient", "設定・MOD", 0x5CE1E6, mx, my, o);
-        quickCard(1, "quick_cos", "menu_account", "Cosmetics", "マント・オーラ", 0xE83ECE, mx, my, o);
+        String head = "FzClient";
+        R.text(head, quickX() + FAV_W - 2 - R.width(head), favY(), R.alpha(Ui.accent, o));
+        for (int i = 0; i < QUICK.length; i++) quickCard(i, mx, my, o);
     }
 
-    private void quickCard(int i, String id, String icon, String title, String sub, int tint, int mx, int my, float o) {
-        float w = quickW(), y = quickY(i);
-        boolean over = Ui.inside(mx, my, quickX(), y, w, QH);
-        float h = anim(id).update(over ? 1 : 0);
+    private void quickCard(int i, int mx, int my, float o) {
+        String[] q = QUICK[i];
+        int tint = QUICK_TINT[i];
+        float y = quickY(i);
+        float h = anim(q[0]).update(Ui.inside(mx, my, quickX(), y, FAV_W, FAV_H) ? 1 : 0);
         float x = quickX() - h * 2f;   // slides a little towards the middle, like the favourites do
-        int a = (int) (0x1C + 0x1C * h);
-        // dark card with a wash of its colour and a coloured bar on the left
-        R.rounded(x, y, w, QH, 5f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, h), o));
-        R.rounded(x, y, w, QH, 5f, R.alpha((a << 24) | tint, o));
-        R.roundedOutline(x, y, w, QH, 5f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, 0xFF000000 | tint, h), o));
-        R.rounded(x + 1, y + 8, 2, QH - 16, 1f, R.alpha(0xFF000000 | tint, o));
-        // icon in a round badge
-        R.rounded(x + 9, y + 9, 22, 22, 11f, R.alpha(0x38000000 | (tint & 0xFFFFFF), o));
-        Icons.draw(icon, x + 13, y + 13, 14, R.alpha(0xFF000000 | tint, o));
-        R.text(title, x + 38, y + 10, R.alpha(Ui.text, o));
-        R.text(Ui.trim(dev.fzkc.fzhud.util.Lang.t(sub), w - 56), x + 38, y + 22, R.alpha(Ui.MUTED, o));
-        R.text("›", x + w - 12 + h * 2f, y + 16, R.alpha(R.lerpColor(0xFF5A666A, 0xFF000000 | tint, h), o));
+        card(x, y, FAV_W, FAV_H, h, 0xFF000000 | tint, o);
+        // icon in a round badge where the favourites have their server icon
+        R.rounded(x + 4, y + 4, 22, 22, 11f, R.alpha(0x38000000 | tint, o));
+        Icons.draw(q[1], x + 8, y + 8, 14, R.alpha(0xFF000000 | tint, o));
+        R.text(q[2], x + 31, y + 5, R.alpha(Ui.text, o));
+        R.text(Ui.trim(dev.fzkc.fzhud.util.Lang.t(q[3]), FAV_W - 48), x + 31, y + 16, R.alpha(Ui.MUTED, o));
+        R.text("›", x + FAV_W - 10 + h * 2f, y + 11, R.alpha(R.lerpColor(0xFF5A666A, 0xFF000000 | tint, h), o));
+    }
+
+    /** Title screen buttons in liquid glass, when that style is picked and switched on for the title screen. */
+    private static boolean glass() {
+        return Glass.on() && dev.fzkc.fzhud.Modules.uiMenuGlass.get();
+    }
+
+    /** A dark card (favourites, shortcuts, small buttons) or a glass one; edge colour shows on hover. */
+    private static void card(float x, float y, float w, float hgt, float hover, int edge, float o) {
+        if (glass()) {
+            Glass.surface(x, y, w, hgt, Ui.rad(6f), o, hover, 0f, 0.7f + hover * 0.3f);
+            if (hover > 0.01f) R.roundedOutline(x, y, w, hgt, Ui.rad(6f), 1f, R.alpha(R.alpha(edge, hover * 0.8f), o));
+            return;
+        }
+        R.rounded(x, y, w, hgt, 5f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, hover), o));
+        R.roundedOutline(x, y, w, hgt, 5f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, edge, hover), o));
     }
 
     private float favRowY(int i) { return favY() + 16 + i * (FAV_H + 5); }
@@ -158,7 +175,8 @@ public class FzMainMenu extends FzScreen {
         float x = favX(), y = favY();
         R.text("★ お気に入り", x + 2, y, R.alpha(0xFFFFD84A, o));
         if (favs.isEmpty()) {
-            R.rounded(x, y + 14, FAV_W, 30, 4f, R.alpha(0x90101A1E, o));
+            if (glass()) Glass.surface(x, y + 14, FAV_W, 30, Ui.rad(6f), o, 0f, 0f, 0.6f);
+            else R.rounded(x, y + 14, FAV_W, 30, 4f, R.alpha(0x90101A1E, o));
             R.text(Ui.trim("マルチプレイの一覧で ☆ を", FAV_W - 12), x + 6, y + 19, R.alpha(Ui.MUTED, o));
             R.text(Ui.trim("押すとここに出ます", FAV_W - 12), x + 6, y + 30, R.alpha(Ui.MUTED, o));
             return;
@@ -173,8 +191,7 @@ public class FzMainMenu extends FzScreen {
             net.minecraft.client.multiplayer.ServerData sd = favs.get(i);
             float ry = favRowY(i);
             float h = favAnims[i].update(Ui.inside(mx, my, x, ry, FAV_W, FAV_H) ? 1 : 0);
-            R.rounded(x + h * 2, ry, FAV_W, FAV_H, 5f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, h), o));
-            R.roundedOutline(x + h * 2, ry, FAV_W, FAV_H, 5f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, 0xFFFFD84A, h), o));
+            card(x + h * 2, ry, FAV_W, FAV_H, h, 0xFFFFD84A, o);
             // icon
             ResourceLocation icon = dev.fzkc.fzhud.util.Favorites.icon(sd);
             image(icon != null ? icon : UNKNOWN_SERVER, x + h * 2 + 4, ry + 4, 22, 22, 0xFFFFFF, o);
@@ -532,7 +549,13 @@ public class FzMainMenu extends FzScreen {
         boolean over = Ui.inside(mx, my, x, y, BW, BH);
         float h = anim(id).update(over ? 1 : 0);
         float lift = h * 1.5f;
-        if (primary) {
+        if (glass()) {
+            // primary = the cyan-tinted piece of glass, like the primary buttons in the FzClient menus
+            Glass.surface(x, y - lift, BW, BH, Ui.rad(Math.min(BH / 2f, 9f)), o, primary ? 0.5f + h * 0.5f : h,
+                    primary ? 0.85f + h * 0.15f : h * 0.22f, 1f);
+            Icons.draw(icon, x + 10, y - lift + 6, 12, R.alpha(primary ? 0xFFFFFFFF : R.lerpColor(0xFFC9D6D9, Ui.accent, h), o));
+            R.textCentered(label, x + BW / 2f, y - lift + 8, R.alpha(Ui.text, o));
+        } else if (primary) {
             R.rounded(x, y - lift, BW, BH, 4f, R.alpha(R.lerpColor(0xFF4FCBD0, 0xFF72EEF3, h), o));
             R.roundedOutline(x, y - lift, BW, BH, 4f, 1f, R.alpha(R.lerpColor(0x40FFFFFF, 0xFFFFFFFF, h), o));
             Icons.draw(icon, x + 10, y - lift + 6, 12, R.alpha(0xFF071012, o));
@@ -552,8 +575,11 @@ public class FzMainMenu extends FzScreen {
         float x = smallX(i), y = smallY(), w = smallW();
         boolean over = Ui.inside(mx, my, x, y, w, SBH);
         float h = anim(id).update(over ? 1 : 0);
-        R.rounded(x, y, w, SBH, 4f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, h), o));
-        R.roundedOutline(x, y, w, SBH, 4f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, Ui.accent, h), o));
+        if (glass()) Glass.surface(x, y, w, SBH, Ui.rad(Math.min(SBH / 2f, 9f)), o, h, h * 0.22f, 1f);
+        else {
+            R.rounded(x, y, w, SBH, 4f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, h), o));
+            R.roundedOutline(x, y, w, SBH, 4f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, Ui.accent, h), o));
+        }
         float tw = 11 + 4 + R.width(label);
         float sx = x + (w - tw) / 2f;
         Icons.draw(icon, sx, y + 5.5f, 11, R.alpha(R.lerpColor(0xFF9DB4B8, Ui.accent, h), o));
@@ -570,10 +596,12 @@ public class FzMainMenu extends FzScreen {
             mc.displayGuiScreen(new GuiSelectWorld(this));
         } else if (Ui.inside(mx, my, colX(), rowY(1), BW, BH)) {
             mc.displayGuiScreen(new GuiMultiplayer(this));
-        } else if (Ui.inside(mx, my, quickX() - 2, quickY(0), quickW() + 2, QH)) {
+        } else if (Ui.inside(mx, my, quickX() - 2, quickY(0), FAV_W + 2, FAV_H)) {
             mc.displayGuiScreen(new ModsScreen(this));
-        } else if (Ui.inside(mx, my, quickX() - 2, quickY(1), quickW() + 2, QH)) {
+        } else if (Ui.inside(mx, my, quickX() - 2, quickY(1), FAV_W + 2, FAV_H)) {
             mc.displayGuiScreen(new CosmeticsScreen(this));
+        } else if (Ui.inside(mx, my, quickX() - 2, quickY(2), FAV_W + 2, FAV_H)) {
+            mc.displayGuiScreen(new AccountScreen(this));
         } else if (Ui.inside(mx, my, smallX(0), smallY(), smallW(), SBH)) {
             mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings));
         } else if (Ui.inside(mx, my, smallX(1), smallY(), smallW(), SBH)) {

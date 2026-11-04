@@ -307,3 +307,18 @@ input[type=range] { flex: 1; accent-color: var(--cyan); }
 .optdebug { margin-top: 10px; color: var(--muted); font-size: 12px; }
 .optdebug summary { cursor: pointer; }
 .optdebug pre { white-space: pre-wrap; word-break: break-all; max-height: 320px; overflow: auto; padding: 10px; border-radius: 10px; background: rgba(0,0,0,.35); border: 1px solid var(--line); color: var(--text); user-select: text; font-size: 11px; }
+
+/* ---------- one mod's details (click a mod in the list) */
+.list .card.clickable { cursor: pointer; transition: border-color .2s; }
+.list .card.clickable:hover { border-color: rgba(92,225,230,.45); }
+.card .pin { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: rgba(255,216,74,.16); color: #ffd84a; margin-left: 6px; font-weight: 400; }
+.md-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.md-title .ico { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; flex: none; }
+.md-title .ico.blank { display: grid; place-items: center; background: rgba(255,255,255,.06); color: var(--muted); font-size: 13px; }
+#mdName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.md-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.md-row > div { flex: 1; display: flex; flex-direction: column; }
+.md-row small { color: var(--muted); font-size: 11px; }
+#mdVer { flex: 1; min-width: 0; height: 34px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--line); background: rgba(5,10,12,.6); color: var(--text); outline: none; }
+#mdVer:focus { border-color: var(--cyan); }
+.md-actions { display: flex; gap: 8px; flex-wrap: wrap; }

@@ -161,6 +161,26 @@ async function latestVersion(projectId) {
   return (list || []).find(fits) || null;
 }
 
+/** Every real Forge 1.8.9 version of a project, newest first: [{ id, number, date, type }] */
+async function versions(projectId) {
+  const list = await api(`/project/${encodeURIComponent(projectId)}/version?loaders=${q([LOADER])}&game_versions=${q([MC])}`);
+  return (list || []).filter(fits).map(v => ({ id: v.id, number: v.version_number, date: v.date_published, type: v.version_type }));
+}
+
+/** Replaces the installed jar `file` by another version of the same project (newer or older). */
+async function setVersion(modsDir, file, versionId) {
+  const j = jars(modsDir).find(x => x.file === file);
+  const k = j && known.get(hashOf(j));
+  if (!k) throw new Error('この MOD は Modrinth のものではありません');
+  const v = await api(`/version/${encodeURIComponent(versionId)}`);
+  if (!v || v.project_id !== k.project.id || !fits(v)) throw new Error('この MOD の Forge 1.8.9 版ではありません');
+  const name = await downloadVersion(v, modsDir, j.enabled);
+  if (name !== j.file) {
+    try { await shell.trashItem(j.full); } catch { fs.renameSync(j.full, j.full + '.old'); }
+  }
+  return name;
+}
+
 // project id -> true / false (has a real Forge 1.8.9 build), for the whole launcher session
 const compat = new Map();
 async function compatible(projectId) {
@@ -260,4 +280,4 @@ function knownFiles(modsDir) {
   return jars(modsDir).filter(j => known.get(hashOf(j))).map(j => j.file.replace(/\.disabled$/i, ''));
 }
 
-module.exports = { knownFiles,  installed, install, update, search, installedProjects, fits118, safeName, sha1, jars, OWN };
+module.exports = { knownFiles,  installed, install, update, search, installedProjects, versions, setVersion, fits118, safeName, sha1, jars, OWN };

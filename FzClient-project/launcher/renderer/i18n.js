@@ -1,6 +1,29 @@
 'use strict';
 // Japanese is the source language. EN maps each Japanese string to its English text. {0}, {1} are placeholders.
 const EN = {
+  // one mod's details
+  'NEW：MOD ごとのバージョン選択、タイトル画面のリキッドグラス': 'NEW: pick each mod\'s version, liquid glass title screen',
+  'スキン・マントの切り替え、スクショを見る': 'Skins and capes, screenshot gallery',
+  '有効にする': 'Enabled',
+  'OFF にするとゲームで読み込まれません': 'When off, the game does not load it',
+  '自動で更新する': 'Update automatically',
+  'OFF にすると今のバージョンのまま固定します': 'When off, it stays on this version',
+  'バージョンを選ぶ（古い版に戻すこともできます）': 'Pick a version (you can also go back to an older one)',
+  'この版にする': 'Use this version',
+  'サイトで見る': 'Open page',
+  '設定フォルダを開く': 'Open config folder',
+  '固定': 'Pinned',
+  'いま入っている版': 'installed',
+  '最新': 'latest',
+  'バージョンを読み込み中…': 'Loading versions…',
+  'バージョンを読み込めませんでした': 'Could not load the versions',
+  'ファイル: {0} · {1} KB': 'File: {0} · {1} KB',
+  '{0} を {1} にしました': '{0} is now on {1}',
+  '古い版なので自動更新を止めました': 'It is an older version, so automatic updates are off for it',
+  '{0} は自動で更新しません': '{0} will not be updated automatically',
+  '{0} を自動で更新します': '{0} will be updated automatically',
+  'この版は CurseForge のサイトからしかダウンロードできません': 'This version can only be downloaded from the CurseForge site',
+  'クリックで詳細': 'Click for details',
   // optimize
   '省電力で通信が一瞬止まるのを防ぎます（PC を再起動すると効きます）。': 'Prevents short drops caused by power saving (takes effect after a restart).',
   '詳細（うまくいかないとき）': 'Details (when something does not work)',

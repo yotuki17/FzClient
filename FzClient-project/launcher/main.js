@@ -85,7 +85,8 @@ ipcMain.handle('open:folder', (e, which) => {
   const d = dirs();
   const target = which === 'mods' ? path.join(d.gameDir, 'mods')
     : which === 'logs' ? path.join(d.gameDir, 'logs')
-    : which === 'screenshots' ? path.join(d.gameDir, 'screenshots') : d.gameDir;
+    : which === 'screenshots' ? path.join(d.gameDir, 'screenshots')
+    : which === 'config' ? path.join(d.gameDir, 'config') : d.gameDir;
   fs.mkdirSync(target, { recursive: true });
   return shell.openPath(target);
 });
@@ -132,12 +133,48 @@ ipcMain.handle('mods:add', async () => {
 
 // ---------------------------------------------------------------- Modrinth
 const plainFile = f => typeof f === 'string' && f === path.basename(f) && /\.jar(\.disabled)?$/i.test(f);
-ipcMain.handle('mods:installed', async (e, checkUpdates) => {
-  const opts = { checkUpdates: !!checkUpdates };
-  return curseforge.annotate(await modrinth.installed(modsDir(), opts), modsDir(), opts);
-});
 const SOURCES = { modrinth, curseforge };
 const source = s => SOURCES[s] || modrinth;
+/** "modrinth:<id>" / "curseforge:<id>": a mod's key in settings.modPins (stays the same across versions). */
+const pinKey = m => (m.project ? `${m.source === 'curseforge' ? 'curseforge' : 'modrinth'}:${m.project.id}` : null);
+async function installedMods(checkUpdates) {
+  const opts = { checkUpdates: !!checkUpdates };
+  const list = await curseforge.annotate(await modrinth.installed(modsDir(), opts), modsDir(), opts);
+  const pins = settings.get().modPins || {};
+  return list.map(m => ({ ...m, source: m.source || (m.project ? 'modrinth' : null), pinned: !!pins[pinKey(m)] }));
+}
+async function installedMod(file) {
+  const m = plainFile(file) && (await installedMods(false)).find(x => x.file === file);
+  if (!m) throw new Error('MOD が見つかりません');
+  return m;
+}
+ipcMain.handle('mods:installed', (e, checkUpdates) => installedMods(checkUpdates));
+/** The versions a site has for one installed mod, and which one is installed now. */
+ipcMain.handle('mods:versions', async (e, file) => {
+  const m = await installedMod(file);
+  if (!m.project) throw new Error('手動で追加した MOD はバージョンを選べません');
+  return { current: m.version && m.version.id, list: await source(m.source).versions(m.project.id) };
+});
+/** Installs the chosen version of one mod. An older one is pinned, or the next update would undo it. */
+ipcMain.handle('mods:setVersion', async (e, file, versionId, pin) => {
+  if (running) throw new Error('Minecraft を閉じてから変更してください');
+  const m = await installedMod(file);
+  if (!m.project) throw new Error('手動で追加した MOD はバージョンを選べません');
+  const name = await source(m.source).setVersion(modsDir(), file, String(versionId));
+  if (typeof pin === 'boolean') setPin(m, pin);
+  return name;
+});
+function setPin(m, on) {
+  const pins = { ...(settings.get().modPins || {}) };
+  if (on) pins[pinKey(m)] = true;
+  else delete pins[pinKey(m)];
+  settings.set({ modPins: pins });
+}
+ipcMain.handle('mods:pin', async (e, file, on) => {
+  const m = await installedMod(file);
+  if (!m.project) throw new Error('手動で追加した MOD は自動で更新されません');
+  setPin(m, !!on);
+});
 ipcMain.handle('mods:search', (e, query, offset, src) => source(src).search(String(query || '').slice(0, 100), offset));
 ipcMain.handle('mods:installedProjects', (e, src) => source(src).installedProjects(modsDir()));
 ipcMain.handle('mods:install', (e, projectId, src) => {
@@ -145,8 +182,10 @@ ipcMain.handle('mods:install', (e, projectId, src) => {
   if (!ok.test(String(projectId))) throw new Error('bad project');
   return source(src).install(String(projectId), modsDir());
 });
-/** Modrinth first, then CurseForge for the jars Modrinth does not know. */
+/** Modrinth first, then CurseForge for the jars Modrinth does not know. No list = every mod that is not pinned. */
 async function updateMods(files) {
+  if (!files) files = (await installedMods(false)).filter(m => !m.pinned).map(m => m.file);
+  if (!files.length) return 0;
   const n = await modrinth.update(modsDir(), files);
   let m = 0;
   try {

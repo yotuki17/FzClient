@@ -196,15 +196,19 @@ async function loadMods(checkUpdates) {
   try { mods = await fz.mods.installed(!!checkUpdates); } catch (e) { toast(errText(e), true); return; }
   list.innerHTML = '';
   if (!mods.length) list.appendChild(el('div', 'empty', t('ほかの MOD はまだありません。「MOD を探す」から入れられます。')));
-  const updatable = mods.filter(m => m.update);
+  const updatable = mods.filter(m => m.update && !m.pinned);
   $('modUpdateAll').disabled = !updatable.length;
   $('modUpdateAll').textContent = updatable.length ? t('すべて更新（{0}）', updatable.length) : t('すべて更新');
   for (const m of mods) {
-    const row = el('div', 'card' + (m.enabled ? '' : ' off'));
+    const row = el('div', 'card clickable' + (m.enabled ? '' : ' off'));
+    row.title = t('クリックで詳細');
+    // the buttons in the row do their own thing; anywhere else opens the details
+    row.onclick = ev => { if (!ev.target.closest('button')) openModDetails(m); };
     row.appendChild(icon(m.project && m.project.icon, m.name));
     const ver = m.version ? m.version.number : t('手動で追加');
     const src = m.source === 'curseforge' ? '<span class="src">CurseForge</span>' : '';
-    row.appendChild(el('div', null, `<b>${esc(m.name)}${src}</b><small>${esc(ver)} · ${(m.size / 1024).toFixed(0)} KB</small>`));
+    const pin = m.pinned ? `<span class="pin">${esc(t('固定'))}</span>` : '';
+    row.appendChild(el('div', null, `<b>${esc(m.name)}${src}${pin}</b><small>${esc(ver)} · ${(m.size / 1024).toFixed(0)} KB</small>`));
     if (m.update) {
       row.appendChild(el('span', 'tag', esc(t('更新あり {0}', m.update.number))));
       const up = el('button', 'btn mini primary', esc(t('更新')));
@@ -225,6 +229,136 @@ async function loadMods(checkUpdates) {
     list.appendChild(row);
   }
 }
+
+// ---------------------------------------------------------------- one mod's details
+let mdMod = null;      // the mod shown in the dialog
+let mdVersions = [];   // its versions on the site, newest first
+
+function modPage(m) {
+  if (!m.project) return '';
+  if (m.project.url) return m.project.url;
+  return m.source === 'curseforge' ? '' : `https://modrinth.com/mod/${encodeURIComponent(m.project.slug || m.project.id)}`;
+}
+
+function fillModDetails(m) {
+  mdMod = m;
+  const ico = $('mdIcon');
+  ico.innerHTML = '';
+  ico.appendChild(icon(m.project && m.project.icon, m.name));
+  $('mdName').textContent = m.name;
+  const from = m.source === 'curseforge' ? 'CurseForge' : m.source === 'modrinth' ? 'Modrinth' : t('手動で追加');
+  $('mdMeta').textContent = `${from} · ${m.version ? m.version.number : ''}${m.version ? ' · ' : ''}`
+    + t('ファイル: {0} · {1} KB', m.file.replace(/\.disabled$/i, ''), (m.size / 1024).toFixed(0));
+  $('mdOn').classList.toggle('on', m.enabled);
+  const site = !!m.project;
+  $('mdAutoRow').style.display = site ? '' : 'none';
+  $('mdVerSec').style.display = site ? '' : 'none';
+  $('mdAuto').classList.toggle('on', !m.pinned);
+  $('mdPage').style.display = modPage(m) ? '' : 'none';
+  $('mdDel').classList.remove('sure');
+  $('mdDel').textContent = t('削除');
+}
+
+async function loadModVersions(m) {
+  const sel = $('mdVer');
+  sel.innerHTML = `<option>${esc(t('バージョンを読み込み中…'))}</option>`;
+  sel.disabled = true;
+  $('mdVerApply').disabled = true;
+  mdVersions = [];
+  try {
+    const r = await fz.mods.versions(m.file);
+    if (mdMod !== m) return;   // another mod was opened meanwhile
+    mdVersions = r.list;
+    sel.innerHTML = '';
+    r.list.forEach((v, i) => {
+      const tags = [i === 0 ? t('最新') : '', v.id === r.current ? t('いま入っている版') : '', v.type !== 'release' ? v.type : '']
+        .filter(Boolean).join(', ');
+      const day = v.date ? new Date(v.date).toLocaleDateString() : '';
+      const o = el('option', null, esc(`${v.number}${tags ? `（${tags}）` : ''}  ${day}`));
+      o.value = v.id;
+      if (v.id === r.current) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.disabled = !r.list.length;
+    $('mdVerApply').disabled = !r.list.length;
+  } catch (e) {
+    if (mdMod !== m) return;
+    sel.innerHTML = `<option>${esc(t('バージョンを読み込めませんでした'))}</option>`;
+    toast(errText(e), true);
+  }
+}
+
+function openModDetails(m) {
+  fillModDetails(m);
+  $('modModal').classList.add('on');
+  if (m.project) loadModVersions(m);
+}
+
+/** Re-reads the list and shows the (possibly renamed) jar again in the dialog. */
+async function refreshModDetails(file) {
+  await loadMods();
+  const list = await fz.mods.installed(false);
+  const m = list.find(x => x.file === file);
+  if (m) fillModDetails(m);
+  else $('modModal').classList.remove('on');
+  return m;
+}
+
+$('mdClose').onclick = () => { $('modModal').classList.remove('on'); mdMod = null; };
+$('modModal').onclick = e => { if (e.target === $('modModal')) $('mdClose').onclick(); };
+$('mdOn').onclick = async () => {
+  const m = mdMod;
+  try {
+    await fz.mods.toggle(m.file);
+    // toggling renames the jar: foo.jar <-> foo.jar.disabled
+    await refreshModDetails(m.enabled ? m.file + '.disabled' : m.file.replace(/\.disabled$/i, ''));
+  } catch (e) { toast(errText(e), true); }
+};
+$('mdAuto').onclick = async () => {
+  const m = mdMod;
+  try {
+    await fz.mods.pin(m.file, !m.pinned);
+    toast(t(m.pinned ? '{0} を自動で更新します' : '{0} は自動で更新しません', m.name));
+    await refreshModDetails(m.file);
+  } catch (e) { toast(errText(e), true); }
+};
+$('mdVerApply').onclick = async () => {
+  const m = mdMod;
+  const id = $('mdVer').value;
+  const v = mdVersions.find(x => x.id === id);
+  if (!v || (m.version && m.version.id === id)) return;
+  if (v.external) { toast(t('この版は CurseForge のサイトからしかダウンロードできません'), true); return; }
+  // anything but the newest would be undone by the next update: pin it; picking the newest unpins
+  const older = mdVersions[0] && mdVersions[0].id !== id;
+  $('mdVerApply').disabled = true;
+  try {
+    const file = await fz.mods.setVersion(m.file, id, older);
+    toast(t('{0} を {1} にしました', m.name, v.number) + (older ? ' — ' + t('古い版なので自動更新を止めました') : ''));
+    const now = await refreshModDetails(file);
+    if (now) loadModVersions(now);
+  } catch (e) {
+    toast(errText(e), true);
+    $('mdVerApply').disabled = false;
+  }
+};
+$('mdPage').onclick = () => { const u = mdMod && modPage(mdMod); if (u) fz.open.url(u); };
+$('mdConfig').onclick = () => fz.open.folder('config');
+$('mdDel').onclick = async () => {
+  const b = $('mdDel'), m = mdMod;
+  if (!b.classList.contains('sure')) {
+    b.classList.add('sure');
+    b.textContent = t('本当?');
+    setTimeout(() => { if (mdMod === m) { b.classList.remove('sure'); b.textContent = t('削除'); } }, 3000);
+    return;
+  }
+  try {
+    await fz.mods.remove(m.file);
+    toast(t('{0} をごみ箱に移しました', m.name));
+    $('modModal').classList.remove('on');
+    mdMod = null;
+    loadMods();
+  } catch (e) { toast(errText(e), true); }
+};
 
 async function runUpdate(files) {
   if (modsBusy) return;

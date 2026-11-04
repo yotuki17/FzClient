@@ -185,6 +185,38 @@ async function install(modId, modsDir) {
   return added;
 }
 
+const RELEASE_TYPE = { 1: 'release', 2: 'beta', 3: 'alpha' };
+
+/** Every real Forge 1.8.9 file of a mod, newest first: [{ id, number, date, type, external }] */
+async function versions(modId) {
+  const r = await api(`/mods/${Number(modId)}/files?gameVersion=${MC}&pageSize=50`);
+  return ((r && r.data) || []).filter(fileFits)
+    .sort((a, b) => Date.parse(b.fileDate) - Date.parse(a.fileDate))
+    .map(f => ({ id: String(f.id), number: f.displayName || f.fileName, date: f.fileDate,
+      type: RELEASE_TYPE[f.releaseType] || 'release', external: !f.downloadUrl }));
+}
+
+/** Replaces the installed jar `file` by another file of the same mod (newer or older). */
+async function setVersion(modsDir, file, fileId) {
+  const name = baseName(file);
+  const e = liveManifest(modsDir)[name];
+  if (!e) throw new Error('この MOD は CurseForge のものではありません');
+  const r = await api(`/mods/${Number(e.modId)}/files/${Number(fileId)}`);
+  const f = r && r.data;
+  if (!f || f.modId !== e.modId || !fileFits(f)) throw new Error('この MOD の Forge 1.8.9 版ではありません');
+  const enabled = fs.existsSync(path.join(modsDir, name));
+  const oldFull = path.join(modsDir, name + (enabled ? '' : '.disabled'));
+  const newName = await downloadFile(f, modsDir, enabled);
+  if (newName !== name) {
+    try { await shell.trashItem(oldFull); } catch { fs.renameSync(oldFull, oldFull + '.old'); }
+  }
+  const cur = readManifest(modsDir);
+  delete cur[name];
+  cur[newName] = { ...e, fileId: f.id, version: f.displayName || f.fileName };
+  writeManifest(modsDir, cur);
+  return newName + (enabled ? '' : '.disabled');
+}
+
 /** Mod ids installed from CurseForge (to mark search results as installed). */
 function installedProjects(modsDir) {
   return Object.values(liveManifest(modsDir)).map(e => String(e.modId));
@@ -252,4 +284,4 @@ async function update(modsDir, files = null, skip = []) {
   return n;
 }
 
-module.exports = { search, install, installedProjects, annotate, update, fileFits };
+module.exports = { search, install, installedProjects, annotate, update, versions, setVersion, fileFits };

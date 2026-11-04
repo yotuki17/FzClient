@@ -187,6 +187,8 @@ public final class Modules {
     public static final HeaderSetting uiHeadStyle = glassUi.add(new HeaderSetting("h_style", "スタイル"));
     /** 0 = liquid glass, 1 = classic (dark flat), 2 = dashboard (light, coloured tiles). */
     public static final ChoiceSetting uiStyle = glassUi.add(new ChoiceSetting("style", "スタイル", 0, "リキッドグラス", "クラシック", "ダッシュボード"));
+    /** The title screen draws its own buttons; this makes them follow the liquid glass style too. */
+    public static final BoolSetting uiMenuGlass = glassUi.add(new BoolSetting("menuglass", "タイトル画面もリキッドグラスにする", true));
     public static final BoolSetting glassBlur = glassUi.add(new BoolSetting("blur", "ゲーム画面をぼかす", true));
     public static final SliderSetting glassBlurAmount = glassUi.add(new SliderSetting("bluramount", "ぼかしの強さ", 2, 20, 1, 8, ""));
     public static final SliderSetting glassTint = glassUi.add(new SliderSetting("tint", "ガラスの明るさ", 0, 100, 5, 50, "%"));

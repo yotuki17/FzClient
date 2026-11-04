@@ -51,12 +51,12 @@
       <div class="status" id="status"></div>
     </div>
     <div class="news">
-      <div class="news-h">FzClient 1.0.7</div>
+      <div class="news-h">FzClient 1.0.8</div>
       <ul>
+        <li>NEW：MOD ごとのバージョン選択、タイトル画面のリキッドグラス</li>
         <li>最適化：Windows・ネットワーク・NVIDIA・Java の設定と FPS 計測</li>
-        <li>スキンの変更・ライブラリ・マントの切り替え</li>
+        <li>スキン・マントの切り替え、スクショを見る</li>
         <li>Modrinth と CurseForge から MOD を探して入れる・自動で更新</li>
-        <li>スクリーンショットをランチャーで見る</li>
         <li>HUD・Keystrokes・CPS・リーチ表示を自由に配置</li>
         <li>ズーム、1.7 アニメーション、ブロックアウトライン</li>
         <li>チャット翻訳・日本語入力・通知音</li>
@@ -227,6 +227,24 @@
     <div class="d-sec">
       <div class="note">オフライン（シングルプレイ用・サーバーには入れません）</div>
       <div class="inline"><input type="text" id="offName" placeholder="名前（英数字 3〜16 文字）" maxlength="16"><button class="btn" id="offAdd">追加</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modModal">
+  <div class="dialog">
+    <div class="d-h"><span class="md-title"><span id="mdIcon"></span><span id="mdName"></span></span><button class="x" id="mdClose">×</button></div>
+    <div class="note" id="mdMeta"></div>
+    <div class="md-row"><div><b>有効にする</b><small>OFF にするとゲームで読み込まれません</small></div><button class="sw" id="mdOn"></button></div>
+    <div class="md-row" id="mdAutoRow"><div><b>自動で更新する</b><small>OFF にすると今のバージョンのまま固定します</small></div><button class="sw" id="mdAuto"></button></div>
+    <div class="d-sec" id="mdVerSec">
+      <div class="note">バージョンを選ぶ（古い版に戻すこともできます）</div>
+      <div class="inline"><select id="mdVer"></select><button class="btn primary" id="mdVerApply">この版にする</button></div>
+    </div>
+    <div class="d-sec md-actions">
+      <button class="btn" id="mdPage">サイトで見る</button>
+      <button class="btn" id="mdConfig">設定フォルダを開く</button>
+      <button class="btn danger" id="mdDel">削除</button>
     </div>
   </div>
 </div>
