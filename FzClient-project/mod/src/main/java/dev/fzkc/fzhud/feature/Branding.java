@@ -166,7 +166,7 @@ public final class Branding {
     private static boolean branded;
 
     /**
-     * Adds "FzClient 1.0.1" to Forge's version lines (main menu corner). FML is loaded before mixins
+     * Adds "FzClient <version>" to Forge's version lines (main menu corner). FML is loaded before mixins
      * can touch it, so this edits its list by reflection when the main menu opens.
      */
     @SuppressWarnings("unchecked")
