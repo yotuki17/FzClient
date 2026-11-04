@@ -1,0 +1,14 @@
+{
+    "ui.confirm": {
+        "category": "master",
+        "sounds": [
+            { "name": "ui/confirm", "volume": 0.8, "stream": false }
+        ]
+    },
+    "ui.cancel": {
+        "category": "master",
+        "sounds": [
+            { "name": "ui/cancel", "volume": 0.8, "stream": false }
+        ]
+    }
+}

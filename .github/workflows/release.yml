@@ -1,0 +1,63 @@
+name: Release
+# Push a tag like v1.0.7 -> builds the mod and the launcher with that version and publishes a GitHub Release
+# with the 5 files the launcher's auto-updater reads (see FzClient-project/docs/RELEASE.md).
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4.1.1
+
+      - name: Read version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4.0.0
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build mod
+        working-directory: FzClient-project/mod
+        # gradle.properties points org.gradle.java.home at a local Windows JDK; override it on CI
+        run: |
+          ./gradlew.bat build "-Pversion=$VERSION" "-Dorg.gradle.java.home=$JAVA_HOME"
+          cp "build/libs/fzclient-$VERSION.jar" ../launcher/resources/fzclient.jar
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: FzClient-project/launcher/package-lock.json
+
+      - name: Build launcher
+        working-directory: FzClient-project/launcher
+        run: |
+          npm ci
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          npm run dist
+
+      - name: Publish GitHub Release
+        working-directory: FzClient-project/launcher/dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --title "FzClient $VERSION" --generate-notes \
+            FzClient-Launcher-Setup.exe FzClient-Launcher-Setup.exe.blockmap latest.yml fzclient.jar fzclient.json
