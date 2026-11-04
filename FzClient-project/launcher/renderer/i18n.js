@@ -2,7 +2,7 @@
 // Japanese is the source language. EN maps each Japanese string to its English text. {0}, {1} are placeholders.
 const EN = {
   // one mod's details
-  'NEW：MOD ごとのバージョン選択、タイトル画面のリキッドグラス': 'NEW: pick each mod\'s version, liquid glass title screen',
+  'NEW：Patcher 風の軽量化とバグ修正（Optimization / Bug Fixes）': 'NEW: Patcher-style optimizations and bug fixes (Optimization / Bug Fixes)',
   'スキン・マントの切り替え、スクショを見る': 'Skins and capes, screenshot gallery',
   '有効にする': 'Enabled',
   'OFF にするとゲームで読み込まれません': 'When off, the game does not load it',

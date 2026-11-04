@@ -5,6 +5,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,6 +24,22 @@ public abstract class MixinEntityLivingBase {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || (Object) this != mc.thePlayer) return;
         cir.setReturnValue(Math.max(1, Math.round(cir.getReturnValue() / speed)));
+    }
+
+    // ---- Bug fix "マウスの遅れ": the crosshair target (what a click hits) is found with getLook(1.0), which for
+    //      living entities uses the head yaw - for your own player that lags one tick behind the mouse. Use the
+    //      body yaw you just turned to, like every other entity does.
+
+    @Inject(require = 0, method = "getLook", at = @At("HEAD"), cancellable = true)
+    private void fzhud$noMouseDelay(float partialTicks, CallbackInfoReturnable<Vec3> cir) {
+        if (partialTicks != 1.0F || !Modules.fixes.enabled || !Modules.fixMouseDelay.get()) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null || (Object) this != mc.thePlayer) return;
+        EntityLivingBase self = (EntityLivingBase) (Object) this;
+        // Entity.getVectorForRotation(pitch, yaw)
+        float yaw = -self.rotationYaw * 0.017453292F - (float) Math.PI, pitch = -self.rotationPitch * 0.017453292F;
+        float c = -MathHelper.cos(pitch);
+        cir.setReturnValue(new Vec3(MathHelper.sin(yaw) * c, MathHelper.sin(pitch), MathHelper.cos(yaw) * c));
     }
 
     // ---- Fullbright "暗視の効果": your own player looks as if Night Vision were active. The game's light map and

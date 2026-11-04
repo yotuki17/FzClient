@@ -17,6 +17,13 @@
     "MixinSplashThread",
     "MixinEntityPlayerSP",
     "MixinPlayerControllerMP",
-    "MixinAbstractClientPlayer"
+    "MixinAbstractClientPlayer",
+    "MixinMinecraftHitDelay",
+    "MixinMinecraftOptimize",
+    "MixinTileEntityRendererDispatcher",
+    "MixinEffectRenderer",
+    "MixinRenderItem",
+    "MixinInventoryEffectRenderer",
+    "MixinNetHandlerPlayClient"
   ]
 }

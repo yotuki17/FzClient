@@ -268,6 +268,22 @@ public final class Modules {
     public static final BoolSetting perfNoClouds = performance.add(new BoolSetting("noclouds", "雲を描かない", false));
     public static final SliderSetting perfMenuFps = performance.add(new SliderSetting("menufps", "メニュー中のFPS上限（240で無制限）", 15, 240, 5, 240, " FPS"));
 
+    // ---- Optimization in the style of Patcher: small things OptiFine and FzClientOpt don't touch, so all three
+    //      work together. The defaults keep the picture exactly as before; only the GL error checks are skipped.
+    public static final Module optimize = new Module("optimize", "Optimization", Category.UTILITY,
+            "OptiFine と一緒に使える軽量化", true);
+    public static final BoolSetting optGlErrors = optimize.add(new BoolSetting("glerrors", "GL エラーの確認を省く（毎フレームの待ちが減る）", true));
+    public static final SliderSetting optTileDist = optimize.add(new SliderSetting("tiledist", "チェスト・看板・頭などの描画距離（64 = いつも通り）", 8, 64, 4, 64, "m"));
+    public static final SliderSetting optParticles = optimize.add(new SliderSetting("maxparticles", "パーティクルの上限（4000 = いつも通り）", 200, 4000, 200, 4000, ""));
+    public static final BoolSetting optNoGlint = optimize.add(new BoolSetting("noglint", "エンチャントの光沢を描かない", false));
+
+    // ---- Bug fixes in the style of Patcher
+    public static final Module fixes = new Module("fixes", "Bug Fixes", Category.UTILITY,
+            "1.8.9 のバグを直す", true);
+    public static final BoolSetting fixInventory = fixes.add(new BoolSetting("inventory", "ポーション効果中にインベントリが右にずれるのを直す", true));
+    public static final BoolSetting fixMouseDelay = fixes.add(new BoolSetting("mousedelay", "マウスの遅れを直す（狙った所にちゃんと当たる）", true));
+    public static final BoolSetting fixResourcePack = fixes.add(new BoolSetting("resourcepack", "サーバーのリソースパックを使った攻撃を防ぐ", true));
+
     // ---- Branding (window title, icon, loading logo, main menu)
     public static final Module branding = new Module("branding", "FzClient Branding", Category.UTILITY,
             "名前・アイコン・タイトル画面", true);
@@ -466,6 +482,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, overlays, autoGG, bgFps, performance, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

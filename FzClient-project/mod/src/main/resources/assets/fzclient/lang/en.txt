@@ -766,3 +766,12 @@ config/fzclient-cape.png がありません	config/fzclient-cape.png not found
 FzClient の機能	FzClient features
 コスメティック	Cosmetics
 タイトル画面もリキッドグラスにする	Use liquid glass on the title screen too
+OptiFine と一緒に使える軽量化	Lighter rendering that works next to OptiFine
+GL エラーの確認を省く（毎フレームの待ちが減る）	Skip GL error checks (less waiting every frame)
+チェスト・看板・頭などの描画距離（64 = いつも通り）	Chest / sign / skull render distance (64 = normal)
+パーティクルの上限（4000 = いつも通り）	Particle limit (4000 = normal)
+エンチャントの光沢を描かない	Hide the enchantment glint
+1.8.9 のバグを直す	Fixes for 1.8.9 bugs
+ポーション効果中にインベントリが右にずれるのを直す	Keep the inventory centred while a potion is active
+マウスの遅れを直す（狙った所にちゃんと当たる）	Fix mouse delay (hits land where you aim)
+サーバーのリソースパックを使った攻撃を防ぐ	Block the server resource pack exploit
