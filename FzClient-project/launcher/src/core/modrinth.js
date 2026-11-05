@@ -108,7 +108,8 @@ async function installed(modsDir, { checkUpdates = false } = {}) {
     const u = updates[j.sha1];
     return {
       file: j.file, enabled: j.enabled, size: j.size,
-      name: k ? k.project.title : j.file.replace(/\.disabled$/i, '').replace(/\.jar$/i, ''),
+      // some launchers leave "Foo.temp.temp.jar" behind: show "Foo" (the file keeps its name)
+      name: k ? k.project.title : j.file.replace(/\.disabled$/i, '').replace(/\.jar$/i, '').replace(/(\.temp)+$/i, ''),
       project: k ? k.project : null, version: k ? k.version : null,
       update: u ? { id: u.id, number: u.version_number } : null,
     };

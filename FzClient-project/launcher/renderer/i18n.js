@@ -2,6 +2,16 @@
 // Japanese is the source language. EN maps each Japanese string to its English text. {0}, {1} are placeholders.
 const EN = {
   // one mod's details
+  'FzClient の Auto GG と同じ機能です（両方 ON だと GG が 2 回出ます）': 'Same as FzClient\'s Auto GG (with both on, GG is sent twice)',
+  'FzClient の Armor / Potions / Item Counter と同じ表示です': 'Shows the same as FzClient\'s Armor / Potions / Item Counter',
+  'FzClient の Keystrokes と同じ表示です': 'Shows the same as FzClient\'s Keystrokes',
+  'FzClient の Toggle Sprint と同じ機能です': 'Same as FzClient\'s Toggle Sprint',
+  'FzClient の Animations と同じ機能です': 'Same as FzClient\'s Animations',
+  'FzClient の Item Physics と同じ機能です': 'Same as FzClient\'s Item Physics',
+  'FzClient の Hitbox と同じ機能です': 'Same as FzClient\'s Hitbox',
+  'FzClient の Optimization / Bug Fixes と同じ所を変えます': 'Changes the same things as FzClient\'s Optimization / Bug Fixes',
+  '人が多い場所（ロビーなど）では重くなります': 'Costs a lot of FPS where many players are (lobbies)',
+  'OptiFine の入れ直しと設定は「最適化」ページでできます': 'Reinstall and set up OptiFine on the Optimize page',
   'キャッシュの大きいコアで動かす（Ryzen X3D）': 'Run on the big-cache cores (Ryzen X3D)',
   'Minecraft を 3D V-Cache の付いたコアだけで動かします。Windows がゲームだと気づかず、キャッシュの無いコアで動いてしまうのを防ぎます。': 'Runs Minecraft only on the cores with 3D V-Cache, so Windows cannot put it on the cores without the cache when it does not recognise it as a game.',
   'X3D の CPU では OFF がおすすめ': 'Best left off on X3D CPUs',
@@ -36,7 +46,7 @@ const EN = {
   'ダウンロードが見つかりませんでした。もう一度「OptiFine を入れる」を押すか、「ファイルから」を使ってください': 'The download was not found. Press "Install OptiFine" again or use "From file"',
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
-  'NEW：Ryzen X3D のキャッシュコアで動かす・横に詳細表示': 'NEW: run on Ryzen X3D cache cores, details beside the list',
+  'NEW：かぶる MOD の表示・ログが巨大になる問題を修正': 'NEW: overlapping mods are marked, the launcher log no longer grows huge',
   'スキン・マントの切り替え、スクショを見る': 'Skins and capes, screenshot gallery',
   '有効にする': 'Enabled',
   'OFF にするとゲームで読み込まれません': 'When off, the game does not load it',

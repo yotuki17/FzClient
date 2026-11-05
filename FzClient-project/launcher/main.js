@@ -34,6 +34,45 @@ function log(line) {
   try { fs.appendFileSync(logFile(), `[${new Date().toISOString()}] ${line}\n`); } catch { /* ignore */ }
 }
 
+/**
+ * launcher.log used to get every line the game printed, forever (a practice map's command blocks made it 48 GB).
+ * At start a log over 5 MB is cut down to its last 512 KB.
+ */
+function trimLog() {
+  const file = logFile(), keep = 512 * 1024;
+  try {
+    const size = fs.statSync(file).size;
+    if (size <= 5 * 1024 * 1024) return;
+    const fd = fs.openSync(file, 'r');
+    const buf = Buffer.alloc(keep);
+    const n = fs.readSync(fd, buf, 0, keep, size - keep);
+    fs.closeSync(fd);
+    const tail = buf.subarray(0, n);
+    const from = tail.indexOf(10) + 1;   // start at a whole line
+    fs.writeFileSync(file + '.tmp', Buffer.concat([Buffer.from(`[${new Date().toISOString()}] [log] trimmed from ${size} bytes\n`), tail.subarray(from)]));
+    fs.renameSync(file + '.tmp', file);
+  } catch { /* no log yet */ }
+}
+
+/**
+ * The game's own output goes to game-output.log, started fresh for every launch and capped at 20 MB (the game
+ * keeps its full log in logs/latest.log anyway). Written through a stream, not a file call per line.
+ */
+const GAME_LOG_MAX = 20 * 1024 * 1024;
+function gameLog() {
+  let out = null, written = 0, full = false;
+  try { out = fs.createWriteStream(path.join(app.getPath('userData'), 'game-output.log'), { flags: 'w' }); } catch { /* no log */ }
+  return {
+    write(text) {
+      if (!out || full) return;
+      written += Buffer.byteLength(text);
+      if (written > GAME_LOG_MAX) { full = true; out.write('\n[launcher] game output over 20 MB, the rest is only in logs/latest.log\n'); return; }
+      out.write(text);
+    },
+    end() { if (out) out.end(); },
+  };
+}
+
 function send(channel, data) {
   if (win && !win.isDestroyed()) win.webContents.send(channel, data);
 }
@@ -88,6 +127,7 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
   app.whenReady().then(() => {
+    trimLog();
     shots.handle(() => path.join(dirs().gameDir, 'screenshots'));
     createWindow();
     updater.startLauncherUpdates(send, log);
@@ -133,15 +173,6 @@ ipcMain.handle('update:install', () => {
 });
 
 // ---------------------------------------------------------------- mods (enable / disable by renaming)
-ipcMain.handle('mods:list', () => {
-  const dir = path.join(dirs().gameDir, 'mods');
-  fs.mkdirSync(dir, { recursive: true });
-  return fs.readdirSync(dir)
-    .filter(f => /\.jar(\.disabled)?$/i.test(f) && f !== 'FzClient.jar')
-    .map(f => ({ file: f, name: f.replace(/\.disabled$/i, '').replace(/\.jar$/i, ''), enabled: !/\.disabled$/i.test(f),
-      size: fs.statSync(path.join(dir, f)).size }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-});
 ipcMain.handle('mods:toggle', (e, file) => {
   const dir = path.join(dirs().gameDir, 'mods');
   if (!plainFile(file)) throw new Error('bad file');
@@ -390,23 +421,31 @@ async function launchGame() {
   }
   const game = new Game(dirs(), log);
   let lastSent = 0;
-  const child = await game.launch({
-    account: acc, memoryMb: s.memoryMb, width: s.width, height: s.height, fullscreen: s.fullscreen,
-    jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
-    optimizeJvm: !!s.optimizeJvm, jvmExtras: s.optimizeJvm ? optimize.jvmExtras() : [], highPriority: s.gamePriority === 'high',
-    affinityMask: s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
-    onProgress: (stage, done, total, bytesDone, bytesTotal) => {
-      const now = Date.now();
-      if (now - lastSent < 80 && done < total) return; // don't flood the page
-      lastSent = now;
-      send('game:progress', { stage, done, total, bytesDone, bytesTotal });
-    },
-    onLog: line => { log(line.trimEnd()); send('game:log', line); },
-  });
+  const output = gameLog();
+  let child;
+  try {
+    child = await game.launch({
+      account: acc, memoryMb: s.memoryMb, width: s.width, height: s.height, fullscreen: s.fullscreen,
+      jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
+      optimizeJvm: !!s.optimizeJvm, jvmExtras: s.optimizeJvm ? optimize.jvmExtras() : [], highPriority: s.gamePriority === 'high',
+      affinityMask: s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
+      onProgress: (stage, done, total, bytesDone, bytesTotal) => {
+        const now = Date.now();
+        if (now - lastSent < 80 && done < total) return; // don't flood the page
+        lastSent = now;
+        send('game:progress', { stage, done, total, bytesDone, bytesTotal });
+      },
+      onLog: text => output.write(text),
+    });
+  } catch (e) {
+    output.end();
+    throw e;
+  }
   running = child;
   send('game:state', { running: true });
   child.on('exit', code => {
     running = null;
+    output.end();
     log('[exit] ' + code);
     send('game:state', { running: false, code });
     if (win && !win.isDestroyed()) { win.show(); win.restore(); }

@@ -1,28 +1,17 @@
-# FzHUD (Minecraft 1.8.9 Forge)
+# FzClient（Minecraft 1.8.9 Forge MOD）
 
-オリジナルのPvP向けHUD MOD。Featherのコードは一切使っていません。
-
-## 入っているもの
-- コンパス（上部、なめらかスクロール）
-- キーストローク WASD + スペース（押すとふわっと色が変わる）
-- Ping / FPS / TPS パネル
-- CPS（左 | 右、クリックでパルス）
-- 移動状態（Flying / Sprinting / Sneaking ...、切り替わりでスライド）
-- 時計 / 速度 [m/s]
-- ポーション効果（スライドイン、切れそうになると点滅）
-- ワールドに入るたびにフェードイン
+FzClient 本体です。HUD・PvP 向けの機能・メニュー・コスメティックなどが入っています。
 
 ## 使い方
-- **右Shift** で編集画面
-  - ドラッグ：移動（画面端・中央にスナップ）
-  - 右クリック：ON/OFF
-  - マウスホイール：サイズ変更
-  - R：全部リセット / Esc：保存して閉じる
-- 設定は `.minecraft/config/fzhud.json` に保存
+- **右Shift** で FzClient のメニュー（HUD の配置・各機能の設定）
+- 設定は `.minecraft/config/fzclient.json` に保存（昔の `fzhud.json` は、`fzclient.json` が無いときに一度だけ読み込みます）
 
 ## ビルド方法（Windows）
-1. JDK 17以上を入れる（例: Adoptium Temurin 17 / 21）
-2. このフォルダの `build.bat` をダブルクリック
-3. できた `build\libs\fzhud-1.0.0.jar` を Forge 1.8.9 の `mods` フォルダへ
+1. JDK 17 を入れる（例: Adoptium Temurin 17）
+2. このフォルダの `build.bat` をダブルクリック（または `gradlew build`）
+3. `build\libs\fzclient-<バージョン>.jar` ができる
 
-FeatherOpt-1.0.0-SNAPSHOT.jar（LGPL）も同じ `mods` フォルダに入れればFeatherの軽量化も一緒に使えます。
+ふだんは手でビルドしなくて大丈夫です。`v1.0.15` のようなタグを push すると、GitHub Actions が MOD とランチャーを
+ビルドしてリリースまで出します（[docs/RELEASE.md](../docs/RELEASE.md)）。
+
+軽量化 MOD の FzClientOpt（FeatherOpt, LGPL）はランチャーが一緒に入れます。

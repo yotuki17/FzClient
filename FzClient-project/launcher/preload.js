@@ -19,7 +19,6 @@ contextBridge.exposeInMainWorld('fz', {
   },
   pickFolder: () => ipcRenderer.invoke('pick:folder'),
   mods: {
-    list: () => ipcRenderer.invoke('mods:list'),
     toggle: file => ipcRenderer.invoke('mods:toggle', file),
     add: () => ipcRenderer.invoke('mods:add'),
     installed: checkUpdates => ipcRenderer.invoke('mods:installed', checkUpdates),
@@ -88,6 +87,5 @@ contextBridge.exposeInMainWorld('fz', {
     kill: () => ipcRenderer.invoke('game:kill'),
     onProgress: cb => ipcRenderer.on('game:progress', (e, d) => cb(d)),
     onState: cb => ipcRenderer.on('game:state', (e, d) => cb(d)),
-    onLog: cb => ipcRenderer.on('game:log', (e, d) => cb(d)),
   },
 });

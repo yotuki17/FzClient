@@ -200,6 +200,27 @@ function icon(src, name) {
   return el('div', 'ico blank', esc((name || '?').slice(0, 1).toUpperCase()));
 }
 
+/**
+ * Mods that do the same job as a part of FzClient (with both on, the same thing happens twice) or that are known to
+ * cost a lot of FPS where many players are. Matched on the file name and the site's title.
+ */
+const MOD_NOTES = [
+  [/autogg/i, 'FzClient の Auto GG と同じ機能です（両方 ON だと GG が 2 回出ます）'],
+  [/inventory ?hud/i, 'FzClient の Armor / Potions / Item Counter と同じ表示です'],
+  [/keystrokes/i, 'FzClient の Keystrokes と同じ表示です'],
+  [/toggle ?sprint/i, 'FzClient の Toggle Sprint と同じ機能です'],
+  [/old ?animations|animatium/i, 'FzClient の Animations と同じ機能です'],
+  [/item ?physic/i, 'FzClient の Item Physics と同じ機能です'],
+  [/hitbox/i, 'FzClient の Hitbox と同じ機能です'],
+  [/patcher/i, 'FzClient の Optimization / Bug Fixes と同じ所を変えます'],
+  [/skin ?layers/i, '人が多い場所（ロビーなど）では重くなります'],
+  [/optifine/i, 'OptiFine の入れ直しと設定は「最適化」ページでできます'],
+];
+function modNote(m) {
+  const hit = MOD_NOTES.find(([re]) => re.test(m.file) || re.test(m.name));
+  return hit ? t(hit[1]) : '';
+}
+
 async function loadMods(checkUpdates) {
   const list = $('modList');
   let mods;
@@ -219,7 +240,9 @@ async function loadMods(checkUpdates) {
     const ver = m.version ? m.version.number : t('手動で追加');
     const src = m.source === 'curseforge' ? '<span class="src">CurseForge</span>' : '';
     const pin = m.pinned ? `<span class="pin">${esc(t('固定'))}</span>` : '';
-    row.appendChild(el('div', null, `<b>${esc(m.name)}${src}${pin}</b><small>${esc(ver)} · ${(m.size / 1024).toFixed(0)} KB</small>`));
+    const note = modNote(m);
+    row.appendChild(el('div', null, `<b>${esc(m.name)}${src}${pin}</b><small>${esc(ver)} · ${(m.size / 1024).toFixed(0)} KB</small>`
+      + (note ? `<small class="warn">⚠ ${esc(note)}</small>` : '')));
     if (m.update) {
       row.appendChild(el('span', 'tag', esc(t('更新あり {0}', m.update.number))));
       const up = el('button', 'btn mini primary', esc(t('更新')));
@@ -274,6 +297,9 @@ function fillModDetails(m) {
   const from = m.source === 'curseforge' ? 'CurseForge' : m.source === 'modrinth' ? 'Modrinth' : t('手動で追加');
   $('mdMeta').textContent = `${from} · ${m.version ? m.version.number : ''}${m.version ? ' · ' : ''}`
     + t('ファイル: {0} · {1} KB', m.file.replace(/\.disabled$/i, ''), (m.size / 1024).toFixed(0));
+  const note = modNote(m);
+  $('mdWarn').textContent = note ? '⚠ ' + note : '';
+  $('mdWarn').style.display = note ? '' : 'none';
   $('mdOn').classList.toggle('on', m.enabled);
   const site = !!m.project;
   $('mdAutoRow').style.display = site ? '' : 'none';

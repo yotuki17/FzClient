@@ -350,3 +350,5 @@ input[type=range] { flex: 1; accent-color: var(--cyan); }
   #modModal .dialog { width: auto; max-height: none; border-radius: 0; border-width: 0 0 0 1px; box-shadow: none; transform: none; }
 }
 .list .card.sel, .shot.sel { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset; }
+/* a mod that does the same job as a part of FzClient, or is known to be heavy */
+.card small.warn, .note.warn { color: #ffcf6b; }

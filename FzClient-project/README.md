@@ -23,19 +23,21 @@ FzClient-project/
 
 ## ビルド
 
+### リリース
+- ふだんは手でビルドしません。`vX.Y.Z` のタグを push すると、GitHub Actions が MOD とランチャーを
+  そのバージョンでビルドして Release を出します（[docs/RELEASE.md](docs/RELEASE.md)）。
+
 ### MOD（mod/）
-- JDK 17 で `build.bat`（または `gradlew build`）。できた jar が `build/libs/fzclient.jar`。
-- バージョンは `gradle.properties` の `version` だけを書き換える（mcmod.info に入り、メニューの表示もそこから読む）。
+- JDK 17 で `build.bat`（または `gradlew build`）。できた jar が `build/libs/fzclient-<バージョン>.jar`。
+- バージョンは `gradle.properties` の `version`（mcmod.info に入り、メニューの表示もそこから読む）。リリースではタグの番号が使われます。
 
 ### ランチャー（launcher/）
 - Node.js を入れて `npm install` → `npm run dist`。
 - `dist/` に `FzClient-Launcher-Setup.exe`、`.blockmap`、`latest.yml`、`fzclient.jar`、`fzclient.json` ができる。
-- 中に入れる MOD は `resources/fzclient.jar` を差し替える。
+- 中に入れる MOD は `resources/fzclient.jar`（リリースでは CI がその時の MOD で置き換えます）。
 
 ### サイト（website/）
-- そのまま GitHub Pages に置ける（リポジトリの `docs/` フォルダに入れて、Settings → Pages → main / docs）。
+- 公開されているのはリポジトリ直下の `docs/`（GitHub Pages: main / docs）。`website/` はその元で、直すときは両方そろえる。
 
 ## 注意
-- この zip の `mod/` は作業用にこちらで持っていた写しです。PC 側（`Downloads\FzHUD-source\fzhud`）で手で直した部分があれば、そちらが正です。
 - API キーや秘密の値（CurseForge の API キー、ADMIN_KEY など）は入っていません。Cloudflare の Secret にだけ入っています。
-- `launcher/resources/fzclient.jar` は入れた時点の MOD（コスメティック入り）です。

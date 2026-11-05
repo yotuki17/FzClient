@@ -776,3 +776,5 @@ GL エラーの確認を省く（毎フレームの待ちが減る）	Skip GL er
 マウスの遅れを直す（狙った所にちゃんと当たる）	Fix mouse delay (hits land where you aim)
 サーバーのリソースパックを使った攻撃を防ぐ	Block the server resource pack exploit
 ホログラム（浮いている文字）を軽く描く	Draw holograms (floating text) the light way
+遠くの物・壁の向こうの物を描かずに軽くする（見え方が少し変わる）	Lighter by not drawing far-away things and things behind walls (looks a little different)
+見た目を変えずに軽くする（OptiFine と一緒に使える）	Lighter without changing the look (works next to OptiFine)

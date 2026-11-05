@@ -3,9 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { net } = require('electron');
+const { app, net } = require('electron');
 
-const UA = 'FzClientLauncher/1.0';
+const UA = 'FzClientLauncher/' + app.getVersion();
 
 async function fetchRetry(url, opts = {}, tries = 3) {
   let last;

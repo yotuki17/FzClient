@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 > nul
-echo FzHUD をビルドします（初回は数分かかります）...
+echo FzClient をビルドします（初回は数分かかります）...
 call gradlew.bat build
 if errorlevel 1 (
   echo.
@@ -9,6 +9,6 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo 完成: build\libs\fzhud-1.0.0.jar
+echo 完成: build\libs\fzclient-（バージョン）.jar
 explorer build\libs
 pause

@@ -257,7 +257,7 @@ public final class Modules {
 
     // ---- Performance (draw less of what is far away)
     public static final Module performance = new Module("performance", "Performance", Category.UTILITY,
-            "描画を軽くする", false);
+            "遠くの物・壁の向こうの物を描かずに軽くする（見え方が少し変わる）", false);
     /** Title screen / menus without a world: Minecraft itself caps these at 30 FPS. Always applies (not only with Performance on). */
     public static final SliderSetting perfTitleFps = performance.add(new SliderSetting("titlefps", "タイトル画面のFPS上限（常に有効・260で無制限）", 30, 260, 10, 120, " FPS"));
     public static final SliderSetting perfItems = performance.add(new SliderSetting("items", "アイテム・経験値の描画距離", 4, 32, 2, 12, "m"));
@@ -271,7 +271,7 @@ public final class Modules {
     // ---- Optimization in the style of Patcher: small things OptiFine and FzClientOpt don't touch, so all three
     //      work together. The defaults keep the picture exactly as before; only the GL error checks are skipped.
     public static final Module optimize = new Module("optimize", "Optimization", Category.UTILITY,
-            "OptiFine と一緒に使える軽量化", true);
+            "見た目を変えずに軽くする（OptiFine と一緒に使える）", true);
     public static final BoolSetting optHolograms = optimize.add(new BoolSetting("holograms", "ホログラム（浮いている文字）を軽く描く", true));
     public static final BoolSetting optGlErrors = optimize.add(new BoolSetting("glerrors", "GL エラーの確認を省く（毎フレームの待ちが減る）", true));
     public static final SliderSetting optTileDist = optimize.add(new SliderSetting("tiledist", "チェスト・看板・頭などの描画距離（64 = いつも通り）", 8, 64, 4, 64, "m"));
