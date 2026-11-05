@@ -587,6 +587,7 @@ async function loadSettings() {
   $('jvm').value = s.jvmArgs;
   $('lang').value = s.lang || 'auto';
   $('gameDir').textContent = s.gameDir || info.dirs.root + t('（初期）');
+  showRecSettings(s);
 }
 const save = patch => fz.settings.set(patch);
 $('mem').oninput = () => { $('memVal').textContent = ($('mem').value / 1024).toFixed(2).replace(/\.?0+$/, '') + ' GB'; };
@@ -630,6 +631,21 @@ $('recPrepare').onclick = async () => {
   $('recPrepare').disabled = false;
   loadRecorder();
 };
+function showRecSettings(s) {
+  $('recArea').value = s.recArea === 'monitor' ? 'monitor' : 'game';
+  $('recFps').value = String(Number(s.recFps) === 30 ? 30 : 60);
+  $('recReplay').checked = !!s.recReplay;
+  $('recSec').value = s.recReplaySeconds || 30;
+}
+$('recArea').onchange = () => save({ recArea: $('recArea').value });
+$('recFps').onchange = () => save({ recFps: +$('recFps').value });
+$('recReplay').onchange = () => save({ recReplay: $('recReplay').checked });
+$('recSec').onchange = () => {
+  const v = Math.max(10, Math.min(120, Math.round((+$('recSec').value || 30) / 5) * 5));
+  $('recSec').value = v;
+  save({ recReplaySeconds: v });
+};
+fz.rec.onSettings(showRecSettings);   // switched in the overlay
 $('recOpen').onclick = () => fz.open.folder('recordings');
 $('recRemove').onclick = async () => {
   try { await fz.rec.remove(); toast(t('ffmpeg を削除しました（録画したファイルは残っています）')); } catch (e) { toast(errText(e), true); }

@@ -115,7 +115,8 @@ public final class Extras {
         }
 
         // limit FPS while another window has focus (also on the title screen), and even more while minimized
-        if (Modules.bgFps.enabled && !Display.isActive()) {
+        // not while the launcher's overlay is open: it has the focus then, but the game is right under it
+        if (Modules.bgFps.enabled && !Display.isActive() && !LauncherLink.watching()) {
             int limit = (int) Modules.bgFpsLimit.get();
             if (!Display.isVisible()) limit = Math.min(limit, 5);
             Display.sync(limit);

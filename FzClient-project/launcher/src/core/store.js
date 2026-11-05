@@ -17,6 +17,11 @@ const DEFAULTS = {
   autoUpdateMods: true,   // update Modrinth mods before each launch
   optimizeJvm: false,     // 最適化 page: extra Java options
   gamePriority: 'normal', // 最適化 page: 'high' = the game gets the CPU first
+  // recording (the Alt+X overlay)
+  recReplay: false,       // always keep the last seconds, to save them afterwards
+  recReplaySeconds: 30,
+  recArea: 'game',        // game (its window) | monitor (the whole monitor it is on)
+  recFps: 60,
 };
 
 function file(name) {

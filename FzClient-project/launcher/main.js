@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, globalShortcut, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { settings, accounts, dirs } = require('./src/core/store');
@@ -13,6 +13,8 @@ const optimize = require('./src/core/optimize');
 const shots = require('./src/core/shots');
 const optifine = require('./src/core/optifine');
 const recorder = require('./src/core/recorder');
+const { Link } = require('./src/core/link');
+const { Capture } = require('./src/core/capture');
 
 shots.registerScheme();   // fzshot: pictures for the screenshot page (must happen before "ready")
 const modsDir = () => path.join(dirs().gameDir, 'mods');
@@ -136,6 +138,7 @@ if (!app.requestSingleInstanceLock()) {
     win.webContents.once('did-finish-load', () => updater.checkMod(bundledJar(), log, send));
   });
   app.on('window-all-closed', () => app.quit());
+  app.on('will-quit', () => globalShortcut.unregisterAll());
 }
 
 // ---------------------------------------------------------------- window controls
@@ -145,7 +148,12 @@ ipcMain.on('win:close', () => win.close());
 
 // ---------------------------------------------------------------- settings / info
 ipcMain.handle('settings:get', () => settings.get());
-ipcMain.handle('settings:set', (e, patch) => settings.set(patch));
+ipcMain.handle('settings:set', (e, patch) => {
+  const r = settings.set(patch);
+  // recording options: the running recorder starts again with them
+  if (patch && Object.keys(patch).some(k => /^rec/.test(k)) && play && play.capture) { play.capture.optionsChanged(); pushOverlay(); }
+  return r;
+});
 ipcMain.handle('info', () => ({
   version: app.getVersion(), locale: app.getLocale(), mc: MC_VERSION, dirs: dirs(), msa: auth.msaAvailable(),
   totalMemMb: Math.floor(require('os').totalmem() / 1048576),
@@ -296,7 +304,160 @@ ipcMain.handle('optifine:revert', () => {
   settings.set({ ofPreset: '' });
 });
 
-// ---------------------------------------------------------------- recording (done by FzClient; this prepares ffmpeg + helper)
+// ---------------------------------------------------------------- overlay (Alt+X) and recording, while the game runs
+// The overlay is a window of the launcher laid over the game (always on top, see-through). The recording is done
+// here too (capture.js), so neither depends on what the game shows or on the server. FzClient in the game sends
+// the keys and its numbers through the link (link.js); without it the overlay still records.
+let overlay = null;
+let play = null;   // while the game runs: { link, capture, active }
+
+function recOptions() {
+  const s = settings.get();
+  return {
+    replay: !!s.recReplay, replaySeconds: Math.max(10, Math.min(120, Number(s.recReplaySeconds) || 30)),
+    area: s.recArea === 'monitor' ? 'monitor' : 'game', fps: Number(s.recFps) === 30 ? 30 : 60,
+  };
+}
+
+function uiLang() {
+  const pref = settings.get().lang || 'auto';
+  return pref === 'auto' ? (/^ja/i.test(app.getLocale() || '') ? 'ja' : 'en') : pref;
+}
+
+function overlayState() {
+  return {
+    lang: uiLang(), link: !!(play && play.link.connected), prepared: !!(play && play.capture),
+    rec: play && play.capture ? play.capture.state() : null,
+  };
+}
+
+function overlayVisible() { return !!(overlay && !overlay.isDestroyed() && overlay.isVisible()); }
+
+function pushOverlay() {
+  if (overlayVisible()) overlay.webContents.send('ov:state', overlayState());
+}
+
+function overlayWindow() {
+  if (overlay && !overlay.isDestroyed()) return overlay;
+  overlay = new BrowserWindow({
+    show: false, frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false,
+    resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false,
+    skipTaskbar: true, alwaysOnTop: true, title: 'FzClient Overlay',
+    webPreferences: { preload: path.join(__dirname, 'src', 'overlay', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
+  });
+  overlay.setAlwaysOnTop(true, 'screen-saver');   // over the game, which is on top itself while it has the focus
+  overlay.setContentProtection(true);             // never in a recording of the whole monitor
+  overlay.loadFile(path.join(__dirname, 'renderer', 'overlay', 'overlay.html'));
+  overlay.on('blur', hideOverlay);                // Alt+Tab / a click elsewhere: out of the way
+  overlay.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  overlay.webContents.on('will-navigate', e => e.preventDefault());
+  return overlay;
+}
+
+function showOverlay() {
+  const w = overlayWindow();
+  const { screen } = require('electron');
+  // the game's monitor: the mouse is there (the game holds it in the middle of its window)
+  w.setBounds(screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds);
+  const go = () => {
+    w.show();
+    w.focus();
+    w.webContents.send('ov:state', overlayState());
+    w.webContents.send('ov:show');
+    if (play) play.link.send({ t: 'watch', on: true });
+  };
+  if (w.webContents.isLoading()) w.webContents.once('did-finish-load', go);
+  else go();
+}
+
+function hideOverlay() {
+  if (!overlayVisible()) return;
+  overlay.hide();   // Windows gives the focus back to the window under it: the game
+  if (play) play.link.send({ t: 'watch', on: false });
+}
+
+function toggleOverlay() {
+  if (overlayVisible()) hideOverlay();
+  else showOverlay();
+}
+
+/** A save finished (or failed): the overlay, a line in the game's chat, else a Windows notification. */
+function recNotify(text, error) {
+  pushOverlay();
+  if (!play) return;
+  const m = /^(.*?: )(.+)$/.exec(text);
+  if (play.link.connected) play.link.send({ t: 'chat', text: m ? m[1] : text, arg: m ? m[2] : '', error: !!error });
+  else if (Notification.isSupported()) new Notification({ title: 'FzClient', body: text }).show();
+}
+
+function recNotPrepared() {
+  recNotify('ランチャーの「設定」→「録画」で準備してください', true);
+}
+
+/** Without the link the launcher listens for Alt+X itself (with it the game sends its keys, only while it has the focus). */
+function updateShortcuts() {
+  globalShortcut.unregisterAll();
+  if (!play || play.link.connected) return;
+  try { globalShortcut.register('Alt+X', toggleOverlay); } catch (e) { log('[overlay] Alt+X: ' + e.message); }
+}
+
+function gameMessage(m) {
+  if (!play) return;
+  if (m.t === 'key') {
+    if (m.k === 'overlay') toggleOverlay();
+    else if (m.k === 'record') { if (play.capture) play.capture.toggleRecording(); else recNotPrepared(); }
+    else if (m.k === 'save') { if (play.capture) play.capture.saveReplay(); else recNotPrepared(); }
+  } else if (m.t === 'state') {
+    play.active = !!m.active;
+    if (play.capture) play.capture.setFullscreen(!!m.fs);
+  } else if (m.t === 'stats') {
+    if (overlayVisible()) overlay.webContents.send('ov:stats', m);
+  }
+}
+
+function startPlay(child, link, tools) {
+  const capture = tools ? new Capture({
+    game: { pid: child.pid, gameDir: dirs().gameDir }, tools, options: recOptions,
+    notify: recNotify, changed: pushOverlay, log,
+  }) : null;
+  play = { child, link, capture, active: false };
+  link.on('message', gameMessage);
+  link.on('connected', () => { updateShortcuts(); pushOverlay(); });
+  link.on('disconnected', () => { updateShortcuts(); pushOverlay(); });
+  updateShortcuts();
+}
+
+function endPlay() {
+  if (!play) return;
+  hideOverlay();
+  if (play.capture) play.capture.close();
+  play.link.close();
+  play = null;
+  globalShortcut.unregisterAll();
+}
+
+ipcMain.on('ov:hide', hideOverlay);
+ipcMain.on('ov:record', () => { if (play && play.capture) play.capture.toggleRecording(); });
+ipcMain.on('ov:save', () => { if (play && play.capture) play.capture.saveReplay(); });
+ipcMain.on('ov:replay', (e, on) => {
+  settings.set({ recReplay: !!on });
+  if (play && play.capture) play.capture.optionsChanged();
+  pushOverlay();
+  send('rec:settings', settings.get());
+});
+ipcMain.on('ov:switch', (e, i, on) => { if (play) play.link.send({ t: 'set', i: i | 0, on: !!on }); });
+ipcMain.on('ov:menu', () => {
+  if (play) play.link.send({ t: 'menu' });
+  hideOverlay();
+});
+ipcMain.on('ov:folder', () => {
+  const d = path.join(dirs().gameDir, 'recordings');
+  fs.mkdirSync(d, { recursive: true });
+  hideOverlay();
+  shell.openPath(d);
+});
+
+// preparing ffmpeg + the helper (settings page)
 ipcMain.handle('rec:status', () => recorder.status());
 ipcMain.handle('rec:prepare', async () => {
   const r = await recorder.prepare(p => send('rec:progress', p), log);
@@ -435,14 +596,18 @@ async function launchGame() {
   }
   const game = new Game(dirs(), log);
   let lastSent = 0;
-  const recProp = await recorder.forLaunch(log);   // the Alt+X recorder, when it is prepared
+  const tools = await recorder.forLaunch(log);   // ffmpeg + helper for recording, when they are prepared
+  // the link to FzClient in the game (overlay keys, numbers, switches)
+  const link = new Link(log);
+  let linkProp = null;
+  try { linkProp = await link.start(); } catch (e) { log('[link] ' + e.message); }
   const output = gameLog();
   let child;
   try {
     child = await game.launch({
       account: acc, memoryMb: s.memoryMb, width: s.width, height: s.height, fullscreen: s.fullscreen,
       jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
-      optimizeJvm: !!s.optimizeJvm, jvmExtras: [...(s.optimizeJvm ? optimize.jvmExtras() : []), ...(recProp ? [recProp] : [])],
+      optimizeJvm: !!s.optimizeJvm, jvmExtras: [...(s.optimizeJvm ? optimize.jvmExtras() : []), ...(linkProp ? [linkProp] : [])],
       highPriority: s.gamePriority === 'high',
       affinityMask: s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
       onProgress: (stage, done, total, bytesDone, bytesTotal) => {
@@ -455,12 +620,15 @@ async function launchGame() {
     });
   } catch (e) {
     output.end();
+    link.close();
     throw e;
   }
   running = child;
+  startPlay(child, link, tools);
   send('game:state', { running: true });
   child.on('exit', code => {
     running = null;
+    endPlay();
     output.end();
     log('[exit] ' + code);
     send('game:state', { running: false, code });

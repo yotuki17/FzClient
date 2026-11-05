@@ -1,6 +1,5 @@
 'use strict';
-// Recording (the Alt+X overlay in the game). The launcher only prepares the two programs it needs and tells the
-// game where they are (-Dfzclient.recorder=<folder>); the recording itself is done by FzClient.
+// Recording (the Alt+X overlay, see capture.js). This prepares the two programs it needs:
 //  - ffmpeg: from BtbN/FFmpeg-Builds on GitHub (the LGPL build of the newest stable version), downloaded once.
 //  - FzRecorder.exe: our helper that feeds ffmpeg the game's sound only (src/tools/FzRecorder.cs). It is built on
 //    this PC with the C# compiler that comes with Windows, so no program of ours is downloaded; it is built again
@@ -149,15 +148,15 @@ function prepare(progress, log) {
 }
 
 /**
- * At launch: the system property for the game when recording is prepared, else null. A helper that is older than
- * its source (launcher update) is built again first; if that fails the old one is used.
+ * At launch: { ffmpeg, helper } when recording is prepared, else null. A helper that is older than its source
+ * (launcher update) is built again first; if that fails the old one is used.
  */
 async function forLaunch(log) {
   if (!fs.existsSync(ffmpegExe()) || !fs.existsSync(helperExe())) return null;
   if (!helperFresh()) {
     try { await buildHelper(log); } catch (e) { if (log) log('[recorder] ' + e.message); }
   }
-  return '-Dfzclient.recorder=' + dir();
+  return { ffmpeg: ffmpegExe(), helper: helperExe() };
 }
 
 /** Removes ffmpeg and the helper again (the recordings stay). */

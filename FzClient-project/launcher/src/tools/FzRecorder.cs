@@ -20,6 +20,46 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
+/// <summary>Hands the sound to ffmpeg on a thread of its own. ffmpeg does not read all the time (while it starts,
+/// while it is busy with the picture): waiting for it on the capture thread let Windows' 200 ms capture buffer run
+/// over, and the sound came out in pieces.</summary>
+sealed class Sink {
+    readonly Stream output;
+    readonly System.Collections.Concurrent.BlockingCollection<byte[]> queue = new System.Collections.Concurrent.BlockingCollection<byte[]>();
+    readonly Thread thread;
+    public volatile bool Broken;
+
+    public Sink(Stream output) {
+        this.output = output;
+        thread = new Thread(Run);
+        thread.IsBackground = true;
+        thread.Start();
+    }
+
+    public void Write(byte[] data, int offset, int count) {
+        if (count <= 0 || Broken) return;
+        byte[] copy = new byte[count];
+        Buffer.BlockCopy(data, offset, copy, 0, count);
+        queue.Add(copy);
+    }
+
+    void Run() {
+        try {
+            foreach (byte[] b in queue.GetConsumingEnumerable()) {
+                output.Write(b, 0, b.Length);
+                if (queue.Count == 0) output.Flush();
+            }
+        } catch (Exception) {
+            Broken = true;   // ffmpeg closed its input: it is ending
+        }
+    }
+
+    public void Finish(int waitMs) {
+        queue.CompleteAdding();
+        thread.Join(waitMs);
+    }
+}
+
 [ComImport, Guid("1CB9AD4C-DBFA-4c32-B178-C2F568A703B2"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 interface IAudioClient {
     [PreserveSig] int Initialize(int shareMode, int streamFlags, long bufferDuration, long periodicity, IntPtr format, IntPtr sessionGuid);
@@ -67,7 +107,17 @@ static class FzRecorder {
     const int Rate = 48000, Channels = 2, BytesPerFrame = 4;
     const int SHARED = 0;
     const int LOOPBACK = 0x00020000, EVENTCALLBACK = 0x00040000, AUTOCONVERTPCM = unchecked((int) 0x80000000), SRC_DEFAULT_QUALITY = 0x08000000;
-    const uint SILENT = 0x2;
+    const uint SILENT = 0x2, TIMESTAMP_ERROR = 0x4;
+
+    static void WriteSilence(Sink output, byte[] zeros, long frames, ref long written) {
+        frames = Math.Min(frames, Rate * 10L);      // a jump of more than 10 s is a clock problem, not a pause
+        written += frames;
+        while (frames > 0) {
+            int n = (int) Math.Min(frames, zeros.Length / BytesPerFrame);
+            output.Write(zeros, 0, n * BytesPerFrame);
+            frames -= n;
+        }
+    }
 
     [DllImport("Mmdevapi.dll", ExactSpelling = true, PreserveSig = false)]
     static extern void ActivateAudioInterfaceAsync([MarshalAs(UnmanagedType.LPWStr)] string deviceInterfacePath,
@@ -164,7 +214,7 @@ static class FzRecorder {
 
     /** Writes the game's sound (or silence) into ffmpeg until it is time to stop. */
     static void Feed(int pid, Process game, Process ffmpeg) {
-        Stream output = ffmpeg.StandardInput.BaseStream;
+        Sink output = new Sink(ffmpeg.StandardInput.BaseStream);
         IAudioClient client = null;
         IAudioCaptureClient capture = null;
         AutoResetEvent ready = new AutoResetEvent(false);
@@ -183,10 +233,16 @@ static class FzRecorder {
         }
 
         byte[] buffer = new byte[Rate * BytesPerFrame];   // one second
+        byte[] zeros = new byte[Rate / 10 * BytesPerFrame];
         Stopwatch clock = Stopwatch.StartNew();
+        // every packet says when Windows heard it (in 100 ns units of the same clock as the stopwatch): its
+        // place in the recording comes from that, not from when it reached us, so late packets don't push the
+        // sound later and slow ones don't get silence put in the middle of them
+        double start100ns = Stopwatch.GetTimestamp() * 1e7 / Stopwatch.Frequency;
         long written = 0;                                 // frames sent so far
+        long lastPacket = 0;                              // stopwatch ms of the last packet
         try {
-            while (!stop && !game.HasExited && !ffmpeg.HasExited) {
+            while (!stop && !game.HasExited && !ffmpeg.HasExited && !output.Broken) {
                 ready.WaitOne(20);
                 uint packet;
                 while (capture != null && capture.GetNextPacketSize(out packet) == 0 && packet > 0) {
@@ -197,23 +253,28 @@ static class FzRecorder {
                     if ((flags & SILENT) != 0) Array.Clear(buffer, 0, bytes);
                     else Marshal.Copy(data, buffer, 0, bytes);
                     capture.ReleaseBuffer(frames);
-                    output.Write(buffer, 0, bytes);
-                    written += frames;
+                    lastPacket = clock.ElapsedMilliseconds;
+
+                    int skip = 0;
+                    if ((flags & TIMESTAMP_ERROR) == 0 && qpcPosition > 0) {
+                        long at = (long) ((qpcPosition - start100ns) * Rate / 1e7);
+                        long gap = at - written;
+                        if (gap > Rate / 50) WriteSilence(output, zeros, gap, ref written);      // the game was quiet (more than 20 ms)
+                        else if (gap < -Rate / 50) skip = (int) Math.Min(-gap, frames);       // already covered by silence
+                    }
+                    output.Write(buffer, skip * BytesPerFrame, bytes - skip * BytesPerFrame);
+                    written += frames - skip;
                 }
-                // nothing is played: fill the gap with silence once it is more than 50 ms behind real time
-                long due = (long) (clock.Elapsed.TotalSeconds * Rate);
-                if (due - written > Rate / 20) {
-                    int frames = (int) Math.Min(due - written - Rate / 100, Rate);
-                    Array.Clear(buffer, 0, frames * BytesPerFrame);
-                    output.Write(buffer, 0, frames * BytesPerFrame);
-                    written += frames;
+                // nothing is played (Windows sends no packets then): keep the sound going with silence, staying
+                // well behind real time so the next packet still finds its place after it
+                if (clock.ElapsedMilliseconds - lastPacket > 300) {
+                    long due = (long) ((clock.Elapsed.TotalSeconds - 0.25) * Rate);
+                    if (due > written) WriteSilence(output, zeros, Math.Min(due - written, Rate), ref written);
                 }
-                output.Flush();
             }
-        } catch (IOException) {
-            // ffmpeg closed its input: it is ending
         } finally {
             if (client != null) client.Stop();
+            output.Finish(1500);   // what is still queued, then ffmpeg gets the end of its input
         }
     }
 

@@ -82,14 +82,23 @@ public abstract class MixinMinecraft {
                     fzhud$windowH = this.displayHeight;
                 }
 
-                System.setProperty("org.lwjgl.opengl.Window.undecorated", "true");
+                // the normal window, its frame taken off (Win32Window): a window LWJGL makes without a frame
+                // ("undecorated") lost the mouse and froze recordings
+                System.setProperty("org.lwjgl.opengl.Window.undecorated", "false");
                 Display.setFullscreen(false);
                 Display.setResizable(false);
                 Display.setDisplayMode(new DisplayMode(desktop.getWidth(), desktop.getHeight()));
                 Display.setLocation(0, 0);
+                if (!dev.fzkc.fzhud.util.Win32Window.enter(0, 0, desktop.getWidth(), desktop.getHeight())) {
+                    // not on Windows: LWJGL's frameless window as before
+                    System.setProperty("org.lwjgl.opengl.Window.undecorated", "true");
+                    Display.setDisplayMode(new DisplayMode(desktop.getWidth(), desktop.getHeight()));
+                    Display.setLocation(0, 0);
+                }
 
                 this.resize(desktop.getWidth(), desktop.getHeight());
             } else {
+                dev.fzkc.fzhud.util.Win32Window.leave();
                 System.setProperty("org.lwjgl.opengl.Window.undecorated", "false");
                 Display.setFullscreen(false);
 

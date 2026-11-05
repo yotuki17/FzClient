@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'">
+<title>FzClient Overlay</title>
+<link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+<div class="veil" id="veil"></div>
+
+<div class="col left">
+  <section class="panel" id="perf">
+    <h2>パフォーマンス</h2>
+    <div class="tiles" id="tiles"></div>
+    <div class="graph-h"><span>フレーム時間</span><b id="ms"></b></div>
+    <canvas id="graph" width="560" height="120"></canvas>
+    <p class="note" id="perfNote">FzClient と接続すると FPS などが出ます</p>
+  </section>
+
+  <section class="panel" id="rec">
+    <h2>録画<span class="enc" id="enc"></span></h2>
+    <div id="recReady">
+      <div class="row2">
+        <button class="btn" id="recBtn">● 録画開始</button>
+        <button class="btn" id="saveBtn">直前を保存</button>
+      </div>
+      <div class="item" id="replayRow"><span id="replayText"></span><button class="sw" id="replaySw"></button></div>
+      <p class="status" id="recStatus"></p>
+      <button class="link" id="folderBtn">録画フォルダを開く</button>
+    </div>
+    <p class="note" id="recNone">ランチャーの「設定」→「録画」で準備すると使えます（次の起動から）</p>
+  </section>
+</div>
+
+<div class="col right">
+  <section class="panel" id="quick">
+    <h2>クイック設定</h2>
+    <div id="switches"></div>
+    <button class="btn wide" id="menuBtn">すべての設定を開く</button>
+  </section>
+</div>
+
+<div class="hint">Alt+X / Esc で閉じる</div>
+<script src="../i18n.js"></script>
+<script src="overlay.js"></script>
+</body>
+</html>

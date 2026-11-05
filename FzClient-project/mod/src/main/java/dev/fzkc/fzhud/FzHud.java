@@ -148,9 +148,10 @@ public class FzHud {
         ClientRegistry.registerKeyBinding(toggleSneakKey);
         ClientRegistry.registerKeyBinding(imeKey);
         ClientRegistry.registerKeyBinding(Extras.zoomKey);
-        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.gui.OverlayScreen.KEY);
-        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.Recorder.KEY_RECORD);
-        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.Recorder.KEY_SAVE);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_OVERLAY);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_RECORD);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_SAVE);
+        dev.fzkc.fzhud.feature.LauncherLink.start();   // the launcher's overlay and recorder
         ClientRegistry.registerKeyBinding(Spotify.keyPlay);
         ClientRegistry.registerKeyBinding(Spotify.keyNext);
         ClientRegistry.registerKeyBinding(Spotify.keyPrev);
@@ -264,9 +265,7 @@ public class FzHud {
         }
         MotionBlur.tick();
         Performance.tick();
-        while (dev.fzkc.fzhud.feature.Recorder.KEY_RECORD.isPressed()) dev.fzkc.fzhud.feature.Recorder.toggleRecording();
-        while (dev.fzkc.fzhud.feature.Recorder.KEY_SAVE.isPressed()) dev.fzkc.fzhud.feature.Recorder.saveReplay();
-        dev.fzkc.fzhud.feature.Recorder.tick();
+        dev.fzkc.fzhud.feature.LauncherLink.tick(mc);
         RawInput.tick();
         Glass.tick();
         DiscordVoice.tick();
@@ -288,13 +287,6 @@ public class FzHud {
         }
         if (editKey.isPressed() && mc.currentScreen == null) {
             mc.displayGuiScreen(new MenuScreen());
-        }
-        // Alt+X: the overlay. X without Alt does nothing here, so the key stays free for everything else.
-        boolean overlayPressed = false;
-        while (dev.fzkc.fzhud.gui.OverlayScreen.KEY.isPressed()) overlayPressed = true;
-        if (overlayPressed && Modules.overlay.enabled && mc.currentScreen == null
-                && dev.fzkc.fzhud.gui.OverlayScreen.altDown()) {
-            dev.fzkc.fzhud.gui.OverlayScreen.open(mc);
         }
     }
 
@@ -320,13 +312,11 @@ public class FzHud {
      */
     @SubscribeEvent
     public void onOverlayKey(net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Pre event) {
-        int key = dev.fzkc.fzhud.gui.OverlayScreen.KEY.getKeyCode();
-        if (key == 0 || !Keyboard.getEventKeyState() || Keyboard.getEventKey() != key) return;
-        if (!Modules.overlay.enabled || !dev.fzkc.fzhud.gui.OverlayScreen.altDown()) return;
-        if (event.gui instanceof net.minecraft.client.gui.GuiControls) return;   // binding a key: Alt+X belongs to that
-        event.setCanceled(true);
-        if (event.gui instanceof dev.fzkc.fzhud.gui.OverlayScreen) ((dev.fzkc.fzhud.gui.OverlayScreen) event.gui).close();
-        else dev.fzkc.fzhud.gui.OverlayScreen.open(Minecraft.getMinecraft());
+        if (!Keyboard.getEventKeyState()) return;
+        // binding a key in the controls: Alt+X belongs to that
+        if (dev.fzkc.fzhud.feature.LauncherLink.screenKey(Keyboard.getEventKey(), event.gui instanceof net.minecraft.client.gui.GuiControls)) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -430,6 +420,8 @@ public class FzHud {
         if (event.phase == TickEvent.Phase.END) {
             Performance.afterFrame();
             dev.fzkc.fzhud.util.FrameStats.frame();
+            dev.fzkc.fzhud.util.Win32Window.update(org.lwjgl.opengl.Display.isActive());
+            dev.fzkc.fzhud.feature.LauncherLink.frame();
             return;
         }
         if (event.phase != TickEvent.Phase.START) return;

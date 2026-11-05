@@ -102,8 +102,6 @@ public final class Icons {
         INDEX.put("targethud", INDEX.get("combo"));
         INDEX.put("performance", INDEX.get("bgfps"));
         INDEX.put("optimize", INDEX.get("bgfps"));
-        INDEX.put("overlay", INDEX.get("fps"));
-        INDEX.put("recorder", INDEX.get("screenshot"));
         INDEX.put("fixes", INDEX.get("status"));
         INDEX.put("partyrelay", INDEX.get("discord"));
         INDEX.put("discordvc", INDEX.get("discord"));

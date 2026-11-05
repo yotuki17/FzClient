@@ -45,6 +45,7 @@ contextBridge.exposeInMainWorld('fz', {
     prepare: () => ipcRenderer.invoke('rec:prepare'),
     remove: () => ipcRenderer.invoke('rec:remove'),
     onProgress: cb => ipcRenderer.on('rec:progress', (e, d) => cb(d)),
+    onSettings: cb => ipcRenderer.on('rec:settings', (e, d) => cb(d)),
   },
   optifine: {
     status: () => ipcRenderer.invoke('optifine:status'),
