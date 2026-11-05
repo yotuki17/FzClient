@@ -89,14 +89,19 @@ public abstract class MixinMinecraft {
                 Display.setResizable(false);
                 Display.setDisplayMode(new DisplayMode(desktop.getWidth(), desktop.getHeight()));
                 Display.setLocation(0, 0);
-                if (!dev.fzkc.fzhud.util.Win32Window.enter(0, 0, desktop.getWidth(), desktop.getHeight())) {
+                // one pixel taller than the screen: a window exactly as big as the screen is shown by Windows
+                // directly ("fullscreen optimizations") and recordings of it freeze (tested: 15 of 120 frames,
+                // with the extra pixel 120 of 120). The pixel is below the screen, so nothing shows.
+                int h = desktop.getHeight() + 1;
+                if (dev.fzkc.fzhud.util.Win32Window.enter(0, 0, desktop.getWidth(), h)) {
+                    this.resize(desktop.getWidth(), h);
+                } else {
                     // not on Windows: LWJGL's frameless window as before
                     System.setProperty("org.lwjgl.opengl.Window.undecorated", "true");
                     Display.setDisplayMode(new DisplayMode(desktop.getWidth(), desktop.getHeight()));
                     Display.setLocation(0, 0);
+                    this.resize(desktop.getWidth(), desktop.getHeight());
                 }
-
-                this.resize(desktop.getWidth(), desktop.getHeight());
             } else {
                 dev.fzkc.fzhud.util.Win32Window.leave();
                 System.setProperty("org.lwjgl.opengl.Window.undecorated", "false");

@@ -91,21 +91,25 @@ public final class Win32Window {
      * under it, so the windows that were behind the game stay behind it).
      */
     public static void update(boolean focused) {
-        if (!active || focused == onTop) return;
+        if (!active) return;
         U32 u = user32();
         Pointer hwnd = hwnd();
         if (u == null || hwnd == null) return;
+        // what Windows says is in front: LWJGL's "active" alone stayed true at times (the game kept being on
+        // top behind another window)
+        Pointer fg = u.GetForegroundWindow();
+        focused = focused && hwnd.equals(fg);
+        if (focused == onTop) return;
         onTop = focused;
         int flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE;
         if (focused) {
             u.SetWindowPos(hwnd, TOPMOST, 0, 0, 0, 0, flags);
             return;
         }
-        Pointer fg = u.GetForegroundWindow();
+        u.SetWindowPos(hwnd, NOTOPMOST, 0, 0, 0, 0, flags);
+        // then right under the window that took the focus, so the windows that were behind the game stay
+        // behind it. A window that is on top itself (the overlay, the task manager...) is in front anyway.
         boolean fgOnTop = fg != null && (u.GetWindowLongW(fg, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0;
-        // after a normal window: right under it, and no longer on top. A window that is on top itself (the
-        // launcher's overlay, the task manager...) is in front of every normal window anyway.
         if (fg != null && !fgOnTop && !fg.equals(hwnd)) u.SetWindowPos(hwnd, fg, 0, 0, 0, 0, flags);
-        else u.SetWindowPos(hwnd, NOTOPMOST, 0, 0, 0, 0, flags);
     }
 }

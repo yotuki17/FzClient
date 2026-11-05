@@ -160,11 +160,10 @@ class Capture {
     // numbers go on from what is there (+2: an ffmpeg that is still stopping may write one more piece)
     this.base = Math.max(this.base, this.newest() + 2);
     const o = this.options(), fps = o.fps === 30 ? 30 : 60, e = ENCODERS[this.encoder];
-    // the game window (FzRecorder puts in its handle), or the monitor it is on. While the game is borderless
-    // (over the whole screen, in front) Windows shows it directly and a capture of the window gets no new
-    // pictures ("frames duplicated" in ffmpeg.log): then its monitor is captured, which is only the game anyway
-    // (the overlay and the REC mark are left out of captures).
-    const monitor = o.area === 'monitor' || this.fullscreen;
+    // the game window (FzRecorder puts in its handle), or the monitor it is on. (A window exactly as big as the
+    // screen in front gets no new pictures in a window capture: FzClient's Borderless is one pixel taller for
+    // that. Capturing the monitor instead made the mouse cursor disappear.)
+    const monitor = o.area === 'monitor';
     const source = monitor ? `gfxcapture=hmonitor={HMONITOR}:max_framerate=${fps}` : `gfxcapture=hwnd={HWND}:max_framerate=${fps}`;
     const args = [String(this.game.pid), path.join(this.buffer, 'ffmpeg.log'), this.tools.ffmpeg,
       '-hide_banner', '-loglevel', 'warning',
