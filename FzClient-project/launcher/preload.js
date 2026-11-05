@@ -40,6 +40,12 @@ contextBridge.exposeInMainWorld('fz', {
     debug: () => ipcRenderer.invoke('opt:debug'),
     measure: seconds => ipcRenderer.invoke('opt:measure', seconds),
   },
+  rec: {
+    status: () => ipcRenderer.invoke('rec:status'),
+    prepare: () => ipcRenderer.invoke('rec:prepare'),
+    remove: () => ipcRenderer.invoke('rec:remove'),
+    onProgress: cb => ipcRenderer.on('rec:progress', (e, d) => cb(d)),
+  },
   optifine: {
     status: () => ipcRenderer.invoke('optifine:status'),
     install: () => ipcRenderer.invoke('optifine:install'),

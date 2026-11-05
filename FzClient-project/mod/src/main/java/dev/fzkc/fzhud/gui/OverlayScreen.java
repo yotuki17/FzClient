@@ -3,6 +3,7 @@ package dev.fzkc.fzhud.gui;
 import dev.fzkc.fzhud.Modules;
 import dev.fzkc.fzhud.config.BoolSetting;
 import dev.fzkc.fzhud.config.Module;
+import dev.fzkc.fzhud.feature.Recorder;
 import dev.fzkc.fzhud.render.Anim;
 import dev.fzkc.fzhud.render.R;
 import dev.fzkc.fzhud.util.FrameStats;
@@ -198,6 +199,7 @@ public class OverlayScreen extends FzScreen {
         R.rect(0, 0, vw, vh, R.alpha(parent != null ? 0x80000000 : 0x40000000, o));
         refreshStats();
         drawStats(o);
+        drawRecorder(mx, my, o);
         drawSwitches(mx, my, o);
         R.textCentered("Alt+X / Esc で閉じる", vw / 2f, vh - 16, R.alpha(MUTED, o));
     }
@@ -223,11 +225,17 @@ public class OverlayScreen extends FzScreen {
 
     // ---------------------------------------------------------------- left: the numbers
 
+    // the left column: numbers on top, the recorder under them (both fit a 360 px high screen)
+    private static final float TILE_H = 26, TILE_GAP = 4, GRAPH_H = 34;
+
+    private static float statsH() { return 32 + 4 * (TILE_H + TILE_GAP) + 14 + GRAPH_H + PAD; }
+
+    private float recY() { return M + statsH() + 8; }
+
     private void drawStats(float o) {
         float x = leftX(), y = M;
-        float tw = (PW - PAD * 2 - 6) / 2f, th = 29, gap = 5, gh = 46;
-        float h = 32 + 4 * (th + gap) + 14 + gh + PAD;
-        panel(x, y, PW, h, o);
+        float tw = (PW - PAD * 2 - 6) / 2f, th = TILE_H, gap = TILE_GAP, gh = GRAPH_H;
+        panel(x, y, PW, statsH(), o);
         heading(Lang.t("パフォーマンス"), x + PAD, y + 10, PW - PAD * 2, o);
 
         float cores = FrameStats.gameCores(), sys = FrameStats.systemLoad();
@@ -249,9 +257,9 @@ public class OverlayScreen extends FzScreen {
         for (int i = 0; i < label.length; i++) {
             float tx = x + PAD + (i % 2) * (tw + 6), ty = y + 32 + (i / 2) * (th + gap);
             card(tx, ty, tw, th, 0f, o);
-            R.text(Ui.trim(Lang.t(label[i]), tw - 10), tx + 6, ty + 5, R.alpha(MUTED, o));
-            if (i < 2) R.textScaled(value[i], tx + 6, ty + 15, 1.15f, R.alpha(color[i], o));
-            else R.text(Ui.trim(value[i], tw - 10), tx + 6, ty + 17, R.alpha(color[i], o));
+            R.text(Ui.trim(Lang.t(label[i]), tw - 10), tx + 6, ty + 4, R.alpha(MUTED, o));
+            if (i < 2) R.textScaled(value[i], tx + 6, ty + 14, 1.1f, R.alpha(color[i], o));
+            else R.text(Ui.trim(value[i], tw - 10), tx + 6, ty + 15, R.alpha(color[i], o));
         }
         float gy = y + 32 + 4 * (th + gap);
         R.text(Lang.t("フレーム時間") + String.format("  %.1f ms", ms), x + PAD, gy + 1, R.alpha(MUTED, o));
@@ -282,6 +290,58 @@ public class OverlayScreen extends FzScreen {
         R.text("60", x + 4, line - 9, R.alpha(MUTED, o));
     }
 
+    // ---------------------------------------------------------------- left, under the numbers: the recorder
+
+    private static final float REC_H = 96, REC_BTN = 20;
+    private final Anim recHover = new Anim(0f, 14f), replaySaveHover = new Anim(0f, 14f), replayRowHover = new Anim(0f, 14f);
+    private final Anim replayAnim = new Anim(Modules.recReplay.get() ? 1f : 0f, 14f);
+
+    private float recBtnW() { return (PW - PAD * 2 - 6) / 2f; }
+    private float recBtnY() { return recY() + 30; }
+    private float replayRowY() { return recBtnY() + REC_BTN + 6; }
+
+    private void drawRecorder(int mx, int my, float o) {
+        float x = leftX(), y = recY();
+        panel(x, y, PW, REC_H, o);
+        heading(Lang.t("録画"), x + PAD, y + 10, PW - PAD * 2, o);
+        String enc = Recorder.encoderName();
+        if (!enc.isEmpty()) R.text(enc, x + PW - PAD - R.width(enc), y + 10, R.alpha(MUTED, o));
+        if (!Recorder.available()) {
+            R.text(Ui.trim(Lang.t("ランチャーの「設定」→「録画」で"), PW - PAD * 2), x + PAD, y + 34, R.alpha(MUTED, o));
+            R.text(Ui.trim(Lang.t("準備すると使えます"), PW - PAD * 2), x + PAD, y + 46, R.alpha(MUTED, o));
+            return;
+        }
+        float bw = recBtnW(), bx = x + PAD, by = recBtnY();
+        boolean rec = Recorder.recording();
+        String start = rec ? "■ " + Lang.t("停止") + "  " + clock(Recorder.recordingMillis()) : "● " + Lang.t("録画開始");
+        float h1 = recHover.update(Ui.inside(mx, my, bx, by, bw, REC_BTN) ? 1 : 0);
+        if (rec) {
+            // recording: a red button like the launcher's danger button, so it is obvious
+            R.roundedWithOutline(bx, by, bw, REC_BTN, 6f, R.alpha(R.lerpColor(0xCC5A1E22, 0xE07A2328, h1), o), 1f, R.alpha(0xFFE5484D, o));
+            R.textCentered(start, bx + bw / 2f, by + 6, R.alpha(0xFFFFFFFF, o));
+        } else {
+            button(bx, by, bw, REC_BTN, start, h1, o);
+        }
+        boolean replay = Modules.recReplay.get();
+        String save = Lang.t("直前を保存");
+        button(bx + bw + 6, by, bw, REC_BTN, save, replaySaveHover.update(Ui.inside(mx, my, bx + bw + 6, by, bw, REC_BTN) ? 1 : 0),
+                replay ? o : o * 0.45f);
+
+        float ry = replayRowY(), rw = PW - PAD * 2;
+        card(bx, ry, rw, ROW, replayRowHover.update(Ui.inside(mx, my, bx, ry, rw, ROW) ? 1 : 0), o);
+        String keep = Lang.t("直前の {0} 秒をいつも残す").replace("{0}", Integer.toString(Math.round(Modules.recReplaySeconds.get())));
+        R.text(Ui.trim(keep, rw - 36), bx + 6, ry + 5, R.alpha(TEXT, o));
+        pill(bx + rw - 26, ry + 3, replayAnim.update(replay ? 1 : 0), o);
+
+        String st = Recorder.status();
+        if (!st.isEmpty()) R.text(Ui.trim(Lang.t(st), rw), bx, ry + ROW + 6, R.alpha(st.startsWith("録画が止") || st.startsWith("保存できません") ? 0xFFFF6B6B : MUTED, o));
+    }
+
+    private static String clock(long ms) {
+        long s = ms / 1000;
+        return s / 60 + ":" + (s % 60 < 10 ? "0" : "") + s % 60;
+    }
+
     // ---------------------------------------------------------------- right: the switches
 
     private void drawSwitches(int mx, int my, float o) {
@@ -309,6 +369,16 @@ public class OverlayScreen extends FzScreen {
     @Override
     protected void click(int mx, int my, int button) {
         if (button != 0) return;
+        if (Recorder.available()) {
+            float bx = leftX() + PAD, bw = recBtnW();
+            if (Ui.inside(mx, my, bx, recBtnY(), bw, REC_BTN)) { Recorder.toggleRecording(); return; }
+            if (Ui.inside(mx, my, bx + bw + 6, recBtnY(), bw, REC_BTN)) { Recorder.saveReplay(); return; }
+            if (Ui.inside(mx, my, bx, replayRowY(), PW - PAD * 2, ROW)) {
+                Modules.recReplay.value = !Modules.recReplay.value;
+                if (Modules.recReplay.value) Recorder.replaySwitched();
+                return;
+            }
+        }
         float x = rightX();
         for (int i = 0; i < SWITCHES.length; i++) {
             float indent = SWITCHES[i].setting != null ? 8 : 0;

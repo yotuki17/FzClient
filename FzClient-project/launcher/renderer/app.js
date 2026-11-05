@@ -32,6 +32,7 @@ document.querySelectorAll('.nav').forEach(b => b.onclick = () => {
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + b.dataset.page));
   if (b.dataset.page === 'mods') { loadMods(true); fz.settings.get().then(st => { $('modAuto').checked = st.autoUpdateMods !== false; }); }
   if (b.dataset.page === 'shots') loadShots();
+  if (b.dataset.page === 'settings') loadRecorder();
   if (b.dataset.page === 'skins') loadSkins();
   if (b.dataset.page === 'opt') { loadOpt(); loadOptiFine(); }
   if (b.dataset.page !== 'shots') closeShot();
@@ -600,6 +601,40 @@ $('dirReset').onclick = async () => { await save({ gameDir: '' }); info = await 
 $('dirOpen').onclick = () => fz.open.folder('game');
 $('lang').onchange = async () => { await save({ lang: $('lang').value }); location.reload(); };
 $('logsOpen').onclick = () => fz.open.folder('logs');
+
+// ---------------------------------------------------------------- recording (prepared here, used in the game)
+let recBusy = false;
+async function loadRecorder() {
+  if (recBusy) return;
+  let s;
+  try { s = await fz.rec.status(); } catch (e) { $('recState').textContent = errText(e); return; }
+  $('recState').textContent = s.ready
+    ? t('準備できています（{0}）。ゲーム中に Alt+X で録画できます', s.version || 'ffmpeg')
+    : s.ffmpeg ? t('補助プログラムがまだです。「準備する」を押してください') : t('まだ準備していません');
+  $('recPrepare').textContent = s.ready ? t('作り直す') : t('準備する');
+  $('recRemove').style.display = s.ffmpeg ? '' : 'none';
+}
+fz.rec.onProgress(p => {
+  const text = { find: '最新の ffmpeg を探しています…', download: 'ffmpeg をダウンロード中… {0}%', extract: 'ffmpeg を展開しています…', build: '補助プログラムを作っています…' }[p.stage];
+  if (text) $('recState').textContent = t(text, p.percent || 0);
+});
+$('recPrepare').onclick = async () => {
+  if (recBusy) return;
+  recBusy = true;
+  $('recPrepare').disabled = true;
+  try {
+    await fz.rec.prepare();
+    toast(t('録画の準備ができました。次にゲームを起動すると使えます'));
+  } catch (e) { toast(errText(e), true); }
+  recBusy = false;
+  $('recPrepare').disabled = false;
+  loadRecorder();
+};
+$('recOpen').onclick = () => fz.open.folder('recordings');
+$('recRemove').onclick = async () => {
+  try { await fz.rec.remove(); toast(t('ffmpeg を削除しました（録画したファイルは残っています）')); } catch (e) { toast(errText(e), true); }
+  loadRecorder();
+};
 
 // ---------------------------------------------------------------- start
 (async () => {

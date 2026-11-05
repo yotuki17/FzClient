@@ -149,6 +149,8 @@ public class FzHud {
         ClientRegistry.registerKeyBinding(imeKey);
         ClientRegistry.registerKeyBinding(Extras.zoomKey);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.gui.OverlayScreen.KEY);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.Recorder.KEY_RECORD);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.Recorder.KEY_SAVE);
         ClientRegistry.registerKeyBinding(Spotify.keyPlay);
         ClientRegistry.registerKeyBinding(Spotify.keyNext);
         ClientRegistry.registerKeyBinding(Spotify.keyPrev);
@@ -261,6 +263,9 @@ public class FzHud {
         }
         MotionBlur.tick();
         Performance.tick();
+        while (dev.fzkc.fzhud.feature.Recorder.KEY_RECORD.isPressed()) dev.fzkc.fzhud.feature.Recorder.toggleRecording();
+        while (dev.fzkc.fzhud.feature.Recorder.KEY_SAVE.isPressed()) dev.fzkc.fzhud.feature.Recorder.saveReplay();
+        dev.fzkc.fzhud.feature.Recorder.tick();
         RawInput.tick();
         Glass.tick();
         DiscordVoice.tick();

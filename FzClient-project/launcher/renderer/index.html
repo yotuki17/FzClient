@@ -51,9 +51,9 @@
       <div class="status" id="status"></div>
     </div>
     <div class="news">
-      <div class="news-h">FzClient 1.0.17</div>
+      <div class="news-h">FzClient 1.0.18</div>
       <ul>
-        <li>NEW：Alt+X のオーバーレイ（どの画面でも開ける）</li>
+        <li>NEW：録画（Alt+X）・Minecraft の音だけを録音</li>
         <li>最適化：Windows・ネットワーク・NVIDIA・Java の設定と FPS 計測</li>
         <li>スキン・マントの切り替え、スクショを見る</li>
         <li>Modrinth と CurseForge から MOD を探して入れる・自動で更新</li>
@@ -220,6 +220,10 @@
     <div class="set">
       <label>言語<small>ランチャーの表示言語</small></label>
       <div class="ctl"><select id="lang"><option value="auto">Auto / 自動</option><option value="ja">日本語</option><option value="en">English</option></select></div>
+    </div>
+    <div class="set">
+      <label>録画<small>ゲーム中に Alt+X から録画できるようにします。録画に使う ffmpeg（約 75 MB）を GitHub から一度だけ取得します</small></label>
+      <div class="ctl"><span class="path" id="recState">確認中…</span><button class="btn primary" id="recPrepare">準備する</button><button class="btn" id="recOpen">録画フォルダを開く</button><button class="btn" id="recRemove">削除</button></div>
     </div>
     <div class="set">
       <label>ログ</label>

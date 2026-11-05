@@ -795,3 +795,26 @@ Optimization（見た目を変えずに軽く）	Optimization (lighter, same loo
 Particles（殴った時の粒子を増やす）	Particles (more hit particles)
 オーバーレイ（Alt と一緒に押す）	Overlay (press with Alt)
 Alt+X で FPS・CPU などを見ながら軽くする設定を切り替える	Alt+X: switch FPS settings while watching FPS, CPU and more
+録画	Recording
+停止	Stop
+録画開始	Record
+直前を保存	Save last
+直前の {0} 秒をいつも残す	Always keep the last {0} s
+ランチャーの「設定」→「録画」で	Prepare it in the launcher:
+準備すると使えます	Settings → Recording
+ランチャーの「設定」→「録画」で準備してください	Prepare recording in the launcher (Settings → Recording)
+Recorder が OFF になっています	Recorder is turned off
+「直前の数十秒をいつも残しておく」を ON にしてください	Turn on "always keep the last seconds" first
+保存しています…	Saving…
+録画中	Recording
+保存できませんでした	Could not save
+保存できませんでした（録画がまだありません）	Could not save (nothing recorded yet)
+録画を保存しました: 	Recording saved: 
+録画を保存できませんでした	Could not save the recording
+Alt+X のオーバーレイから録画する（ランチャーの設定で準備が必要）	Record from the Alt+X overlay (prepare it in the launcher settings)
+直前の数十秒をいつも残しておく（あとから保存できる）	Always keep the last seconds (save them afterwards)
+残しておく長さ	Length kept
+フレームレート	Frame rate
+録画するモニター（1 = メイン）	Monitor to record (1 = main)
+録画 開始 / 停止	Recording start / stop
+録画 直前を保存	Recording: save last seconds

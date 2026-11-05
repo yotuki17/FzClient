@@ -282,6 +282,14 @@ public final class Modules {
     public static final Module overlay = new Module("overlay", "Overlay", Category.UTILITY,
             "Alt+X で FPS・CPU などを見ながら軽くする設定を切り替える", true);
 
+    // ---- Recorder (from the overlay): the game's picture (GPU encoder) and the game's sound only
+    public static final Module recorder = new Module("recorder", "Recorder", Category.UTILITY,
+            "Alt+X のオーバーレイから録画する（ランチャーの設定で準備が必要）", true);
+    public static final BoolSetting recReplay = recorder.add(new BoolSetting("replay", "直前の数十秒をいつも残しておく（あとから保存できる）", false));
+    public static final SliderSetting recReplaySeconds = recorder.add(new SliderSetting("replaysec", "残しておく長さ", 10, 120, 5, 30, " 秒"));
+    public static final ChoiceSetting recFps = recorder.add(new ChoiceSetting("fps", "フレームレート", 0, "60 FPS", "30 FPS"));
+    public static final SliderSetting recMonitor = recorder.add(new SliderSetting("monitor", "録画するモニター（1 = メイン）", 1, 4, 1, 1, ""));
+
     // ---- Bug fixes in the style of Patcher
     public static final Module fixes = new Module("fixes", "Bug Fixes", Category.UTILITY,
             "1.8.9 のバグを直す", true);
@@ -487,6 +495,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, overlays, autoGG, bgFps, performance, optimize, overlay, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, overlays, autoGG, bgFps, performance, optimize, overlay, recorder, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

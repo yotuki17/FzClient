@@ -12,6 +12,7 @@ const skins = require('./src/core/skins');
 const optimize = require('./src/core/optimize');
 const shots = require('./src/core/shots');
 const optifine = require('./src/core/optifine');
+const recorder = require('./src/core/recorder');
 
 shots.registerScheme();   // fzshot: pictures for the screenshot page (must happen before "ready")
 const modsDir = () => path.join(dirs().gameDir, 'mods');
@@ -154,7 +155,8 @@ ipcMain.handle('open:folder', (e, which) => {
   const target = which === 'mods' ? path.join(d.gameDir, 'mods')
     : which === 'logs' ? path.join(d.gameDir, 'logs')
     : which === 'screenshots' ? path.join(d.gameDir, 'screenshots')
-    : which === 'config' ? path.join(d.gameDir, 'config') : d.gameDir;
+    : which === 'config' ? path.join(d.gameDir, 'config')
+    : which === 'recordings' ? path.join(d.gameDir, 'recordings') : d.gameDir;
   fs.mkdirSync(target, { recursive: true });
   return shell.openPath(target);
 });
@@ -294,6 +296,18 @@ ipcMain.handle('optifine:revert', () => {
   settings.set({ ofPreset: '' });
 });
 
+// ---------------------------------------------------------------- recording (done by FzClient; this prepares ffmpeg + helper)
+ipcMain.handle('rec:status', () => recorder.status());
+ipcMain.handle('rec:prepare', async () => {
+  const r = await recorder.prepare(p => send('rec:progress', p), log);
+  log('[recorder] ready ' + JSON.stringify(r));
+  return r;
+});
+ipcMain.handle('rec:remove', () => {
+  if (running) throw new Error('Minecraft を閉じてから削除してください');
+  recorder.remove();
+});
+
 // ---------------------------------------------------------------- screenshots
 ipcMain.handle('shots:list', () => shots.list());
 ipcMain.handle('shots:copy', (e, file) => shots.copy(file));
@@ -421,13 +435,15 @@ async function launchGame() {
   }
   const game = new Game(dirs(), log);
   let lastSent = 0;
+  const recProp = await recorder.forLaunch(log);   // the Alt+X recorder, when it is prepared
   const output = gameLog();
   let child;
   try {
     child = await game.launch({
       account: acc, memoryMb: s.memoryMb, width: s.width, height: s.height, fullscreen: s.fullscreen,
       jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
-      optimizeJvm: !!s.optimizeJvm, jvmExtras: s.optimizeJvm ? optimize.jvmExtras() : [], highPriority: s.gamePriority === 'high',
+      optimizeJvm: !!s.optimizeJvm, jvmExtras: [...(s.optimizeJvm ? optimize.jvmExtras() : []), ...(recProp ? [recProp] : [])],
+      highPriority: s.gamePriority === 'high',
       affinityMask: s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
       onProgress: (stage, done, total, bytesDone, bytesTotal) => {
         const now = Date.now();
