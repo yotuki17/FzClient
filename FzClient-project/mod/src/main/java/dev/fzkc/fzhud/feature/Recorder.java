@@ -69,6 +69,8 @@ public final class Recorder {
 
     private static Process helper;
     private static long startedAt;
+    /** Whether the running capture took the whole monitor (the game was borderless when it started). */
+    private static boolean captureFullscreen;
     /** First piece number of the running capture (numbers keep growing across captures). */
     private static int base;
     /** First piece of the recording being made, -1 = not recording. */
@@ -178,6 +180,13 @@ public final class Recorder {
 
         if (wanted && !gaveUp && !running() && helper == null && !recording()) startCapture();
 
+        // F11 while capturing the game: window <-> monitor capture, so start again the other way (the pieces go on,
+        // a recording keeps going across)
+        if (running() && Modules.recArea.get() == 0 && Minecraft.getMinecraft().isFullScreen() != captureFullscreen) {
+            stopCapture();
+            startCapture();
+        }
+
         // saves whose last piece is complete now (ffmpeg moved on to the next one, or stopped)
         int newest = newest();
         for (Iterator<Save> it = waiting.iterator(); it.hasNext(); ) {
@@ -215,7 +224,9 @@ public final class Recorder {
         File buf = bufferDir();
         buf.mkdirs();
         // numbers go on from what is there (pieces of a capture that just ended may still be waiting to be saved)
-        base = Math.max(base, newest() + 1);
+        // +2: an ffmpeg that is still stopping may write one more piece
+        base = Math.max(base, newest() + 2);
+        captureFullscreen = Minecraft.getMinecraft().isFullScreen();
         int fps = Modules.recFps.get() == 1 ? 30 : 60;
         int monitor = Math.max(0, Math.round(Modules.recMonitor.get()) - 1);
         String[] e = ENCODERS[encoder];
@@ -227,8 +238,10 @@ public final class Recorder {
         cmd.add(new File(TOOLS, "ffmpeg.exe").getPath());
         Collections.addAll(cmd, "-hide_banner", "-loglevel", "warning",
                 "-f", "lavfi", "-i", Modules.recArea.get() == 0
-                        // just the game window; FzRecorder puts the window handle in for {HWND}
-                        ? "gfxcapture=hwnd={HWND}:max_framerate=" + fps
+                        // the game: while borderless the monitor it is on (a window covering the screen in front is
+                        // shown by Windows directly and window capture freezes), else just its window. FzRecorder
+                        // puts the handles in for {HMONITOR} / {HWND}.
+                        ? (captureFullscreen ? "gfxcapture=hmonitor={HMONITOR}:max_framerate=" : "gfxcapture=hwnd={HWND}:max_framerate=") + fps
                         // a whole monitor (Desktop Duplication: fails while a game runs in exclusive fullscreen)
                         : "ddagrab=output_idx=" + monitor + ":framerate=" + fps,
                 "-f", "s16le", "-ar", "48000", "-ac", "2", "-thread_queue_size", "1024", "-i", "pipe:0",

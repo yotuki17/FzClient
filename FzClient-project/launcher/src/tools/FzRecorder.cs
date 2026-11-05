@@ -77,6 +77,9 @@ static class FzRecorder {
     [DllImport("kernel32.dll")]
     static extern IntPtr GetStdHandle(int which);
 
+    [DllImport("user32.dll")]
+    static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
+
     static volatile bool stop;
     static StreamWriter log;
 
@@ -93,13 +96,20 @@ static class FzRecorder {
         try {
             Process game = Process.GetProcessById(pid);
 
-            // "{HWND}" in the arguments becomes the game's window (for ffmpeg's gfxcapture, which records just that
-            // window: nothing on top of it shows, any monitor, also fullscreen)
-            string hwnd = null;
+            // "{HWND}" in the arguments becomes the game's window, "{HMONITOR}" the monitor it is on (for ffmpeg's
+            // gfxcapture). The game asks for the monitor while it is borderless: a window covering the whole screen
+            // in front is shown by Windows directly, and capturing the window then only ever gets one picture.
+            string hwnd = null, hmonitor = null;
             for (int i = 3; i < args.Length; i++) {
-                if (args[i].IndexOf("{HWND}", StringComparison.Ordinal) < 0) continue;
-                if (hwnd == null) hwnd = GameWindow(game);
-                args[i] = args[i].Replace("{HWND}", hwnd);
+                if (args[i].IndexOf("{HWND}", StringComparison.Ordinal) >= 0) {
+                    if (hwnd == null) hwnd = GameWindow(game);
+                    args[i] = args[i].Replace("{HWND}", hwnd);
+                }
+                if (args[i].IndexOf("{HMONITOR}", StringComparison.Ordinal) >= 0) {
+                    if (hwnd == null) hwnd = GameWindow(game);
+                    if (hmonitor == null) hmonitor = ((long) MonitorFromWindow(new IntPtr(long.Parse(hwnd)), 2 /* nearest */)).ToString();
+                    args[i] = args[i].Replace("{HMONITOR}", hmonitor);
+                }
             }
 
             ProcessStartInfo psi = new ProcessStartInfo(args[2]);
