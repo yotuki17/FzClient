@@ -303,6 +303,13 @@ class Game {
       // "ゲームの優先度を高く" (最適化 page): Windows gives the game the CPU first
       try { require('os').setPriority(child.pid, require('os').constants.priority.PRIORITY_HIGH); } catch (e) { this.log('[launch] priority: ' + e.message); }
     }
+    if (opts.affinityMask && child.pid) {
+      // "キャッシュの大きいコアで動かす" (最適化 page): Node has no call for this, Windows' own PowerShell does
+      const ps = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+        `(Get-Process -Id ${child.pid}).ProcessorAffinity = [IntPtr]${Number(opts.affinityMask)}`], { windowsHide: true });
+      ps.on('error', e => this.log('[launch] affinity: ' + e.message));
+      ps.on('close', code => this.log('[launch] affinity 0x' + Number(opts.affinityMask).toString(16) + (code ? ' failed (' + code + ')' : ' set')));
+    }
     const onLog = opts.onLog || (() => {});
     child.stdout.on('data', d => onLog(d.toString()));
     child.stderr.on('data', d => onLog(d.toString()));

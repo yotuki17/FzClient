@@ -963,6 +963,7 @@ const OPT_TEXT = {
   nvidia: ['NVIDIA：FzClient 専用の設定', '電源を最大パフォーマンス、テクスチャ品質を高パフォーマンス、スレッド最適化をオンにします。ほかのゲームには影響しません。'],
   jvm: ['Java の最適化', 'メモリを最初から確保して、ガベージコレクションを Minecraft 向けに整えます。'],
   priority: ['ゲームの優先度を高く', '起動した Minecraft の CPU 優先度を「高」にします。'],
+  x3d: ['キャッシュの大きいコアで動かす（Ryzen X3D）', 'Minecraft を 3D V-Cache の付いたコアだけで動かします。Windows がゲームだと気づかず、キャッシュの無いコアで動いてしまうのを防ぎます。'],
 };
 let optState = null, optWant = {}, optErrors = {}, optBusy = false;
 
@@ -1001,6 +1002,7 @@ function renderOpt() {
       if (tw.recommended) tags.push(`<span class="tg rec">${esc(t('おすすめ'))}</span>`);
       if (tw.admin) tags.push(`<span class="tg adm">🛡 ${esc(t('管理者'))}</span>`);
       if (!tw.available) tags.push(`<span class="tg">${esc(t('この PC では使えません'))}</span>`);
+      if (tw.id === 'coreParking' && optState.cpu) tags.push(`<span class="tg err">${esc(t('X3D の CPU では OFF がおすすめ'))}</span>`);
       if (optErrors[tw.id]) tags.push(`<span class="tg err">${esc(t(optErrors[tw.id]))}</span>`);
       row.appendChild(el('div', 'txt', `<b>${esc(t(title))}</b><small>${esc(t(desc))}</small><div class="tags">${tags.join('')}</div>`));
       row.appendChild(el('span', 'state' + (tw.on ? ' on' : ''), esc(t(tw.on ? '適用中' : '未適用'))));

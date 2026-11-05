@@ -2,6 +2,9 @@
 // Japanese is the source language. EN maps each Japanese string to its English text. {0}, {1} are placeholders.
 const EN = {
   // one mod's details
+  'キャッシュの大きいコアで動かす（Ryzen X3D）': 'Run on the big-cache cores (Ryzen X3D)',
+  'Minecraft を 3D V-Cache の付いたコアだけで動かします。Windows がゲームだと気づかず、キャッシュの無いコアで動いてしまうのを防ぎます。': 'Runs Minecraft only on the cores with 3D V-Cache, so Windows cannot put it on the cores without the cache when it does not recognise it as a game.',
+  'X3D の CPU では OFF がおすすめ': 'Best left off on X3D CPUs',
   // OptiFine
   '確認中…': 'Checking…',
   'FPS を大きく上げる定番の MOD です': 'The classic mod for much higher FPS',
@@ -33,7 +36,7 @@ const EN = {
   'ダウンロードが見つかりませんでした。もう一度「OptiFine を入れる」を押すか、「ファイルから」を使ってください': 'The download was not found. Press "Install OptiFine" again or use "From file"',
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
-  'NEW：広い画面でスクショと MOD の詳細を横に表示': 'NEW: screenshot preview and mod details beside the list in a wide window',
+  'NEW：Ryzen X3D のキャッシュコアで動かす・横に詳細表示': 'NEW: run on Ryzen X3D cache cores, details beside the list',
   'スキン・マントの切り替え、スクショを見る': 'Skins and capes, screenshot gallery',
   '有効にする': 'Enabled',
   'OFF にするとゲームで読み込まれません': 'When off, the game does not load it',

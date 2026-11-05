@@ -295,7 +295,26 @@ if ($n -eq 0) { throw 'no network adapter found' }`,
     id: 'priority', group: 'minecraft', launcher: true, recommended: true,
     on: (s, st) => st.gamePriority === 'high',
   },
+  {
+    // only on Ryzen X3D chips with two core groups (see cacheCores)
+    id: 'x3d', group: 'minecraft', launcher: true, recommended: true, x3d: true,
+    on: (s, st) => !!st.gameX3d,
+  },
 ];
+
+/**
+ * Ryzen 7900X3D / 7950X3D / 9900X3D / 9950X3D: two groups of cores (CCDs), and only the first one has the big
+ * 3D V-Cache that games run much faster on. Windows moves a program there only when it recognises it as a game,
+ * which it often does not for Minecraft (Java). Returns { model, mask } with the first group's logical
+ * processors (Windows numbers them first), or null on every other CPU.
+ */
+function cacheCores() {
+  const cpus = os.cpus();
+  const model = (cpus[0] && cpus[0].model || '').trim();
+  if (!/Ryzen.*\b(7900|7950|9900|9950)X3D\b/i.test(model) || cpus.length < 4) return null;
+  const half = Math.floor(cpus.length / 2);
+  return { model, mask: 2 ** half - 1, count: half };
+}
 
 let nvidiaExe = '';
 function nvidiaLines(v) {
@@ -400,8 +419,9 @@ async function status(settings) {
     tweaks: TWEAKS.map(t => ({
       id: t.id, group: t.group, admin: !!t.admin, recommended: !!t.recommended,
       on: !!t.on(state, settings, backup),
-      available: !(t.nvidia && !hasNvidia(state)),
+      available: !(t.nvidia && !hasNvidia(state)) && !(t.x3d && !cacheCores()),
     })),
+    cpu: cacheCores(),
   };
 }
 
@@ -419,6 +439,7 @@ async function change(want, settings) {
     if (t.launcher) {
       if (t.id === 'jvm') patch.optimizeJvm = on;
       if (t.id === 'priority') patch.gamePriority = on ? 'high' : 'normal';
+      if (t.id === 'x3d') patch.gameX3d = on && !!cacheCores();
       done.push(t.id);
       continue;
     }
@@ -471,7 +492,11 @@ async function change(want, settings) {
 
 /** The recommended set: every recommended tweak that this PC can use. */
 function recommended(nvidia) {
-  return TWEAKS.filter(t => t.recommended && !(t.nvidia && !nvidia)).map(t => t.id);
+  const x3d = !!cacheCores();
+  return TWEAKS.filter(t => t.recommended && !(t.nvidia && !nvidia) && !(t.x3d && !x3d)
+    // on two-group X3D chips AMD's driver parks the group without the cache for games; keeping every core
+    // awake works against that
+    && !(t.id === 'coreParking' && x3d)).map(t => t.id);
 }
 
 /** Extra Java options when "Java の最適化" is on (Java 8, Minecraft 1.8.9). */
@@ -525,4 +550,4 @@ Add-Content -Encoding UTF8 -Path $FZ_OUT -Value ("exit=" + $p.ExitCode)`;
   };
 }
 
-module.exports = { debugInfo, lastState, setJavaPath, status, change, recommended, jvmExtras, flushDns, measure, TWEAK_IDS: TWEAKS.map(t => t.id) };
+module.exports = { debugInfo, lastState, setJavaPath, status, change, recommended, jvmExtras, cacheCores, flushDns, measure, TWEAK_IDS: TWEAKS.map(t => t.id) };

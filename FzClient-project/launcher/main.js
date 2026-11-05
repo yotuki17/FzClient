@@ -38,16 +38,43 @@ function send(channel, data) {
   if (win && !win.isDestroyed()) win.webContents.send(channel, data);
 }
 
+/**
+ * First start: wide enough for the side panels (screenshot preview / mod details need 1200 px), but never bigger
+ * than the screen. Later starts: the size the window had when it was last closed.
+ */
+function windowSize() {
+  const { screen } = require('electron');
+  const area = screen.getPrimaryDisplay().workAreaSize;
+  const saved = settings.get().winSize || {};
+  const fit = (want, max, min) => Math.max(min, Math.min(want, max));
+  return {
+    width: fit(saved.width || 1300, area.width - 40, 900),
+    height: fit(saved.height || 800, area.height - 40, 560),
+    maximized: !!saved.maximized,
+  };
+}
+
+function rememberSize() {
+  if (!win || win.isDestroyed()) return;
+  const b = win.getNormalBounds();
+  settings.set({ winSize: { width: b.width, height: b.height, maximized: win.isMaximized() } });
+}
+
 function createWindow() {
+  const size = windowSize();
   win = new BrowserWindow({
-    width: 1040, height: 640, minWidth: 900, minHeight: 560,
+    width: size.width, height: size.height, minWidth: 900, minHeight: 560,
     frame: false, backgroundColor: '#0B1416', show: false, title: 'FzClient Launcher',
     icon: path.join(__dirname, 'renderer', 'assets', 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   win.setMenuBarVisibility(false);
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-  win.once('ready-to-show', () => win.show());
+  win.once('ready-to-show', () => {
+    if (size.maximized) win.maximize();
+    win.show();
+  });
+  win.on('close', rememberSize);
   // links open in the normal browser, never inside the launcher
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
@@ -367,6 +394,7 @@ async function launchGame() {
     account: acc, memoryMb: s.memoryMb, width: s.width, height: s.height, fullscreen: s.fullscreen,
     jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
     optimizeJvm: !!s.optimizeJvm, jvmExtras: s.optimizeJvm ? optimize.jvmExtras() : [], highPriority: s.gamePriority === 'high',
+    affinityMask: s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
     onProgress: (stage, done, total, bytesDone, bytesTotal) => {
       const now = Date.now();
       if (now - lastSent < 80 && done < total) return; // don't flood the page
