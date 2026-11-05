@@ -328,3 +328,25 @@ input[type=range] { flex: 1; accent-color: var(--cyan); }
 .of-card .of-ico { width: 32px; height: 32px; border-radius: 8px; }
 .of-card .btn { flex: none; }
 .of-card .on-preset { border-color: var(--cyan); color: var(--cyan); }
+
+/* ---------- wide window: screenshot preview and mod details as a panel on the right instead of on top */
+@media (min-width: 1200px) {
+  :root { --pane: 420px; }
+  main { transition: right .2s; }
+  body.pane-open main { right: var(--pane); }
+
+  .viewer { inset: 36px 0 0 auto; width: var(--pane); background: #0c1518; border-left: 1px solid var(--line);
+    display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto auto 1fr; align-items: center;
+    align-content: start; gap: 12px; padding: 20px 16px; box-sizing: border-box; overflow-y: auto; }
+  .viewer figure { grid-column: 1 / -1; grid-row: 1; max-width: 100%; max-height: none; }
+  .viewer img { max-height: 60vh; box-shadow: 0 6px 24px rgba(0,0,0,.5); }
+  .viewer figcaption { word-break: break-all; text-align: center; }
+  .viewer .prev { grid-column: 1; grid-row: 2; }
+  .viewer .next { grid-column: 3; grid-row: 2; }
+  .vnav { width: 44px; height: 40px; margin: 0; font-size: 26px; }
+  .vbar { position: static; transform: none; grid-column: 1 / -1; grid-row: 3; flex-wrap: wrap; justify-content: center; }
+
+  #modModal { inset: 36px 0 0 auto; width: var(--pane); background: none; place-items: stretch; }
+  #modModal .dialog { width: auto; max-height: none; border-radius: 0; border-width: 0 0 0 1px; box-shadow: none; transform: none; }
+}
+.list .card.sel, .shot.sel { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset; }

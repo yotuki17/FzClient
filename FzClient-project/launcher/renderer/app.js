@@ -35,7 +35,17 @@ document.querySelectorAll('.nav').forEach(b => b.onclick = () => {
   if (b.dataset.page === 'skins') loadSkins();
   if (b.dataset.page === 'opt') { loadOpt(); loadOptiFine(); }
   if (b.dataset.page !== 'shots') closeShot();
+  if (b.dataset.page !== 'mods' && $('modModal').classList.contains('on')) $('mdClose').onclick();
 });
+
+// In a wide window the screenshot preview and the mod details are a panel on the right (style.css): the page
+// gets narrower while one of them is open, so nothing is hidden under it.
+(function paneWatch() {
+  const panes = [$('viewer'), $('modModal')];
+  const sync = () => document.body.classList.toggle('pane-open', panes.some(p => p.classList.contains('on')));
+  const mo = new MutationObserver(sync);
+  for (const p of panes) mo.observe(p, { attributes: true, attributeFilter: ['class'] });
+})();
 
 // ---------------------------------------------------------------- background particles
 (function stars() {
@@ -201,6 +211,7 @@ async function loadMods(checkUpdates) {
   $('modUpdateAll').textContent = updatable.length ? t('すべて更新（{0}）', updatable.length) : t('すべて更新');
   for (const m of mods) {
     const row = el('div', 'card clickable' + (m.enabled ? '' : ' off'));
+    row.dataset.file = m.file;
     row.title = t('クリックで詳細');
     // the buttons in the row do their own thing; anywhere else opens the details
     row.onclick = ev => { if (!ev.target.closest('button')) openModDetails(m); };
@@ -217,7 +228,14 @@ async function loadMods(checkUpdates) {
     }
     const sw = el('button', 'sw' + (m.enabled ? ' on' : ''));
     sw.title = m.enabled ? 'ON' : 'OFF';
-    sw.onclick = async () => { try { await fz.mods.toggle(m.file); loadMods(); } catch (e) { toast(errText(e), true); } };
+    sw.onclick = async () => {
+      try {
+        await fz.mods.toggle(m.file);
+        // the details panel may show this mod; toggling renames the jar (foo.jar <-> foo.jar.disabled)
+        if (mdMod && mdMod.file === m.file) await refreshModDetails(m.enabled ? m.file + '.disabled' : m.file.replace(/\.disabled$/i, ''));
+        else loadMods();
+      } catch (e) { toast(errText(e), true); }
+    };
     row.appendChild(sw);
     const del = el('button', 'iconbtn', '🗑');
     del.title = t('削除（ごみ箱へ）');
@@ -228,6 +246,12 @@ async function loadMods(checkUpdates) {
     row.appendChild(del);
     list.appendChild(row);
   }
+  markModRow();
+}
+
+/** Highlights the mod whose details are open (useful when they are the panel next to the list). */
+function markModRow() {
+  document.querySelectorAll('#modList .card').forEach(r => r.classList.toggle('sel', !!mdMod && r.dataset.file === mdMod.file));
 }
 
 // ---------------------------------------------------------------- one mod's details
@@ -242,6 +266,7 @@ function modPage(m) {
 
 function fillModDetails(m) {
   mdMod = m;
+  markModRow();
   const ico = $('mdIcon');
   ico.innerHTML = '';
   ico.appendChild(icon(m.project && m.project.icon, m.name));
@@ -304,8 +329,8 @@ async function refreshModDetails(file) {
   return m;
 }
 
-$('mdClose').onclick = () => { $('modModal').classList.remove('on'); mdMod = null; };
-$('modModal').onclick = e => { if (e.target === $('modModal')) $('mdClose').onclick(); };
+$('mdClose').onclick = () => { $('modModal').classList.remove('on'); mdMod = null; markModRow(); };
+$('modModal').onclick = e => { if (e.target === $('modModal') && !docked()) $('mdClose').onclick(); };
 $('mdOn').onclick = async () => {
   const m = mdMod;
   try {
@@ -488,12 +513,19 @@ function openShot(i) {
   $('vDel').textContent = t('削除');
   $('vDel').classList.remove('sure');
   $('viewer').classList.add('on');
+  document.querySelectorAll('#shotGrid .shot').forEach((b, j) => b.classList.toggle('sel', j === shotIdx));
 }
-function closeShot() { $('viewer').classList.remove('on'); shotIdx = -1; }
+function closeShot() {
+  $('viewer').classList.remove('on');
+  shotIdx = -1;
+  document.querySelectorAll('#shotGrid .shot.sel').forEach(b => b.classList.remove('sel'));
+}
+/** Wide window: the preview / details are a docked panel, so a click on its empty part must not close it. */
+const docked = () => matchMedia('(min-width: 1200px)').matches;
 $('vPrev').onclick = () => openShot(shotIdx - 1);
 $('vNext').onclick = () => openShot(shotIdx + 1);
 $('vClose').onclick = closeShot;
-$('viewer').onclick = e => { if (e.target === $('viewer')) closeShot(); };
+$('viewer').onclick = e => { if (e.target === $('viewer') && !docked()) closeShot(); };
 $('vCopy').onclick = async () => { try { await fz.shots.copy(shotList[shotIdx].file); toast(t('画像をコピーしました')); } catch (e) { toast(errText(e), true); } };
 $('vReveal').onclick = () => fz.shots.reveal(shotList[shotIdx].file);
 $('vDel').onclick = async () => {
