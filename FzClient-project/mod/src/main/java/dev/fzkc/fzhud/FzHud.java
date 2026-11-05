@@ -246,6 +246,7 @@ public class FzHud {
         if (event.phase != TickEvent.Phase.END) return;
         dev.fzkc.fzhud.util.Stamp.ticks++;
         Minecraft mc = Minecraft.getMinecraft();
+        borderlessAtStart(mc);
         Tracker.tick();
         Gameplay.tick(toggleSneakKey);
         TntTimer.tick();
@@ -295,6 +296,22 @@ public class FzHud {
                 && dev.fzkc.fzhud.gui.OverlayScreen.altDown()) {
             dev.fzkc.fzhud.gui.OverlayScreen.open(mc);
         }
+    }
+
+    private boolean borderlessChecked;
+
+    /**
+     * Borderless used to apply only when F11 was pressed: a game started in fullscreen (the launcher's setting)
+     * stayed in exclusive fullscreen. That also froze recordings (window capture only gets new frames from a
+     * window Windows draws itself) and hid the mouse in menus. On the first tick such a game is switched to
+     * borderless: our toggleFullscreen goes fullscreen -> window, and the second call window -> borderless.
+     */
+    private void borderlessAtStart(Minecraft mc) {
+        if (borderlessChecked) return;
+        borderlessChecked = true;
+        if (!Modules.borderless.enabled || !org.lwjgl.opengl.Display.isFullscreen()) return;
+        mc.toggleFullscreen();
+        mc.toggleFullscreen();
     }
 
     /**

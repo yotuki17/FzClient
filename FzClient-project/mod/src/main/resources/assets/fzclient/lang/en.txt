@@ -822,3 +822,4 @@ Alt+X のオーバーレイから録画する（ランチャーの設定で準�
 Minecraft のウィンドウだけ	Only the Minecraft window
 モニター全体	Whole monitor
 録画するモニター（モニター全体のとき、1 = メイン）	Monitor to record (whole monitor, 1 = main)
+フルスクリーンでは映像が止まることがあります（Borderless を ON に）	The picture may freeze in fullscreen (turn on Borderless)

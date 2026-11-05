@@ -123,7 +123,7 @@ public final class Recorder {
         // the piece being written now: up to 2 s from before the button, never less than what was asked for
         recordFrom = Math.max(base, newest());
         recordStartedAt = System.currentTimeMillis();
-        status = "録画中";
+        if (!status.startsWith("フルスクリーン")) status = "録画中";   // keep the fullscreen warning from startCapture
     }
 
     /** Saves the last N seconds (only while they are being kept). */
@@ -248,6 +248,8 @@ public final class Recorder {
             startedAt = System.currentTimeMillis();
             addShutdownHook();
             if (status.isEmpty() || status.startsWith("録画が止まりました")) status = "";
+            // exclusive fullscreen is not drawn by Windows itself: window capture would only get its first picture
+            if (Modules.recArea.get() == 0 && org.lwjgl.opengl.Display.isFullscreen()) status = "フルスクリーンでは映像が止まることがあります（Borderless を ON に）";
             return true;
         } catch (Exception ex) {
             helper = null;

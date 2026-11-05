@@ -96,7 +96,8 @@ public abstract class MixinMinecraft {
                 int w = Math.max(320, fzhud$windowW);
                 int h = Math.max(240, fzhud$windowH);
 
-                if (w >= desktop.getWidth() && h >= desktop.getHeight()) {
+                // no window size known yet (the game started in fullscreen) or one as big as the screen
+                if (fzhud$windowW <= 0 || (w >= desktop.getWidth() && h >= desktop.getHeight())) {
                     w = 854;
                     h = 480;
                 }
