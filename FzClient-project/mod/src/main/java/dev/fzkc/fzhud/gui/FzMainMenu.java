@@ -136,26 +136,55 @@ public class FzMainMenu extends FzScreen {
         favLine = new String[0];
         favLinePop = new String[0];
         favLinePing = new long[0];
-        {
-            for (final net.minecraft.client.multiplayer.ServerData sd : favs) {
-                sd.pingToServer = -2L; // "checking"
-                sd.populationInfo = "";
-                Thread t = new Thread(() -> {
-                    try {
-                        pinger.ping(sd);
-                    } catch (Throwable e) {
-                        sd.pingToServer = -1L;
-                    }
-                }, "FzClient-FavPing");
-                t.setDaemon(true);
-                t.start();
-            }
+        for (net.minecraft.client.multiplayer.ServerData sd : favs) {
+            sd.pingToServer = -2L; // "checking"
+            sd.populationInfo = "";
+        }
+        favTries = new int[favs.size()];
+        favAt = new long[favs.size()];
+        // right after the game starts another mod (Mellow: its replay recorder sees every connection) is not ready
+        // yet and the first pings failed in it (NullPointerException: every favourite "Offline" until the
+        // multiplayer screen had been opened). So the first ping of a game waits a moment, and a server that could
+        // not be reached is asked again (3 times in all).
+        long first = System.currentTimeMillis() + (pingedOnce ? 0 : 2500);
+        pingedOnce = true;
+        java.util.Arrays.fill(favAt, first);
+    }
+
+    private static boolean pingedOnce;
+    private int[] favTries = new int[0];
+    private long[] favAt = new long[0];
+
+    private static boolean unreachable(net.minecraft.client.multiplayer.ServerData sd) {
+        return sd.pingToServer == -1L && sd.serverMOTD != null && sd.serverMOTD.contains("Can't connect");
+    }
+
+    /** Sends the pings that are due (on a thread: looking up the address and connecting take a while). */
+    private void pingDue() {
+        long now = System.currentTimeMillis();
+        for (int i = 0; i < favs.size() && i < favTries.length; i++) {
+            final net.minecraft.client.multiplayer.ServerData sd = favs.get(i);
+            boolean due = favTries[i] == 0 ? now >= favAt[i] : favTries[i] < 3 && unreachable(sd) && now - favAt[i] > 3000;
+            if (!due) continue;
+            favTries[i]++;
+            favAt[i] = now;
+            Thread t = new Thread(() -> {
+                try {
+                    pinger.ping(sd);
+                } catch (Throwable e) {
+                    sd.pingToServer = -1L;
+                    sd.serverMOTD = "Can't connect";
+                }
+            }, "FzClient-FavPing");
+            t.setDaemon(true);
+            t.start();
         }
     }
 
     @Override
     public void updateScreen() {
         super.updateScreen();
+        pingDue();
         try {
             pinger.pingPendingNetworks();
         } catch (Throwable ignored) {
