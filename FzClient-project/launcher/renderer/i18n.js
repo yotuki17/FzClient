@@ -33,7 +33,7 @@ const EN = {
   'ダウンロードが見つかりませんでした。もう一度「OptiFine を入れる」を押すか、「ファイルから」を使ってください': 'The download was not found. Press "Install OptiFine" again or use "From file"',
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
-  'NEW：OptiFine の導入と PvP 向け設定': 'NEW: OptiFine install and PvP settings',
+  'NEW：ロビーのホログラムを軽く描く・OptiFine の導入': 'NEW: lighter lobby holograms, OptiFine install',
   'スキン・マントの切り替え、スクショを見る': 'Skins and capes, screenshot gallery',
   '有効にする': 'Enabled',
   'OFF にするとゲームで読み込まれません': 'When off, the game does not load it',

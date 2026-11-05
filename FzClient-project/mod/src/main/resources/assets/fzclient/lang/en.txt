@@ -775,3 +775,4 @@ GL エラーの確認を省く（毎フレームの待ちが減る）	Skip GL er
 ポーション効果中にインベントリが右にずれるのを直す	Keep the inventory centred while a potion is active
 マウスの遅れを直す（狙った所にちゃんと当たる）	Fix mouse delay (hits land where you aim)
 サーバーのリソースパックを使った攻撃を防ぐ	Block the server resource pack exploit
+ホログラム（浮いている文字）を軽く描く	Draw holograms (floating text) the light way

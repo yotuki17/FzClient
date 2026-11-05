@@ -272,6 +272,7 @@ public final class Modules {
     //      work together. The defaults keep the picture exactly as before; only the GL error checks are skipped.
     public static final Module optimize = new Module("optimize", "Optimization", Category.UTILITY,
             "OptiFine と一緒に使える軽量化", true);
+    public static final BoolSetting optHolograms = optimize.add(new BoolSetting("holograms", "ホログラム（浮いている文字）を軽く描く", true));
     public static final BoolSetting optGlErrors = optimize.add(new BoolSetting("glerrors", "GL エラーの確認を省く（毎フレームの待ちが減る）", true));
     public static final SliderSetting optTileDist = optimize.add(new SliderSetting("tiledist", "チェスト・看板・頭などの描画距離（64 = いつも通り）", 8, 64, 4, 64, "m"));
     public static final SliderSetting optParticles = optimize.add(new SliderSetting("maxparticles", "パーティクルの上限（4000 = いつも通り）", 200, 4000, 200, 4000, ""));
