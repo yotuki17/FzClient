@@ -818,3 +818,7 @@ Alt+X のオーバーレイから録画する（ランチャーの設定で準�
 録画するモニター（1 = メイン）	Monitor to record (1 = main)
 録画 開始 / 停止	Recording start / stop
 録画 直前を保存	Recording: save last seconds
+録画する範囲	Area to record
+Minecraft のウィンドウだけ	Only the Minecraft window
+モニター全体	Whole monitor
+録画するモニター（モニター全体のとき、1 = メイン）	Monitor to record (whole monitor, 1 = main)

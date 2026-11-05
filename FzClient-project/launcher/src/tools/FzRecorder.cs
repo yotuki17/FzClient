@@ -93,6 +93,15 @@ static class FzRecorder {
         try {
             Process game = Process.GetProcessById(pid);
 
+            // "{HWND}" in the arguments becomes the game's window (for ffmpeg's gfxcapture, which records just that
+            // window: nothing on top of it shows, any monitor, also fullscreen)
+            string hwnd = null;
+            for (int i = 3; i < args.Length; i++) {
+                if (args[i].IndexOf("{HWND}", StringComparison.Ordinal) < 0) continue;
+                if (hwnd == null) hwnd = GameWindow(game);
+                args[i] = args[i].Replace("{HWND}", hwnd);
+            }
+
             ProcessStartInfo psi = new ProcessStartInfo(args[2]);
             StringBuilder line = new StringBuilder();
             for (int i = 3; i < args.Length; i++) line.Append(i > 3 ? " " : "").Append(Quote(args[i]));
@@ -130,6 +139,17 @@ static class FzRecorder {
             log.Close();
         }
         return 0;
+    }
+
+    /** The game's main window, as a number for ffmpeg (waits a little: the window may still be opening). */
+    static string GameWindow(Process game) {
+        for (int i = 0; i < 50; i++) {
+            game.Refresh();
+            IntPtr h = game.MainWindowHandle;
+            if (h != IntPtr.Zero) return ((long) h).ToString();
+            Thread.Sleep(100);
+        }
+        throw new Exception("the game window was not found");
     }
 
     /** Writes the game's sound (or silence) into ffmpeg until it is time to stop. */

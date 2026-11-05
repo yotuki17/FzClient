@@ -287,8 +287,10 @@ public final class Modules {
             "Alt+X のオーバーレイから録画する（ランチャーの設定で準備が必要）", true);
     public static final BoolSetting recReplay = recorder.add(new BoolSetting("replay", "直前の数十秒をいつも残しておく（あとから保存できる）", false));
     public static final SliderSetting recReplaySeconds = recorder.add(new SliderSetting("replaysec", "残しておく長さ", 10, 120, 5, 30, " 秒"));
+    /** 0 = only the game window (Windows.Graphics.Capture: nothing on top shows, any monitor, also fullscreen), 1 = a whole monitor. */
+    public static final ChoiceSetting recArea = recorder.add(new ChoiceSetting("area", "録画する範囲", 0, "Minecraft のウィンドウだけ", "モニター全体"));
     public static final ChoiceSetting recFps = recorder.add(new ChoiceSetting("fps", "フレームレート", 0, "60 FPS", "30 FPS"));
-    public static final SliderSetting recMonitor = recorder.add(new SliderSetting("monitor", "録画するモニター（1 = メイン）", 1, 4, 1, 1, ""));
+    public static final SliderSetting recMonitor = recorder.add(new SliderSetting("monitor", "録画するモニター（モニター全体のとき、1 = メイン）", 1, 4, 1, 1, ""));
 
     // ---- Bug fixes in the style of Patcher
     public static final Module fixes = new Module("fixes", "Bug Fixes", Category.UTILITY,

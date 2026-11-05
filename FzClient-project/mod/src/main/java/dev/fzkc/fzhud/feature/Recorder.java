@@ -23,7 +23,8 @@ import java.util.List;
  *
  * The launcher puts ffmpeg and its own helper (FzRecorder.exe, see launcher/src/tools/FzRecorder.cs) into a folder
  * and passes it as -Dfzclient.recorder. The helper runs ffmpeg and feeds it the game's sound only (Windows'
- * process loopback); ffmpeg takes the picture with Desktop Duplication and encodes it on the GPU (NVENC, else AMF,
+ * process loopback); ffmpeg takes the picture of just the game window (Windows.Graphics.Capture; or a whole
+ * monitor with Desktop Duplication, see 録画する範囲) and encodes it on the GPU (NVENC, else AMF,
  * else Media Foundation), so recording costs almost no FPS.
  *
  * ffmpeg writes 2-second pieces into recordings/.buffer. Both kinds of recording only join pieces: "save the last
@@ -225,7 +226,11 @@ public final class Recorder {
         cmd.add(new File(buf, "ffmpeg.log").getPath());
         cmd.add(new File(TOOLS, "ffmpeg.exe").getPath());
         Collections.addAll(cmd, "-hide_banner", "-loglevel", "warning",
-                "-f", "lavfi", "-i", "ddagrab=output_idx=" + monitor + ":framerate=" + fps,
+                "-f", "lavfi", "-i", Modules.recArea.get() == 0
+                        // just the game window; FzRecorder puts the window handle in for {HWND}
+                        ? "gfxcapture=hwnd={HWND}:max_framerate=" + fps
+                        // a whole monitor (Desktop Duplication: fails while a game runs in exclusive fullscreen)
+                        : "ddagrab=output_idx=" + monitor + ":framerate=" + fps,
                 "-f", "s16le", "-ar", "48000", "-ac", "2", "-thread_queue_size", "1024", "-i", "pipe:0",
                 "-map", "0:v", "-map", "1:a");
         if (e[1] != null) Collections.addAll(cmd, "-vf", e[1]);
