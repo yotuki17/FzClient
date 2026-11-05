@@ -148,6 +148,7 @@ public class FzHud {
         ClientRegistry.registerKeyBinding(toggleSneakKey);
         ClientRegistry.registerKeyBinding(imeKey);
         ClientRegistry.registerKeyBinding(Extras.zoomKey);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.gui.OverlayScreen.KEY);
         ClientRegistry.registerKeyBinding(Spotify.keyPlay);
         ClientRegistry.registerKeyBinding(Spotify.keyNext);
         ClientRegistry.registerKeyBinding(Spotify.keyPrev);
@@ -282,6 +283,13 @@ public class FzHud {
         if (editKey.isPressed() && mc.currentScreen == null) {
             mc.displayGuiScreen(new MenuScreen());
         }
+        // Alt+X: the overlay. X without Alt does nothing here, so the key stays free for everything else.
+        boolean overlayPressed = false;
+        while (dev.fzkc.fzhud.gui.OverlayScreen.KEY.isPressed()) overlayPressed = true;
+        if (overlayPressed && Modules.overlay.enabled && mc.currentScreen == null && mc.theWorld != null
+                && dev.fzkc.fzhud.gui.OverlayScreen.altDown()) {
+            mc.displayGuiScreen(new dev.fzkc.fzhud.gui.OverlayScreen());
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -384,6 +392,7 @@ public class FzHud {
     public void onRenderTick(TickEvent.RenderTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             Performance.afterFrame();
+            dev.fzkc.fzhud.util.FrameStats.frame();
             return;
         }
         if (event.phase != TickEvent.Phase.START) return;

@@ -278,6 +278,10 @@ public final class Modules {
     public static final SliderSetting optParticles = optimize.add(new SliderSetting("maxparticles", "パーティクルの上限（4000 = いつも通り）", 200, 4000, 200, 4000, ""));
     public static final BoolSetting optNoGlint = optimize.add(new BoolSetting("noglint", "エンチャントの光沢を描かない", false));
 
+    // ---- Overlay (Alt+X): FPS / CPU / frame times and the switches that change them, on top of the running game
+    public static final Module overlay = new Module("overlay", "Overlay", Category.UTILITY,
+            "Alt+X で FPS・CPU などを見ながら軽くする設定を切り替える", true);
+
     // ---- Bug fixes in the style of Patcher
     public static final Module fixes = new Module("fixes", "Bug Fixes", Category.UTILITY,
             "1.8.9 のバグを直す", true);
@@ -483,6 +487,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, overlays, autoGG, bgFps, performance, optimize, overlay, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

@@ -778,3 +778,20 @@ GL エラーの確認を省く（毎フレームの待ちが減る）	Skip GL er
 ホログラム（浮いている文字）を軽く描く	Draw holograms (floating text) the light way
 遠くの物・壁の向こうの物を描かずに軽くする（見え方が少し変わる）	Lighter by not drawing far-away things and things behind walls (looks a little different)
 見た目を変えずに軽くする（OptiFine と一緒に使える）	Lighter without changing the look (works next to OptiFine)
+パフォーマンス	Performance
+メモリ	Memory
+パーティクル	Particles
+モーションブラー	Motion blur
+クイック設定	Quick settings
+エンティティ（描画 / 全部）	Entities (drawn / all)
+CPU（ゲーム）	CPU (game)
+CPU（PC 全体）	CPU (whole PC)
+コア分	cores
+フレーム時間	Frame time
+Alt+X / Esc で閉じる	Alt+X / Esc to close
+すべての設定を開く	Open all settings
+Performance（遠く・壁の向こうを描かない）	Performance (skip far / hidden things)
+Optimization（見た目を変えずに軽く）	Optimization (lighter, same look)
+Particles（殴った時の粒子を増やす）	Particles (more hit particles)
+オーバーレイ（Alt と一緒に押す）	Overlay (press with Alt)
+Alt+X で FPS・CPU などを見ながら軽くする設定を切り替える	Alt+X: switch FPS settings while watching FPS, CPU and more
