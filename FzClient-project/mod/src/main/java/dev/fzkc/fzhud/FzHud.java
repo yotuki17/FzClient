@@ -286,10 +286,25 @@ public class FzHud {
         // Alt+X: the overlay. X without Alt does nothing here, so the key stays free for everything else.
         boolean overlayPressed = false;
         while (dev.fzkc.fzhud.gui.OverlayScreen.KEY.isPressed()) overlayPressed = true;
-        if (overlayPressed && Modules.overlay.enabled && mc.currentScreen == null && mc.theWorld != null
+        if (overlayPressed && Modules.overlay.enabled && mc.currentScreen == null
                 && dev.fzkc.fzhud.gui.OverlayScreen.altDown()) {
-            mc.displayGuiScreen(new dev.fzkc.fzhud.gui.OverlayScreen());
+            dev.fzkc.fzhud.gui.OverlayScreen.open(mc);
         }
+    }
+
+    /**
+     * Alt+X while any screen is open (title screen, inventory, chest menus, pause menu, chat...): key bindings
+     * only work in the game itself, so the key is caught here before the screen sees it.
+     */
+    @SubscribeEvent
+    public void onOverlayKey(net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Pre event) {
+        int key = dev.fzkc.fzhud.gui.OverlayScreen.KEY.getKeyCode();
+        if (key == 0 || !Keyboard.getEventKeyState() || Keyboard.getEventKey() != key) return;
+        if (!Modules.overlay.enabled || !dev.fzkc.fzhud.gui.OverlayScreen.altDown()) return;
+        if (event.gui instanceof net.minecraft.client.gui.GuiControls) return;   // binding a key: Alt+X belongs to that
+        event.setCanceled(true);
+        if (event.gui instanceof dev.fzkc.fzhud.gui.OverlayScreen) ((dev.fzkc.fzhud.gui.OverlayScreen) event.gui).close();
+        else dev.fzkc.fzhud.gui.OverlayScreen.open(Minecraft.getMinecraft());
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

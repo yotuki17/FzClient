@@ -47,8 +47,12 @@ public abstract class FzScreen extends GuiScreen {
 
     protected void key(char c, int keyCode) {}
 
+    /** Drawn before this screen, in normal GUI pixels (the overlay draws the screen it was opened over here). */
+    protected void drawBehind(int mouseX, int mouseY, float partialTicks) {}
+
     @Override
     public final void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        drawBehind(mouseX, mouseY, partialTicks);
         computeScale();
         Ui.refresh();
         RecentActions.track();
