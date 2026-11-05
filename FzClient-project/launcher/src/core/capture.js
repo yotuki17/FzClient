@@ -160,8 +160,12 @@ class Capture {
     // numbers go on from what is there (+2: an ffmpeg that is still stopping may write one more piece)
     this.base = Math.max(this.base, this.newest() + 2);
     const o = this.options(), fps = o.fps === 30 ? 30 : 60, e = ENCODERS[this.encoder];
-    // the game window (FzRecorder puts in its handle), or the monitor it is on
-    const source = o.area === 'monitor' ? `gfxcapture=hmonitor={HMONITOR}:max_framerate=${fps}` : `gfxcapture=hwnd={HWND}:max_framerate=${fps}`;
+    // the game window (FzRecorder puts in its handle), or the monitor it is on. While the game is borderless
+    // (over the whole screen, in front) Windows shows it directly and a capture of the window gets no new
+    // pictures ("frames duplicated" in ffmpeg.log): then its monitor is captured, which is only the game anyway
+    // (the overlay and the REC mark are left out of captures).
+    const monitor = o.area === 'monitor' || this.fullscreen;
+    const source = monitor ? `gfxcapture=hmonitor={HMONITOR}:max_framerate=${fps}` : `gfxcapture=hwnd={HWND}:max_framerate=${fps}`;
     const args = [String(this.game.pid), path.join(this.buffer, 'ffmpeg.log'), this.tools.ffmpeg,
       '-hide_banner', '-loglevel', 'warning',
       '-f', 'lavfi', '-i', source,
@@ -186,7 +190,7 @@ class Capture {
     child.on('error', err => this.log('[capture] ' + err.message));
     child.on('exit', code => this.exited(child, code));
     if (this.status.startsWith('録画が止まりました')) this.status = '';
-    this.log(`[capture] started (${e.name}, ${o.area || 'game'}, ${fps} fps) from piece ${this.base}`);
+    this.log(`[capture] started (${e.name}, ${monitor ? 'monitor' : 'window'}, ${fps} fps) from piece ${this.base}`);
     this.changed();
     return true;
   }

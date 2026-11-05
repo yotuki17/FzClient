@@ -151,7 +151,11 @@ ipcMain.handle('settings:get', () => settings.get());
 ipcMain.handle('settings:set', (e, patch) => {
   const r = settings.set(patch);
   // recording options: the running recorder starts again with them
-  if (patch && Object.keys(patch).some(k => /^rec/.test(k)) && play && play.capture) { play.capture.optionsChanged(); pushOverlay(); }
+  if (patch && play && play.capture && Object.keys(patch).some(k => /^rec/.test(k))) {
+    if (Object.keys(patch).some(k => /^rec(?!Badge)/.test(k))) play.capture.optionsChanged();
+    pushOverlay();
+    updateBadge();
+  }
   return r;
 });
 ipcMain.handle('info', () => ({
@@ -376,6 +380,42 @@ function hideOverlay() {
   if (play) play.link.send({ t: 'watch', on: false });
 }
 
+/** The REC mark in the corner of the game's monitor while the recorder runs (left out of captures, clicks go through). */
+let badge = null, badgeTimer = null, badgeReady = false;
+function updateBadge() {
+  const r = play && play.capture ? play.capture.state() : null;
+  if (!(r && r.running && settings.get().recBadge !== false)) {
+    if (badge && !badge.isDestroyed() && badge.isVisible()) badge.hide();
+    if (badgeTimer) { clearInterval(badgeTimer); badgeTimer = null; }
+    return;
+  }
+  if (!badge || badge.isDestroyed()) {
+    badge = new BrowserWindow({
+      show: false, width: 220, height: 40, frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false,
+      resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, focusable: false,
+      skipTaskbar: true, alwaysOnTop: true, title: 'FzClient REC',
+      webPreferences: { preload: path.join(__dirname, 'src', 'overlay', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
+    });
+    badge.setAlwaysOnTop(true, 'screen-saver');
+    badge.setContentProtection(true);
+    badge.setIgnoreMouseEvents(true);
+    badge.loadFile(path.join(__dirname, 'renderer', 'overlay', 'badge.html'));
+    badgeReady = false;
+    badge.webContents.once('did-finish-load', () => { badgeReady = true; updateBadge(); });
+    return;
+  }
+  if (!badgeReady) return;
+  badge.webContents.send('ov:state', overlayState());
+  if (!badge.isVisible()) {
+    const { screen } = require('electron');
+    const b = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds;
+    badge.setPosition(b.x + 14, b.y + 14);
+    badge.showInactive();
+  }
+  // the game puts itself on top again whenever it gets the focus: stay over it
+  if (!badgeTimer) badgeTimer = setInterval(() => { if (badge && !badge.isDestroyed() && badge.isVisible()) badge.moveTop(); }, 1000);
+}
+
 function toggleOverlay() {
   if (overlayVisible()) hideOverlay();
   else showOverlay();
@@ -418,7 +458,7 @@ function gameMessage(m) {
 function startPlay(child, link, tools) {
   const capture = tools ? new Capture({
     game: { pid: child.pid, gameDir: dirs().gameDir }, tools, options: recOptions,
-    notify: recNotify, changed: pushOverlay, log,
+    notify: recNotify, changed: () => { pushOverlay(); updateBadge(); }, log,
   }) : null;
   play = { child, link, capture, active: false };
   link.on('message', gameMessage);
@@ -433,6 +473,7 @@ function endPlay() {
   if (play.capture) play.capture.close();
   play.link.close();
   play = null;
+  updateBadge();
   globalShortcut.unregisterAll();
 }
 

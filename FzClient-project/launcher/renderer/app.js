@@ -636,7 +636,9 @@ function showRecSettings(s) {
   $('recFps').value = String(Number(s.recFps) === 30 ? 30 : 60);
   $('recReplay').checked = !!s.recReplay;
   $('recSec').value = s.recReplaySeconds || 30;
+  $('recBadge').checked = s.recBadge !== false;
 }
+$('recBadge').onchange = () => save({ recBadge: $('recBadge').checked });
 $('recArea').onchange = () => save({ recArea: $('recArea').value });
 $('recFps').onchange = () => save({ recFps: +$('recFps').value });
 $('recReplay').onchange = () => save({ recReplay: $('recReplay').checked });

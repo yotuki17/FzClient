@@ -22,6 +22,7 @@ const DEFAULTS = {
   recReplaySeconds: 30,
   recArea: 'game',        // game (its window) | monitor (the whole monitor it is on)
   recFps: 60,
+  recBadge: true,         // the REC mark in the corner while recording
 };
 
 function file(name) {
