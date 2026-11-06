@@ -83,9 +83,10 @@ public class FzMainMenu extends FzScreen {
             // id, icon, title, subtitle
             {"quick_fz", "menu_fz", "設定・MOD", "FzClient の機能"},
             {"quick_cos", "menu_account", "コスメティック", "マント・オーラ"},
-            {"quick_acc", "menu_multi", "アカウント", "アカウントを切り替え"},
+            // (the account switcher is the face + name in the bottom left: the third row is the gallery)
     };
-    private static final int[] QUICK_TINT = {CYAN, MAGENTA, 0xFFD84A};
+    private static final int[] QUICK_TINT = {CYAN, MAGENTA};
+    private static final int GALLERY_TINT = 0xFFD84A;
     private float quickX() { return vw - favX() - FAV_W; }
     private float quickY(int i) { return favRowY(i); }
 
@@ -93,6 +94,76 @@ public class FzMainMenu extends FzScreen {
         String head = "FzClient";
         R.text(head, quickX() + FAV_W - 2 - R.width(head), favY(), R.alpha(Ui.accent, o));
         for (int i = 0; i < QUICK.length; i++) quickCard(i, mx, my, o);
+        galleryCard(mx, my, o);
+    }
+
+    // ---- the gallery: the newest screenshots / clips under the shortcuts (clips and the big view: the launcher's overlay)
+    private static final float THUMB_GAP = 4;
+    private float galY() { return quickY(QUICK.length); }
+    private float thumbW() { return (FAV_W - 8 - THUMB_GAP * (dev.fzkc.fzhud.util.RecentShots.MAX - 1)) / dev.fzkc.fzhud.util.RecentShots.MAX; }
+    private float thumbH() { return thumbW() * 9f / 16f; }
+    private float thumbX(int k) { return quickX() + 4 + k * (thumbW() + THUMB_GAP); }
+    private float thumbY() { return galY() + FAV_H - 2; }
+    /** The pictures only when they fit above the footer. */
+    private boolean galThumbs() { return thumbY() + thumbH() + 4 <= vh - 26; }
+    private float galH() { return galThumbs() ? FAV_H - 2 + thumbH() + 4 : FAV_H; }
+    private int recentAsk;
+
+    private void galleryCard(int mx, int my, float o) {
+        java.util.List<dev.fzkc.fzhud.util.RecentShots.Item> items = dev.fzkc.fzhud.util.RecentShots.items();
+        float y = galY(), gh = galH();
+        float h = anim("quick_gal").update(Ui.inside(mx, my, quickX(), y, FAV_W, gh) ? 1 : 0);
+        float x = quickX() - h * 2f, dx = x - quickX();
+        card(x, y, FAV_W, gh, h, 0xFF000000 | GALLERY_TINT, o);
+        R.rounded(x + 4, y + 4, 22, 22, 11f, R.alpha(0x38000000 | GALLERY_TINT, o));
+        Icons.draw("screenshot", x + 8, y + 8, 14, R.alpha(0xFF000000 | GALLERY_TINT, o));
+        R.text("ギャラリー", x + 31, y + 5, R.alpha(Ui.text, o));
+        String sub = items.isEmpty() ? "F2 でスクショ・Alt+X で録画" : "スクショ・クリップ";
+        R.text(Ui.trim(dev.fzkc.fzhud.util.Lang.t(sub), FAV_W - 48), x + 31, y + 16, R.alpha(Ui.MUTED, o));
+        R.text("›", x + FAV_W - 10 + h * 2f, y + 11, R.alpha(R.lerpColor(0xFF5A666A, 0xFF000000 | GALLERY_TINT, h), o));
+        if (!galThumbs()) return;
+        float tw = thumbW(), th = thumbH(), ty = thumbY();
+        for (int k = 0; k < dev.fzkc.fzhud.util.RecentShots.MAX; k++) {
+            float tx = thumbX(k) + dx;
+            dev.fzkc.fzhud.util.RecentShots.Item it = k < items.size() ? items.get(k) : null;
+            float th2 = anim("gal" + k).update(it != null && Ui.inside(mx, my, thumbX(k), ty, tw, th) ? 1 : 0);
+            R.rounded(tx, ty, tw, th, 3f, R.alpha(0x70000000, o));
+            if (it != null && it.tex != null) image(it.tex, tx, ty, tw, th, 0xFFFFFF, o);
+            if (it != null && it.clip) {
+                // a play mark in the middle
+                float cx = tx + tw / 2f, cy = ty + th / 2f;
+                R.rounded(cx - 6, cy - 6, 12, 12, 6f, R.alpha(0xA0000000, o));
+                R.triangleRight(cx + 0.5f, cy, 3f, R.alpha(0xFFFFFFFF, o));
+            }
+            R.roundedOutline(tx, ty, tw, th, 3f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, 0xFF000000 | GALLERY_TINT, th2), o));
+        }
+    }
+
+    /** A click on the gallery card: a picture opens big in the launcher's overlay (or the file itself without it). */
+    private boolean clickGallery(int mx, int my) {
+        if (!Ui.inside(mx, my, quickX() - 2, galY(), FAV_W + 2, galH())) return false;
+        java.util.List<dev.fzkc.fzhud.util.RecentShots.Item> items = dev.fzkc.fzhud.util.RecentShots.items();
+        boolean link = dev.fzkc.fzhud.feature.LauncherLink.connected();
+        if (galThumbs()) {
+            for (int k = 0; k < items.size() && k < dev.fzkc.fzhud.util.RecentShots.MAX; k++) {
+                if (!Ui.inside(mx, my, thumbX(k), thumbY(), thumbW(), thumbH())) continue;
+                if (link) dev.fzkc.fzhud.feature.LauncherLink.openGallery(items.get(k).file);
+                else openFile(new java.io.File(new java.io.File(mc.mcDataDir, "screenshots"), items.get(k).file));
+                return true;
+            }
+        }
+        if (link) dev.fzkc.fzhud.feature.LauncherLink.openGallery(null);
+        else openFile(new java.io.File(mc.mcDataDir, "screenshots"));
+        return true;
+    }
+
+    private static void openFile(java.io.File f) {
+        if (f.isDirectory() || !f.getParentFile().exists()) f.mkdirs();
+        try {
+            Runtime.getRuntime().exec(new String[] {"explorer.exe", f.getAbsolutePath()});
+        } catch (Exception e) {
+            org.lwjgl.Sys.openURL(f.toURI().toString());
+        }
     }
 
     private void quickCard(int i, int mx, int my, float o) {
@@ -185,6 +256,8 @@ public class FzMainMenu extends FzScreen {
     public void updateScreen() {
         super.updateScreen();
         pingDue();
+        // the newest screenshots / clips: now, and every 5 s (a new one, the launcher connecting a moment later)
+        if (recentAsk++ % 100 == 0) dev.fzkc.fzhud.util.RecentShots.refresh();
         try {
             pinger.pingPendingNetworks();
         } catch (Throwable ignored) {
@@ -629,8 +702,8 @@ public class FzMainMenu extends FzScreen {
             mc.displayGuiScreen(new ModsScreen(this));
         } else if (Ui.inside(mx, my, quickX() - 2, quickY(1), FAV_W + 2, FAV_H)) {
             mc.displayGuiScreen(new CosmeticsScreen(this));
-        } else if (Ui.inside(mx, my, quickX() - 2, quickY(2), FAV_W + 2, FAV_H)) {
-            mc.displayGuiScreen(new AccountScreen(this));
+        } else if (clickGallery(mx, my)) {
+            return;
         } else if (Ui.inside(mx, my, smallX(0), smallY(), smallW(), SBH)) {
             mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings));
         } else if (Ui.inside(mx, my, smallX(1), smallY(), smallW(), SBH)) {

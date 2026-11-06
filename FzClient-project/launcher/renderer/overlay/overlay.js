@@ -10,12 +10,21 @@ function close() {
   document.body.classList.remove('on');
   fzo.hide();
 }
-fzo.onShow(() => {
+fzo.onShow(async open => {
   stats = null;
   render();
   drawStats();
-  loadGallery();
+  if (open && !shown.gallery) {   // asked for from the title menu: the gallery is shown (and kept shown)
+    shown.gallery = true;
+    try { localStorage.setItem('ovPanels', JSON.stringify(shown)); } catch { /* not kept */ }
+    applyPanels();
+  }
   requestAnimationFrame(() => document.body.classList.add('on'));
+  await loadGallery();
+  if (open && open.file) {
+    const i = gallery.findIndex(s => s.file === open.file);
+    if (i >= 0) openView(i);
+  }
 });
 document.addEventListener('keydown', e => {
   if (waiting) return;   // choosing a key: see keyCapture

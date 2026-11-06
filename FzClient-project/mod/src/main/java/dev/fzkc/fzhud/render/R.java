@@ -220,6 +220,17 @@ public final class R {
         end();
     }
 
+    /** A triangle pointing right (a play mark), its middle at cx, cy. */
+    public static void triangleRight(float cx, float cy, float size, int argb) {
+        begin(argb);
+        GL11.glBegin(GL11.GL_TRIANGLES);
+        GL11.glVertex2f(cx - size * 0.7f, cy - size);
+        GL11.glVertex2f(cx - size * 0.7f, cy + size);
+        GL11.glVertex2f(cx + size, cy);
+        GL11.glEnd();
+        end();
+    }
+
     /** Text with shadow; skips fully transparent text (the font renderer treats alpha 0 as opaque). */
     public static void text(String s, float x, float y, int argb) {
         s = dev.fzkc.fzhud.util.Lang.t(s);

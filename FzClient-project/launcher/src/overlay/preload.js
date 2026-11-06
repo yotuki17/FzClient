@@ -7,7 +7,8 @@ contextBridge.exposeInMainWorld('fzo', {
   onState: cb => ipcRenderer.on('ov:state', (e, s) => cb(s)),
   /** The game's numbers and switches (while the overlay is open). */
   onStats: cb => ipcRenderer.on('ov:stats', (e, s) => cb(s)),
-  onShow: cb => ipcRenderer.on('ov:show', () => cb()),
+  /** open: null, or { file } from the game's title menu: the gallery, with that file big ('' = none) */
+  onShow: cb => ipcRenderer.on('ov:show', (e, open) => cb(open || null)),
   hide: () => ipcRenderer.send('ov:hide'),
   record: () => ipcRenderer.send('ov:record'),
   saveReplay: () => ipcRenderer.send('ov:save'),

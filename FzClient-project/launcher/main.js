@@ -358,7 +358,8 @@ function overlayWindow() {
   return overlay;
 }
 
-function showOverlay() {
+/** open: { gallery: true, file } = show the gallery panel, with that file big ('' = none). */
+function showOverlay(open) {
   const w = overlayWindow();
   const { screen } = require('electron');
   // the game's monitor: the mouse is there (the game holds it in the middle of its window)
@@ -367,7 +368,7 @@ function showOverlay() {
     w.show();
     w.focus();
     w.webContents.send('ov:state', overlayState());
-    w.webContents.send('ov:show');
+    w.webContents.send('ov:show', open && open.gallery ? { file: open.file || '' } : null);
     if (play) play.link.send({ t: 'watch', on: true });
   };
   if (w.webContents.isLoading()) w.webContents.once('did-finish-load', go);
@@ -427,6 +428,7 @@ function recNotify(text, error) {
   if (!play) return;
   const m = /^(.*?: )(.+)$/.exec(text);
   if (play.link.connected) play.link.send({ t: 'chat', text: m ? m[1] : text, arg: m ? m[2] : '', error: !!error });
+  if (!error && play.link.connected) sendRecent(3);   // the title menu shows the newest
   else if (Notification.isSupported()) new Notification({ title: 'FzClient', body: text }).show();
 }
 
@@ -452,7 +454,28 @@ function gameMessage(m) {
     if (play.capture) play.capture.setFullscreen(!!m.fs);
   } else if (m.t === 'stats') {
     if (overlayVisible()) overlay.webContents.send('ov:stats', m);
+  } else if (m.t === 'recent') {
+    sendRecent(Math.max(1, Math.min(6, m.n | 0 || 3)));
+  } else if (m.t === 'gallery') {
+    // from the game's title menu: the overlay with its gallery, that picture / clip big (or just the gallery)
+    showOverlay({ gallery: true, file: typeof m.file === 'string' ? m.file : '' });
   }
+}
+
+/** The newest screenshots / clips for the game's title menu, with their small pictures as files. */
+let recentBusy = false;
+async function sendRecent(n) {
+  if (!play || recentBusy) return;
+  recentBusy = true;
+  try {
+    const items = [];
+    for (const s of shots.list().slice(0, n)) {
+      let thumb = null;
+      try { thumb = await shots.thumbFile(s.file, s.kind); } catch { /* none */ }
+      items.push({ file: s.file, kind: s.kind, time: s.time, thumb: thumb || '' });
+    }
+    if (play) play.link.send({ t: 'recent', items });
+  } finally { recentBusy = false; }
 }
 
 function startPlay(child, link, tools) {

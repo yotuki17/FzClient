@@ -122,6 +122,15 @@ function list() {
   return [...filesOf(shotsDir(), SHOT, 'shot'), ...filesOf(clipsDir(), CLIP, 'clip')].sort((a, b) => b.time - a.time);
 }
 
+/** The small JPEG of a screenshot or clip, as a file on disk (made if needed; the game's title menu shows it). */
+async function thumbFile(name, kind) {
+  const full = fileIn(name, kind);
+  if (!full) return null;
+  if (kind === 'clip') return (await clipThumbnail(full)) ? path.join(thumbDir(), thumbKey(full) + '.v.jpg') : null;
+  thumbnail(full);
+  return path.join(thumbDir(), thumbKey(full) + '.jpg');
+}
+
 function copy(name) {
   const full = fileIn(name, 'shot');
   if (!full) throw new Error('ファイルが見つかりません');
@@ -140,4 +149,4 @@ async function remove(name, kind) {
   await shell.trashItem(full);
 }
 
-module.exports = { registerScheme, handle, list, copy, reveal, remove };
+module.exports = { registerScheme, handle, list, thumbFile, copy, reveal, remove };

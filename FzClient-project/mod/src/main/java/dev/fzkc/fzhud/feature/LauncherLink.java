@@ -173,6 +173,9 @@ public final class LauncherLink {
             case "menu":
                 mc.displayGuiScreen(new dev.fzkc.fzhud.gui.ModsScreen(mc.currentScreen));
                 break;
+            case "recent":   // the newest screenshots / clips (the title menu)
+                dev.fzkc.fzhud.util.RecentShots.fromLauncher(o);
+                break;
             case "chat":
                 if (mc.thePlayer != null) {
                     boolean bad = o.has("error") && o.get("error").getAsBoolean();
@@ -220,6 +223,20 @@ public final class LauncherLink {
         if (k == 0 || key != k || !altDown() || controlsScreen) return false;
         key("overlay");
         return true;
+    }
+
+    /** The newest n screenshots / clips, with their small pictures (the answer comes as "recent"). */
+    public static void askRecent(int n) {
+        JsonObject o = msg("recent");
+        o.addProperty("n", n);
+        send(o);
+    }
+
+    /** The overlay with its gallery, that screenshot / clip shown big (null: just the gallery). */
+    public static void openGallery(String file) {
+        JsonObject o = msg("gallery");
+        if (file != null) o.addProperty("file", file);
+        send(o);
     }
 
     private static boolean altDown() {

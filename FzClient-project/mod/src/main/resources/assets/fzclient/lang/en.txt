@@ -823,3 +823,6 @@ Minecraft のウィンドウだけ	Only the Minecraft window
 モニター全体	Whole monitor
 録画するモニター（モニター全体のとき、1 = メイン）	Monitor to record (whole monitor, 1 = main)
 フルスクリーンでは映像が止まることがあります（Borderless を ON に）	The picture may freeze in fullscreen (turn on Borderless)
+ギャラリー	Gallery
+スクショ・クリップ	Screenshots & clips
+F2 でスクショ・Alt+X で録画	F2: screenshot · Alt+X: record
