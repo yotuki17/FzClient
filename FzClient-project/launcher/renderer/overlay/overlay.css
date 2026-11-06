@@ -69,3 +69,23 @@ canvas { display: block; width: 100%; height: 60px; background: rgba(5, 10, 12, 
 .hint { position: fixed; left: 0; right: 0; bottom: 18px; text-align: center; color: var(--muted); font-size: 12px;
   opacity: 0; transition: opacity .18s; text-shadow: 0 1px 3px rgba(0, 0, 0, .8); }
 body.on .hint { opacity: 1; }
+
+/* the length of "keep the last seconds" */
+.seg { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 6px; }
+.seg button { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 4px 0; cursor: pointer;
+  font-size: 12px; color: var(--muted); transition: border-color .15s, color .15s; }
+.seg button:hover { border-color: rgba(92, 225, 230, .55); color: var(--text); }
+.seg button.on { border-color: var(--cyan); color: var(--text); background: rgba(92, 225, 230, .16); }
+.seg.dim { opacity: .45; }
+
+/* keys */
+.sub-h { margin: 12px 0 2px; font-size: 12px; color: var(--muted); }
+.key { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.key span { flex: 1; min-width: 0; }
+.key button { min-width: 96px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px;
+  cursor: pointer; font-size: 12px; transition: border-color .15s; }
+.key button:hover { border-color: var(--cyan); }
+.key button.wait { border-color: var(--magenta); color: #fff; animation: pulse 1s ease-in-out infinite; }
+.key button.none { color: var(--muted); }
+@keyframes pulse { 50% { border-color: rgba(232, 62, 206, .3); } }
+.note.small { font-size: 11px; }

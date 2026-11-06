@@ -160,6 +160,16 @@ public final class LauncherLink {
                 }
                 break;
             }
+            case "bind": {
+                // a key chosen in the overlay: the same key binding as in Controls (saved in options.txt)
+                KeyBinding kb = binding(o.get("k").getAsString());
+                int code = o.get("code").getAsInt();
+                if (kb != null && code >= -100 && code < 256) {
+                    mc.gameSettings.setOptionKeyBinding(kb, code);
+                    send(stats());
+                }
+                break;
+            }
             case "menu":
                 mc.displayGuiScreen(new dev.fzkc.fzhud.gui.ModsScreen(mc.currentScreen));
                 break;
@@ -255,6 +265,10 @@ public final class LauncherLink {
             new Switch("Particles（殴った時の粒子を増やす）", Modules.particles),
     };
 
+    private static KeyBinding binding(String id) {
+        return "overlay".equals(id) ? KEY_OVERLAY : "record".equals(id) ? KEY_RECORD : "save".equals(id) ? KEY_SAVE : null;
+    }
+
     private static JsonObject stats() {
         Minecraft mc = Minecraft.getMinecraft();
         JsonObject o = msg("stats");
@@ -284,6 +298,16 @@ public final class LauncherLink {
             sw.add(j);
         }
         o.add("switches", sw);
+        JsonArray keys = new JsonArray();
+        for (String id : new String[] {"overlay", "record", "save"}) {
+            KeyBinding kb = binding(id);
+            JsonObject j = new JsonObject();
+            j.addProperty("id", id);
+            j.addProperty("code", kb.getKeyCode());
+            j.addProperty("name", kb.getKeyCode() == 0 ? "" : net.minecraft.client.settings.GameSettings.getKeyDisplayString(kb.getKeyCode()));
+            keys.add(j);
+        }
+        o.add("keys", keys);
         return o;
     }
 

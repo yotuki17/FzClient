@@ -152,7 +152,7 @@ ipcMain.handle('settings:set', (e, patch) => {
   const r = settings.set(patch);
   // recording options: the running recorder starts again with them
   if (patch && play && play.capture && Object.keys(patch).some(k => /^rec/.test(k))) {
-    if (Object.keys(patch).some(k => /^rec(?!Badge)/.test(k))) play.capture.optionsChanged();
+    if (Object.keys(patch).some(k => /^rec(?!Badge|ReplaySeconds)/.test(k))) play.capture.optionsChanged();
     pushOverlay();
     updateBadge();
   }
@@ -487,6 +487,16 @@ ipcMain.on('ov:replay', (e, on) => {
   send('rec:settings', settings.get());
 });
 ipcMain.on('ov:switch', (e, i, on) => { if (play) play.link.send({ t: 'set', i: i | 0, on: !!on }); });
+ipcMain.on('ov:bind', (e, k, code) => {
+  if (play && ['overlay', 'record', 'save'].includes(k)) play.link.send({ t: 'bind', k, code: code | 0 });
+});
+ipcMain.on('ov:seconds', (e, sec) => {
+  // read by the recorder whenever it needs it: no restart, the seconds kept so far stay
+  settings.set({ recReplaySeconds: Math.max(10, Math.min(120, Math.round((sec | 0) / 5) * 5)) });
+  pushOverlay();
+  updateBadge();
+  send('rec:settings', settings.get());
+});
 ipcMain.on('ov:menu', () => {
   if (play) play.link.send({ t: 'menu' });
   hideOverlay();

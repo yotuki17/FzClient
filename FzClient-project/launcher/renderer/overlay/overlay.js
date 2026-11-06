@@ -17,6 +17,7 @@ fzo.onShow(() => {
   requestAnimationFrame(() => document.body.classList.add('on'));
 });
 document.addEventListener('keydown', e => {
+  if (waiting) return;   // choosing a key: see keyCapture
   if (e.key === 'Escape' || (e.altKey && (e.key === 'x' || e.key === 'X'))) { e.preventDefault(); close(); }
 });
 $('veil').onclick = close;
@@ -42,13 +43,110 @@ function render() {
     $('saveBtn').disabled = !r.replay;
     $('replayText').textContent = t('直前の {0} 秒をいつも残す', r.replaySeconds);
     $('replaySw').classList.toggle('on', r.replay);
+    drawSeconds(r);
     const bad = /^(録画が止|保存できません|録画を始められません)/.test(r.status);
     $('recStatus').textContent = translateStatus(r.status);
     $('recStatus').classList.toggle('bad', bad);
   }
   $('quick').style.display = state.link ? '' : 'none';
   $('perfNote').style.display = state.link ? 'none' : '';
+  $('keyBox').style.display = state.link && stats && stats.keys ? '' : 'none';
 }
+
+// ---------------------------------------------------------------- how long "the last seconds" are
+const SECONDS = [15, 30, 45, 60, 90, 120];
+function drawSeconds(r) {
+  const box = $('secs');
+  if (!box.children.length) {
+    for (const s of SECONDS) {
+      const b = document.createElement('button');
+      b.textContent = t('{0} 秒', s);
+      b.onclick = () => fzo.setReplaySeconds(s);
+      box.appendChild(b);
+    }
+  }
+  [...box.children].forEach((b, i) => b.classList.toggle('on', SECONDS[i] === r.replaySeconds));
+  box.classList.toggle('dim', !r.replay);
+}
+
+// ---------------------------------------------------------------- keys (Minecraft key bindings, set through FzClient)
+const KEY_LABELS = { overlay: 'オーバーレイ', record: '録画 開始 / 停止', save: '直前を保存' };
+let waiting = null;   // the key being chosen
+
+function drawKeys(keys) {
+  const box = $('keys');
+  if (box.children.length !== keys.length) {
+    box.innerHTML = '';
+    for (const k of keys) {
+      const d = document.createElement('div');
+      d.className = 'key';
+      d.innerHTML = '<span></span><button></button>';
+      d.firstChild.textContent = t(KEY_LABELS[k.id] || k.id);
+      d.lastChild.onclick = e => { e.stopPropagation(); startWaiting(k.id); };
+      box.appendChild(d);
+    }
+  }
+  keys.forEach((k, i) => {
+    const b = box.children[i].lastChild;
+    if (waiting === k.id) return;
+    b.className = k.code ? '' : 'none';
+    b.textContent = !k.code ? t('なし') : (k.id === 'overlay' ? 'Alt + ' : '') + k.name;
+  });
+}
+
+function startWaiting(id) {
+  const keys = (stats && stats.keys) || [];
+  const i = keys.findIndex(k => k.id === id);
+  if (i < 0) return;
+  if (waiting) finishWaiting(null);
+  waiting = id;
+  const b = $('keys').children[i].lastChild;
+  b.className = 'wait';
+  b.textContent = t('キーを押す…');
+}
+
+function finishWaiting(code) {
+  const id = waiting;
+  waiting = null;
+  if (code != null && id) fzo.bindKey(id, code);
+  drawKeys((stats && stats.keys) || []);
+}
+
+// Esc: cancel, Backspace / Delete: no key. For the overlay key Alt, Ctrl, Shift alone wait for the next key (it
+// is always Alt + something).
+document.addEventListener('keydown', e => {
+  if (!waiting) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.code === 'Escape') { finishWaiting(null); return; }
+  if (e.code === 'Backspace' || e.code === 'Delete') { finishWaiting(0); return; }
+  if (/^(Alt|Control|Shift|Meta)/.test(e.code) && waiting === 'overlay') return;
+  const code = LWJGL[e.code];
+  if (code) finishWaiting(code);
+}, true);
+// the middle button and the side buttons (Minecraft: -100 + its button number); a click elsewhere cancels
+document.addEventListener('mousedown', e => {
+  if (!waiting) return;
+  const mc = { 1: 2, 3: 3, 4: 4 }[e.button];
+  if (mc == null) { if (!e.target.closest('.key')) finishWaiting(null); return; }
+  e.preventDefault();
+  finishWaiting(waiting === 'overlay' ? null : -100 + mc);   // the overlay key is a keyboard key with Alt
+}, true);
+
+/** KeyboardEvent.code -> LWJGL 2 key code (the keyboard's scan codes, what Minecraft saves). */
+const LWJGL = {
+  Digit1: 2, Digit2: 3, Digit3: 4, Digit4: 5, Digit5: 6, Digit6: 7, Digit7: 8, Digit8: 9, Digit9: 10, Digit0: 11,
+  Minus: 12, Equal: 13, Tab: 15, KeyQ: 16, KeyW: 17, KeyE: 18, KeyR: 19, KeyT: 20, KeyY: 21, KeyU: 22, KeyI: 23,
+  KeyO: 24, KeyP: 25, BracketLeft: 26, BracketRight: 27, Enter: 28, ControlLeft: 29, KeyA: 30, KeyS: 31, KeyD: 32,
+  KeyF: 33, KeyG: 34, KeyH: 35, KeyJ: 36, KeyK: 37, KeyL: 38, Semicolon: 39, Quote: 40, Backquote: 41, ShiftLeft: 42,
+  Backslash: 43, KeyZ: 44, KeyX: 45, KeyC: 46, KeyV: 47, KeyB: 48, KeyN: 49, KeyM: 50, Comma: 51, Period: 52, Slash: 53,
+  ShiftRight: 54, NumpadMultiply: 55, AltLeft: 56, Space: 57, CapsLock: 58, F1: 59, F2: 60, F3: 61, F4: 62, F5: 63,
+  F6: 64, F7: 65, F8: 66, F9: 67, F10: 68, NumLock: 69, ScrollLock: 70, Numpad7: 71, Numpad8: 72, Numpad9: 73,
+  NumpadSubtract: 74, Numpad4: 75, Numpad5: 76, Numpad6: 77, NumpadAdd: 78, Numpad1: 79, Numpad2: 80, Numpad3: 81,
+  Numpad0: 82, NumpadDecimal: 83, F11: 87, F12: 88, KanaMode: 112, IntlRo: 115, Convert: 121, NonConvert: 123,
+  IntlYen: 125, NumpadEnter: 156, ControlRight: 157, NumpadDivide: 181, AltRight: 184, Pause: 197, Home: 199,
+  ArrowUp: 200, PageUp: 201, ArrowLeft: 203, ArrowRight: 205, End: 207, ArrowDown: 208, PageDown: 209, Insert: 210,
+};
 
 /** "保存しました: name.mp4" -> translated prefix + the name. */
 function translateStatus(s) {
@@ -153,4 +251,6 @@ function drawSwitches(list) {
 fzo.onStats(s => {
   stats = s;
   drawStats();
+  drawKeys(s.keys || []);
+  $('keyBox').style.display = state.link && s.keys ? '' : 'none';
 });
