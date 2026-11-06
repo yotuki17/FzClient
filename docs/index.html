@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, pick your menu style, split your chat, and stay up to date with the FzClient Launcher.">
+<meta name="description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, make knockback look lighter, record clips with the Alt+X overlay, split your chat, and stay up to date with the FzClient Launcher.">
 <meta property="og:title" content="FzClient">
-<meta property="og:description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, pick your menu style, split your chat, and stay up to date with the FzClient Launcher.">
+<meta property="og:description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, make knockback look lighter, record clips with the Alt+X overlay, split your chat, and stay up to date with the FzClient Launcher.">
 <meta property="og:image" content="img/menu.webp">
 <link rel="icon" href="img/bird.png">
 <title>FzClient</title>
@@ -124,6 +124,18 @@ section.block { padding-block: 88px; }
 .feature li { font: 500 13px/1 var(--tech); padding: 8px 12px; border-radius: 8px; background: var(--sky-2); border: 1px solid var(--line); color: var(--ink); }
 .hud-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 14px; align-items: start; }
 
+/* KB FOV comparison: two clips side by side */
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+.compare figure { margin: 0; }
+.compare video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--sky-2); }
+.compare figcaption { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 14px; color: var(--mute); }
+.chip { font: 600 12px/1 var(--tech); letter-spacing: .06em; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--sky-2); color: var(--ink); white-space: nowrap; }
+.chip.on { background: var(--cyan); border-color: var(--cyan); color: var(--on-cyan); }
+.kb { margin-top: 80px; }
+.kb .head { margin-bottom: 0; }
+.kb .head h3 { font-size: clamp(22px, 2.6vw, 28px); }
+.feature.after-kb { margin-top: 80px; }
+
 /* small features grid */
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 88px; }
 .card { padding: 22px; border-radius: 14px; background: var(--sky-2); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
@@ -171,6 +183,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
   .hero .shot { transform: none; }
   .feature.flip > :first-child { order: 0; }
   .grid { grid-template-columns: minmax(0, 1fr); }
+  .compare { grid-template-columns: minmax(0, 1fr); }
   .strip .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .steps { grid-template-columns: minmax(0, 1fr); }
   .download .box { padding: 28px 20px; }
@@ -201,7 +214,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
       <div>
         <img class="logo" src="img/title.png" alt="FzClient">
         <h1>1.8.9 PvP,<br><em>your way.</em></h1>
-        <p class="lead">FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, pick how the menus look, and split your chat the way you like. Install it with the FzClient Launcher and it keeps itself up to date.</p>
+        <p class="lead">FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, make knockback look lighter, and save your best moments with the Alt+X overlay. Play through the FzClient Launcher and everything stays up to date by itself.</p>
         <div class="cta">
           <a class="btn primary" href="https://github.com/yotuki17/FzClient/releases/latest/download/FzClient-Launcher-Setup.exe" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21V12.6h-9.6zm0-15.4v7.2H21V3z"/></svg>
@@ -211,16 +224,16 @@ footer small { flex-basis: 100%; line-height: 1.6; }
         </div>
         <div class="meta"><span>Latest <b>v1.1.0</b></span><span>Minecraft <b>1.8.9</b></span><span>Forge</span><span>Windows 10 / 11</span></div>
       </div>
-      <div class="shot"><img src="img/menu.webp" alt="The FzClient title screen: a server list on the left, the logo and Singleplayer and Multiplayer buttons in the middle" width="1600" height="899"></div>
+      <div class="shot"><img src="img/menu.webp" alt="The FzClient title screen over a sepia panorama: favourite servers on the left, the logo with Singleplayer and Multiplayer in the middle, Settings, Cosmetics and Gallery on the right" width="1600" height="899"></div>
     </div>
   </section>
 
   <div class="strip" aria-label="FzClient in numbers">
     <div class="wrap">
-      <div><b>47</b><span>built-in features</span></div>
-      <div><b>3</b><span>menu styles</span></div>
+      <div><b>60+</b><span>built-in features and HUDs</span></div>
+      <div><b>Alt+X</b><span>overlay, recording and clips</span></div>
       <div><b>4 tabs</b><span>All · Party · Guild · DMs</span></div>
-      <div><b>120 FPS</b><span>smooth title screen</span></div>
+      <div><b>20,000</b><span>lines of chat to scroll back</span></div>
     </div>
   </div>
 
@@ -245,11 +258,29 @@ footer small { flex-basis: 100%; line-height: 1.6; }
         </div>
       </div>
 
-      <div class="feature flip">
+      <div class="kb" id="kbfov">
+        <div class="head">
+          <span class="tag">KB FOV</span>
+          <h3>Knockback that looks lighter</h3>
+          <p>When a hit knocks you back, FzClient can narrow your view for a split second, so the knockback looks smaller and your eyes stay on the fight. Only real knockback counts: fall damage, fire and poison leave your view alone. Set it anywhere from −30° to +30° and choose how long it lasts.</p>
+        </div>
+        <div class="compare">
+          <figure>
+            <video src="img/kbfov-off.mp4" poster="img/kbfov-off.webp" autoplay muted loop playsinline preload="metadata" aria-label="Taking knockback without KB FOV"></video>
+            <figcaption><span class="chip">Off</span>Normal knockback</figcaption>
+          </figure>
+          <figure>
+            <video src="img/kbfov-16.mp4" poster="img/kbfov-16.webp" autoplay muted loop playsinline preload="metadata" aria-label="Taking knockback with KB FOV set to minus 16 degrees"></video>
+            <figcaption><span class="chip on">KB FOV −16°</span>The same knockback looks lighter</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="feature flip after-kb">
         <div>
           <span class="tag">UI</span>
           <h3>Make the menu look like yours</h3>
-          <p>Choose between Liquid Glass, Classic and Dashboard. Put the categories on the left, the right or across the top, and change the accent colour and the corner logo's colour and size.</p>
+          <p>A title screen over a sepia panorama, with your favourite servers, cosmetics and newest screenshots one click away. In the settings, choose between Liquid Glass, Classic and Dashboard, put the categories where you like, and change the accent colour.</p>
           <ul><li>Liquid Glass</li><li>Classic</li><li>Dashboard</li><li>English / 日本語</li></ul>
         </div>
         <div class="shot"><img src="img/settings.webp" alt="The FzClient Client Settings screen with cards for Chroma, GUI Scale, Borderless and more" width="1600" height="913"></div>
@@ -257,14 +288,29 @@ footer small { flex-basis: 100%; line-height: 1.6; }
 
       <div class="grid">
         <div class="card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 10 5-3v10l-5-3"/></svg></div>
+          <h3>Record without stopping</h3>
+          <p>Press Alt+X on any server for the FzClient overlay. Record, or save the last moments as a clip right after something great happens. Keys can be combos like Ctrl + R.</p>
+        </div>
+        <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div>
           <h3>Chat built for Hypixel</h3>
-          <p>Split your chat into All, Party, Guild and DMs tabs. Type in the Party tab and it goes out as /pc, Guild as /gc. Chat heads and shortcuts like "gg" → "Good game!" are included.</p>
+          <p>Split your chat into All, Party, Guild and DMs tabs, with chat heads and shortcuts. Scroll back through everything said since you started the game, up to 20,000 lines.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg></div>
+          <h3>Translate and type Japanese</h3>
+          <p>Translate foreign chat with one click or automatically, send a message in another language with /tr, and type Japanese with your IME right in the chat box.</p>
         </div>
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/></svg></div>
           <h3>A Bed Wars sidekick</h3>
-          <p>In the waiting lobby, FzClient tells you when a party joins and how big it is, in chat and on the HUD. Drop Protection stops you from tossing anything except iron, gold, diamonds, emeralds and blocks.</p>
+          <p>In the waiting lobby, FzClient tells you when a party joins and how big it is. Drop Protection stops you from tossing anything except iron, gold, diamonds, emeralds and blocks.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-3 3-6 4-8 4 0 8 4 12 8 14 4-2 8-6 8-14-2 0-5-1-8-4z"/></svg></div>
+          <h3>Capes and auras</h3>
+          <p>Wear an FzClient cape and an aura of hearts, flames, notes or snow. Other FzClient players see them too, and they vanish whenever you drink an invisibility potion.</p>
         </div>
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></div>
@@ -274,7 +320,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v6M8 11h6"/></svg></div>
           <h3>Zoom and 1.7 animations</h3>
-          <p>Smooth zoom, 1.7-style sword swings and blocking, and a block outline in any colour. Fight with the old-school look.</p>
+          <p>Smooth zoom, 1.7-style sword swings and blocking, hurt cam control, lower fire and a block outline in any colour. Fight with the old-school look.</p>
         </div>
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div>
@@ -295,6 +341,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
           <p>FzClient adds things that help you see the game better, never things that give you an unfair edge.</p>
           <ul>
             <li>Invisible players stay invisible, and your crosshair doesn't change colour on them</li>
+            <li>Cosmetics are never drawn on invisible players</li>
             <li>The target HUD only appears after you really deal damage</li>
             <li>No auto-replies or auto-answers in chat</li>
           </ul>
@@ -309,8 +356,8 @@ footer small { flex-basis: 100%; line-height: 1.6; }
         <div>
           <span class="tag">Launcher</span>
           <h3>One click to play</h3>
-          <p>With the FzClient Launcher you never install Forge or mods by hand. Every time you press Play, it checks for a newer FzClient and swaps it in automatically.</p>
-          <ul><li>FzClient auto-updates</li><li>Find and install mods from Modrinth</li><li>Auto-update your mods</li><li>Screenshot gallery</li><li>Microsoft sign-in</li></ul>
+          <p>With the FzClient Launcher you never install Forge or mods by hand. Every time you press Play, it checks for a newer FzClient and swaps it in automatically. FzClient only runs when the launcher starts the game, and the launcher clears out its own leftover caches every time it opens.</p>
+          <ul><li>FzClient auto-updates</li><li>Mods from Modrinth and CurseForge</li><li>Auto-update your mods</li><li>Alt+X overlay and recording</li><li>Screenshot and clip gallery</li><li>Microsoft sign-in</li></ul>
         </div>
         <div class="shot"><img src="img/launcher.webp" alt="The FzClient Launcher home screen with the logo and the Play button" width="1040" height="640"></div>
       </div>
@@ -330,7 +377,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
           <a class="btn ghost" href="https://github.com/yotuki17/FzClient/releases" target="_blank" rel="noopener">All releases</a>
         </div>
         <ol class="steps">
-          <li><b>Download</b><span>Press the download button. The installer (about 80 MB) saves straight to your Downloads folder.</span></li>
+          <li><b>Download</b><span>Press the download button. The installer (about 85 MB) saves straight to your Downloads folder.</span></li>
           <li><b>Install</b><span>Open the exe and follow the steps. A shortcut appears on your desktop.</span></li>
           <li><b>Sign in and play</b><span>Sign in with your Microsoft account and press Play.</span></li>
         </ol>
