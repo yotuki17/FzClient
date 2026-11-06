@@ -603,6 +603,48 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowRight') openShot(shotIdx + 1);
   else if (e.key === 'Escape') closeShot();
 });
+// the newest ones on the home page: a click opens it in the gallery's viewer
+let recentKey = '';
+async function loadRecent() {
+  let all = [];
+  try { all = await fz.shots.list(); } catch { /* none */ }
+  const top = all.slice(0, 4);
+  const key = top.map(s => s.file + s.time).join('|');
+  $('recentEmpty').hidden = !!top.length;
+  if (key === recentKey) return;
+  recentKey = key;
+  const g = $('recentGrid');
+  g.innerHTML = '';
+  top.forEach((s, i) => {
+    const clip = s.kind === 'clip';
+    const b = el('button', 'rc' + (i === 0 ? ' big' : '') + (clip ? ' clip' : ''));
+    const img = el('img');
+    img.alt = '';
+    img.src = (clip ? 'fzshot://cthumb/' : 'fzshot://thumb/') + encodeURIComponent(s.file);
+    img.onerror = () => img.replaceWith(el('div', 'noimg', ''));
+    b.appendChild(img);
+    if (clip && i === 0) b.appendChild(el('i', 'tag', /_replay_/.test(s.file) ? t('直前') : t('クリップ')));
+    if (i === 0) b.appendChild(el('span', 'when', esc(new Date(s.time).toLocaleString())));
+    b.title = new Date(s.time).toLocaleString();
+    b.onclick = () => openInGallery(s.file);
+    g.appendChild(b);
+  });
+}
+async function openInGallery(file) {
+  galKind = 'all';
+  document.querySelectorAll('#galKind button').forEach(x => x.classList.toggle('on', x.dataset.k === 'all'));
+  document.querySelector('.nav[data-page="shots"]').click();
+  await loadShots();
+  const i = file ? shotList.findIndex(s => s.file === file) : -1;
+  if (i >= 0) openShot(i);
+}
+$('recentAll').onclick = () => openInGallery(null);
+const homeOn = () => $('page-home').classList.contains('on');
+window.addEventListener('focus', () => { if (homeOn()) loadRecent(); });
+document.querySelector('.nav[data-page="home"]').addEventListener('click', loadRecent);
+setInterval(() => { if (homeOn() && document.hasFocus()) loadRecent(); }, 15000);
+loadRecent();
+
 $('shotFolder').onclick = () => fz.open.folder(galKind === 'clip' ? 'recordings' : 'screenshots');
 $('shotReload').onclick = loadShots;
 

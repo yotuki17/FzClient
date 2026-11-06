@@ -5,7 +5,10 @@
 // loopback). ffmpeg takes the picture of the game window (Windows.Graphics.Capture), or of the monitor the game is
 // on, and encodes it on the GPU (NVENC, else AMF, else Media Foundation).
 //
-// ffmpeg writes 2-second pieces into <game folder>/recordings/.buffer. Both kinds of recording only join pieces:
+// ffmpeg writes 2-second pieces into <game folder>/recordings/.buffer. The pieces of one ffmpeg run keep one clock
+// and are MPEG-TS, so a save puts them back together byte by byte (what they were cut from) and only copies that
+// into an mp4. (Joining them as separate files, each starting at 0, left a small jump at every piece.)
+// Both kinds of recording only join pieces:
 // "save the last 30 s" takes the newest ones, a recording everything from its start to its stop. A save waits until
 // ffmpeg has moved on to the next piece, so the moment the button was pressed is in it. Pieces nothing needs any
 // more are deleted.
@@ -18,7 +21,8 @@ const { spawn } = require('child_process');
 
 // GPU encoders first; each: encoder, video filter (null = take the GPU frames as they are), options
 const ENCODERS = [
-  { name: 'NVENC', codec: 'h264_nvenc', vf: null, opts: ['-preset', 'p4', '-rc', 'vbr', '-cq', '23', '-b:v', '0', '-maxrate', '60M', '-bufsize', '120M'] },
+  // (forced-idr: every 2 s a picture that needs nothing from before it, so a clip can start at any piece)
+  { name: 'NVENC', codec: 'h264_nvenc', vf: null, opts: ['-preset', 'p4', '-rc', 'vbr', '-cq', '23', '-b:v', '0', '-maxrate', '60M', '-bufsize', '120M', '-forced-idr', '1'] },
   { name: 'AMF', codec: 'h264_amf', vf: null, opts: ['-quality', 'speed', '-rc', 'cqp', '-qp_i', '22', '-qp_p', '24'] },
   { name: 'Media Foundation', codec: 'h264_mf', vf: 'hwdownload,format=bgra,format=nv12', opts: ['-b:v', '20M'] },
 ];
@@ -40,6 +44,7 @@ class Capture {
     this.startedAt = 0;
     this.encoder = 0;
     this.base = 0;
+    this.runs = [];          // the first piece of each ffmpeg run (pieces of different runs have different clocks)
     this.recordFrom = -1;
     this.recordStartedAt = 0;
     this.status = '';
@@ -162,6 +167,7 @@ class Capture {
     fs.mkdirSync(this.buffer, { recursive: true });
     // numbers go on from what is there (+2: an ffmpeg that is still stopping may write one more piece)
     this.base = Math.max(this.base, this.newest() + 2);
+    this.runs.push(this.base);
     const o = this.options(), fps = o.fps === 30 ? 30 : 60, e = ENCODERS[this.encoder];
     // the game window (FzRecorder puts in its handle), or the monitor it is on. (A window exactly as big as the
     // screen in front gets no new pictures in a window capture: FzClient's Borderless is one pixel taller for
@@ -176,7 +182,7 @@ class Capture {
       ...(e.vf ? ['-vf', e.vf] : []), '-c:v', e.codec, ...e.opts,
       '-g', String(fps * 2), '-force_key_frames', 'expr:gte(t,n_forced*2)',
       '-c:a', 'aac', '-b:a', '160k',
-      '-f', 'segment', '-segment_time', '2', '-segment_format', 'mpegts', '-reset_timestamps', '1',
+      '-f', 'segment', '-segment_time', '2', '-segment_format', 'mpegts',
       '-segment_start_number', String(this.base), path.join(this.buffer, 'seg%06d.ts')];
     let child;
     try {
@@ -235,35 +241,78 @@ class Capture {
   /** Joins pieces [from, to] into one mp4 in the recordings folder (no re-encoding). */
   join(s) {
     const size = f => { try { return fs.statSync(f).size; } catch { return 0; } };
-    const parts = this.pieces().filter(([i, f]) => i >= s.from && i <= s.to && size(f) > 0).map(([, f]) => f);
+    const parts = this.pieces().filter(([i, f]) => i >= s.from && i <= s.to && size(f) > 0).sort((a, b) => a[0] - b[0]);
     if (s.stopAfter && !this.options().replay && !this.recording && !this.waiting.length) this.stop();
     if (!parts.length) {
       this.setStatus('保存できませんでした（録画がまだありません）');
       this.notify(this.status, true);
       return;
     }
+    // the pieces of each ffmpeg run, in order
+    const runOf = i => { let r = 0; for (const b of this.runs) if (b <= i) r = b; return r; };
+    const groups = [];
+    for (const [i, f] of parts) {
+      const last = groups[groups.length - 1];
+      if (last && last.run === runOf(i)) last.files.push(f); else groups.push({ run: runOf(i), files: [f] });
+    }
     this.joining.add(s.from);
-    const list = path.join(this.buffer, `join-${s.to}.txt`);
     const out = path.join(this.dir, s.name);
-    fs.writeFileSync(list, parts.map(f => `file '${f.replace(/\\/g, '/').replace(/'/g, "'\\''")}'\n`).join(''));
-    const p = spawn(this.tools.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', list,
-      '-c', 'copy', '-movflags', '+faststart', out], { windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
+    const temps = [];
     let err = '';
-    p.stderr.on('data', d => { err += d; });
-    const kill = setTimeout(() => p.kill(), 120000);
-    const done = ok => {
-      clearTimeout(kill);
-      try { fs.unlinkSync(list); } catch { /* fine */ }
+    const onErr = e => { err += e; };
+    const run = async () => {
+      if (groups.length === 1) return this.remux(groups[0].files, out, onErr);
+      // ffmpeg was started again in between: each run on its own, then those joined (mp4 lengths are exact)
+      const mp4s = [];
+      for (const [n, g] of groups.entries()) {
+        const t = path.join(this.buffer, `join-${s.to}-${n}.mp4`);
+        temps.push(t);
+        if (!await this.remux(g.files, t, onErr)) return false;
+        mp4s.push(t);
+      }
+      const list = path.join(this.buffer, `join-${s.to}.txt`);
+      temps.push(list);
+      fs.writeFileSync(list, mp4s.map(f => `file '${f.replace(/\\/g, '/').replace(/'/g, "'\\''")}'\n`).join(''));
+      return this.ffmpeg(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', '-movflags', '+faststart', out], null, onErr);
+    };
+    run().catch(() => false).then(ok => {
+      for (const t of temps) try { fs.unlinkSync(t); } catch { /* fine */ }
+      try { ok = ok && fs.statSync(out).size > 0; } catch { ok = false; }
       this.joining.delete(s.from);
       if (!ok && err) this.log('[capture] join: ' + err.trim().slice(0, 1000));
       this.setStatus(ok ? '保存しました: ' + s.name : '保存できませんでした');
       this.notify(ok ? '録画を保存しました: ' + s.name : '録画を保存できませんでした', !ok, ok ? out : null);
-    };
-    p.on('error', () => done(false));
-    p.on('close', code => {
-      let ok = code === 0;
-      try { ok = ok && fs.statSync(out).size > 0; } catch { ok = false; }
-      done(ok);
+    });
+  }
+
+  /** The MPEG-TS pieces of one run, given to ffmpeg one after another as one stream and copied into an mp4. */
+  remux(files, out, onErr) {
+    return this.ffmpeg(['-f', 'mpegts', '-i', 'pipe:0', '-c', 'copy', '-movflags', '+faststart', out], async stdin => {
+      for (const f of files) {
+        await new Promise(resolve => {
+          const r = fs.createReadStream(f);
+          r.on('error', resolve);
+          r.on('end', resolve);
+          r.pipe(stdin, { end: false });
+        });
+      }
+      stdin.end();
+    }, onErr);
+  }
+
+  /** Runs ffmpeg; feed(stdin) writes its input (or null for none). True when it finished without an error. */
+  ffmpeg(args, feed, onErr) {
+    return new Promise(resolve => {
+      const p = spawn(this.tools.ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', ...args],
+        { windowsHide: true, stdio: [feed ? 'pipe' : 'ignore', 'ignore', 'pipe'] });
+      p.stderr.on('data', d => onErr(String(d)));
+      const kill = setTimeout(() => p.kill(), 300000);
+      if (feed) {
+        p.stdin.on('error', () => { /* ffmpeg stopped early: its exit code says so */ });
+        feed(p.stdin).catch(() => { try { p.stdin.end(); } catch { /* gone */ } });
+      }
+      p.on('error', () => { clearTimeout(kill); resolve(false); });
+      p.on('close', code => { clearTimeout(kill); resolve(code === 0); });
     });
   }
 
