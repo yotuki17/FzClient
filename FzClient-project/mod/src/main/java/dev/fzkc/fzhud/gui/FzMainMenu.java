@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- * FzClient's own title screen: animated aurora + drifting particles in the background, the bird logo,
+ * FzClient's own title screen: a slowly turning sepia panorama with dust in the light, the bird logo,
  * and big buttons (singleplayer, multiplayer, FzClient settings, options, mods, quit).
  */
 public class FzMainMenu extends FzScreen {
@@ -37,7 +37,7 @@ public class FzMainMenu extends FzScreen {
     private static final float INTRO_LEN = 1.15f;
     private static final ResourceLocation TITLE = new ResourceLocation("fzclient", "textures/title.png"); // 512x191
 
-    private static final int CYAN = 0x5CE1E6, MAGENTA = 0xE83ECE, BLUE = 0x3478EB;
+    private static final int CYAN = 0x5CE1E6, MAGENTA = 0xE83ECE;
     private static final int PARTICLES = 70;
     private static final float[] PX = new float[PARTICLES], PY = new float[PARTICLES], PS = new float[PARTICLES],
             PV = new float[PARTICLES], PP = new float[PARTICLES];
@@ -92,7 +92,9 @@ public class FzMainMenu extends FzScreen {
 
     private void drawQuick(int mx, int my, float o) {
         String head = "FzClient";
-        R.text(head, quickX() + FAV_W - 2 - R.width(head), favY(), R.alpha(Ui.accent, o));
+        float hx = quickX() + FAV_W - 2 - R.width(head);
+        R.text(head, hx, favY(), R.alpha(Ui.accent, o));
+        headLine(quickX() + 2, hx - 6, favY() + 4, true, Ui.accent, o);
         for (int i = 0; i < QUICK.length; i++) quickCard(i, mx, my, o);
         galleryCard(mx, my, o);
     }
@@ -105,7 +107,7 @@ public class FzMainMenu extends FzScreen {
     private float thumbX(int k) { return quickX() + 4 + k * (thumbW() + THUMB_GAP); }
     private float thumbY() { return galY() + FAV_H - 2; }
     /** The pictures only when they fit above the footer. */
-    private boolean galThumbs() { return thumbY() + thumbH() + 4 <= vh - 26; }
+    private boolean galThumbs() { return thumbY() + thumbH() + 4 <= vh - 30; }
     private float galH() { return galThumbs() ? FAV_H - 2 + thumbH() + 4 : FAV_H; }
     private int recentAsk;
 
@@ -193,8 +195,21 @@ public class FzMainMenu extends FzScreen {
             if (hover > 0.01f) R.roundedOutline(x, y, w, hgt, Ui.rad(6f), 1f, R.alpha(R.alpha(edge, hover * 0.8f), o));
             return;
         }
-        R.rounded(x, y, w, hgt, 5f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, hover), o));
-        R.roundedOutline(x, y, w, hgt, 5f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, edge, hover), o));
+        R.rounded(x + 1, y + 2, w, hgt, 5f, R.alpha(0x50000000, o));   // soft shadow
+        R.rounded(x, y, w, hgt, 5f, R.alpha(R.lerpColor(0xA80A0F12, 0xDC121C21, hover), o));
+        R.rect(x + 5, y + 0.5f, w - 10, 0.5f, R.alpha(0x26FFFFFF, o));   // light on the top edge
+        R.roundedOutline(x, y, w, hgt, 5f, 1f, R.alpha(R.lerpColor(0x22FFFFFF, edge, hover * 0.85f), o));
+        // the card's colour as a thin stripe on its left, brighter on hover
+        float sh = Math.min(hgt - 12, 18);
+        R.rounded(x + 1.5f, y + (Math.min(hgt, FAV_H) - sh) / 2f, 1.5f, sh, 0.75f, R.alpha(R.alpha(edge, 0.35f + 0.65f * hover), o));
+    }
+
+    /** A thin line beside a list's header, fading out away from the text. */
+    private static void headLine(float x0, float x1, float y, boolean fadeLeft, int argb, float o) {
+        if (x1 - x0 < 4) return;
+        int c = R.alpha(R.alpha(argb, 0.55f), o), z = c & 0x00FFFFFF;
+        if (fadeLeft) Ui.gradient(x0, y, x1 - x0, 0.75f, z, c, z, c);
+        else Ui.gradient(x0, y, x1 - x0, 0.75f, c, z, c, z);
     }
 
     private float favRowY(int i) { return favY() + 16 + i * (FAV_H + 5); }
@@ -275,7 +290,9 @@ public class FzMainMenu extends FzScreen {
 
     private void drawFavourites(int mx, int my, float o) {
         float x = favX(), y = favY();
-        R.text("★ お気に入り", x + 2, y, R.alpha(0xFFFFD84A, o));
+        String head = "★ お気に入り";
+        R.text(head, x + 2, y, R.alpha(0xFFFFD84A, o));
+        headLine(x + 2 + R.width(head) + 6, x + FAV_W - 2, y + 4, false, 0xFFFFD84A, o);
         if (favs.isEmpty()) {
             if (glass()) Glass.surface(x, y + 14, FAV_W, 30, Ui.rad(6f), o, 0f, 0f, 0.6f);
             else R.rounded(x, y + 14, FAV_W, 30, 4f, R.alpha(0x90101A1E, o));
@@ -419,7 +436,11 @@ public class FzMainMenu extends FzScreen {
         float tw = 170, th = tw * 191f / 512f;
         image(TITLE, cx - tw / 2f + 1, ly + bh + 2 + 2, tw, th, 0x000000, o * 0.45f);   // shadow
         image(TITLE, cx - tw / 2f, ly + bh + 2, tw, th, 0xE6F7F8, o);
-        R.textCentered("PVP CLIENT  ·  1.8.9", cx, ly + bh + th + 2, R.alpha(Ui.accent, o));
+        String sub = "PVP CLIENT  ·  1.8.9";
+        float sw = R.width(sub), sy = ly + bh + th + 2;
+        R.textCentered(sub, cx, sy, R.alpha(Ui.accent, o));
+        headLine(cx - sw / 2f - 46, cx - sw / 2f - 8, sy + 4, true, Ui.accent, o);
+        headLine(cx + sw / 2f + 8, cx + sw / 2f + 46, sy + 4, false, Ui.accent, o);
 
         // main buttons
         bigButton("single", "menu_single", "シングルプレイ", rowY(0), true, mx, my, o);
@@ -438,7 +459,10 @@ public class FzMainMenu extends FzScreen {
         // language switch (left of quit)
         Ui.langButton(quitX() - 6 - Ui.langW(), quitY(), anim("lang").update(Ui.inside(mx, my, quitX() - 6 - Ui.langW(), quitY(), Ui.langW(), 20) ? 1 : 0), o);
 
-        // footer
+        // footer: a dark strip with a thin light line on top
+        R.rect(0, vh - 28, vw, 28, R.alpha(0x70000000, o));
+        Ui.gradient(0, vh - 28, vw / 2f, 0.5f, 0x00FFFFFF, R.alpha(0x30FFFFFF, o), 0x00FFFFFF, R.alpha(0x30FFFFFF, o));
+        Ui.gradient(vw / 2f, vh - 28, vw / 2f, 0.5f, R.alpha(0x30FFFFFF, o), 0x00FFFFFF, R.alpha(0x30FFFFFF, o), 0x00FFFFFF);
         String name = mc.getSession() == null ? "" : mc.getSession().getUsername();
         // face + name: opens the account switcher
         float ah = anim("account").update(Ui.inside(mx, my, accountX(), accountY(), accountW(name), 19) ? 1 : 0);
@@ -549,33 +573,35 @@ public class FzMainMenu extends FzScreen {
         image(SPLASH[i], ox + r[0] * k, oy + (r[1] + dy) * k, (r[2] - r[0]) * k, (r[3] - r[1]) * k, 0xFFFFFF, alpha);
     }
 
+    /** The background: a slowly turning panorama (sepia), shaded so the lists and buttons stay readable. */
     private void drawBackground(float t) {
-        // base: deep teal gradient
-        Ui.gradient(0, 0, vw, vh, 0xFF071014, 0xFF08131A, 0xFF0B1A1F, 0xFF0A1420);
+        drawPanorama(t);
 
-        // aurora: three soft colour blobs drifting slowly (and a touch of mouse parallax)
-        float px = (mxs / Math.max(1, vw) - 0.5f) * 14f, py = (mys / Math.max(1, vh) - 0.5f) * 10f;
-        blob(vw * (0.30f + 0.12f * MathHelper.sin(t * 0.11f)) + px, vh * (0.38f + 0.10f * MathHelper.cos(t * 0.09f)) + py,
-                vh * 0.75f, CYAN, 0x2E);
-        blob(vw * (0.72f + 0.10f * MathHelper.cos(t * 0.08f + 1f)) - px, vh * (0.62f + 0.12f * MathHelper.sin(t * 0.10f + 2f)) - py,
-                vh * 0.70f, MAGENTA, 0x24);
-        blob(vw * (0.50f + 0.18f * MathHelper.sin(t * 0.06f + 4f)), vh * (0.95f + 0.05f * MathHelper.cos(t * 0.12f)),
-                vh * 0.65f, BLUE, 0x26);
+        // shade: a little everywhere, more at the sides (the lists) and the bottom (the footer)
+        R.rect(0, 0, vw, vh, 0x3C000000);
+        Ui.gradient(0, 0, vw * 0.34f, vh, 0xB0000000, 0x00000000, 0xB0000000, 0x00000000);
+        Ui.gradient(vw * 0.66f, 0, vw * 0.34f + 1, vh, 0x00000000, 0xB0000000, 0x00000000, 0xB0000000);
+        Ui.gradient(0, 0, vw, vh * 0.22f, 0x80000000, 0x80000000, 0x00000000, 0x00000000);
+        Ui.gradient(0, vh * 0.55f, vw, vh * 0.45f + 1, 0x00000000, 0x00000000, 0xD0000000, 0xD0000000);
 
-        // particles rising and twinkling (all in one draw call)
+        // warm light behind the logo
+        blob(vw / 2f, logoY() + 52, vh * 0.42f, 0xFFC27A, 0x26);
+
+        // dust in the light: rising slowly and twinkling (all in one draw call)
         GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
         GlStateManager.disableAlpha();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GL11.glBegin(GL11.GL_QUADS);
         float span = vh + 20;
+        int acc = Ui.accent & 0xFFFFFF;
         for (int i = 0; i < PARTICLES; i++) {
             float x = PX[i] * vw + MathHelper.sin(t * 0.4f + PP[i]) * 6f;
-            float y = ((PY[i] * span - t * PV[i]) % span + span) % span - 10;
-            float tw = 0.35f + 0.65f * (0.5f + 0.5f * MathHelper.sin(t * 2.2f + PP[i] * 3f));
-            int col = i % 3 == 0 ? CYAN : i % 3 == 1 ? 0xFFFFFF : MAGENTA;
-            GL11.glColor4f(((col >> 16) & 0xFF) / 255f, ((col >> 8) & 0xFF) / 255f, (col & 0xFF) / 255f, tw * 0.667f);
-            float s = PS[i];
+            float y = ((PY[i] * span - t * PV[i] * 0.6f) % span + span) % span - 10;
+            float tw = 0.3f + 0.7f * (0.5f + 0.5f * MathHelper.sin(t * 2.2f + PP[i] * 3f));
+            int col = i % 4 == 0 ? acc : i % 4 == 1 ? 0xFFFFFF : 0xFFE2B4;
+            GL11.glColor4f(((col >> 16) & 0xFF) / 255f, ((col >> 8) & 0xFF) / 255f, (col & 0xFF) / 255f, tw * 0.55f);
+            float s = PS[i] * 0.8f;
             GL11.glVertex2f(x, y);
             GL11.glVertex2f(x, y + s);
             GL11.glVertex2f(x + s, y + s);
@@ -586,11 +612,75 @@ public class FzMainMenu extends FzScreen {
         GlStateManager.enableTexture2D();
         GlStateManager.resetColor();
         GlStateManager.color(1f, 1f, 1f, 1f);
-
-        // vignette so the edges stay dark and the buttons pop
-        Ui.gradient(0, 0, vw, vh * 0.25f, 0x90000000, 0x90000000, 0x00000000, 0x00000000);
-        Ui.gradient(0, vh * 0.75f, vw, vh * 0.25f, 0x00000000, 0x00000000, 0xA0000000, 0xA0000000);
     }
+
+    private static final ResourceLocation[] PANO = new ResourceLocation[6];
+
+    static {
+        for (int i = 0; i < 6; i++) PANO[i] = new ResourceLocation("fzclient", "textures/panorama/panorama_" + i + ".jpg");
+    }
+
+    /**
+     * The six pictures on the inside of a cube around the camera (the usual title-screen panorama layout:
+     * 0 front, 1 right, 2 back, 3 left, 4 up, 5 down), turning slowly, with a touch of mouse parallax.
+     */
+    private void drawPanorama(float t) {
+        float yaw = t * 1.8f + (mxs / Math.max(1, vw) - 0.5f) * 8f;
+        float pitch = 8f + MathHelper.sin(t * 0.07f) * 3f + (mys / Math.max(1, vh) - 0.5f) * 4f;
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);
+        GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+        org.lwjgl.util.glu.Project.gluPerspective(85f, mc.displayWidth / (float) Math.max(1, mc.displayHeight), 0.05f, 10f);
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+        GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+        GlStateManager.rotate(180f, 1f, 0f, 0f);
+        GlStateManager.rotate(pitch, 1f, 0f, 0f);
+        GlStateManager.rotate(yaw, 0f, 1f, 0f);
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
+        GlStateManager.disableCull();
+        GlStateManager.disableAlpha();
+        GlStateManager.disableBlend();
+        GlStateManager.enableTexture2D();
+        GlStateManager.color(1f, 1f, 1f, 1f);
+        for (int k = 0; k < 6; k++) {
+            mc.getTextureManager().bindTexture(PANO[k]);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+            // no seams where two pictures meet
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE);
+            float[] f = FACES[k];
+            GL11.glBegin(GL11.GL_QUADS);
+            for (int v = 0; v < 4; v++) {
+                GL11.glTexCoord2f(UV[v * 2], UV[v * 2 + 1]);
+                GL11.glVertex3f(f[v * 3], f[v * 3 + 1], f[v * 3 + 2]);
+            }
+            GL11.glEnd();
+        }
+        GlStateManager.popMatrix();
+        GlStateManager.matrixMode(GL11.GL_PROJECTION);
+        GlStateManager.popMatrix();
+        GlStateManager.matrixMode(GL11.GL_MODELVIEW);
+        GlStateManager.depthMask(true);
+        GlStateManager.enableDepth();
+        GlStateManager.enableCull();
+        GlStateManager.enableAlpha();
+        GlStateManager.enableBlend();
+    }
+
+    /** Texture corners for the four points of every face. */
+    private static final float[] UV = {0, 0, 0, 1, 1, 1, 1, 0};
+    /** The four points of each face (x, y, z). */
+    private static final float[][] FACES = {
+            {-1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1},
+            {1, -1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1},
+            {1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1},
+            {-1, -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1},
+            {-1, -1, -1, -1, -1, 1, 1, -1, 1, 1, -1, -1},
+            {-1, 1, 1, -1, 1, -1, 1, 1, -1, 1, 1, 1},
+    };
 
     /** The 41 points around a blob (same values the drawing used to compute every frame). */
     private static final float[] CIRCLE_COS = new float[41], CIRCLE_SIN = new float[41];
@@ -658,16 +748,28 @@ public class FzMainMenu extends FzScreen {
             Icons.draw(icon, x + 10, y - lift + 6, 12, R.alpha(primary ? 0xFFFFFFFF : R.lerpColor(0xFFC9D6D9, Ui.accent, h), o));
             R.textCentered(label, x + BW / 2f, y - lift + 8, R.alpha(Ui.text, o));
         } else if (primary) {
-            R.rounded(x, y - lift, BW, BH, 4f, R.alpha(R.lerpColor(0xFF4FCBD0, 0xFF72EEF3, h), o));
-            R.roundedOutline(x, y - lift, BW, BH, 4f, 1f, R.alpha(R.lerpColor(0x40FFFFFF, 0xFFFFFFFF, h), o));
+            int base = Ui.accent | 0xFF000000;
+            if (h > 0.01f) blob(x + BW / 2f, y - lift + BH / 2f, BW * 0.42f, base & 0xFFFFFF, (int) (0x30 * h));   // glow
+            R.rounded(x + 1, y - lift + 2, BW, BH, 4f, R.alpha(0x60000000, o));
+            R.rounded(x, y - lift, BW, BH, 4f, R.alpha(R.lerpColor(R.lerpColor(base, 0xFF000000, 0.12f), R.lerpColor(base, 0xFFFFFFFF, 0.2f), h), o));
+            // a lighter top half: the button looks lit from above
+            R.rounded(x + 1, y - lift + 1, BW - 2, BH / 2f - 1, 3f, R.alpha(0x22FFFFFF, o));
+            R.roundedOutline(x, y - lift, BW, BH, 4f, 1f, R.alpha(R.lerpColor(0x50FFFFFF, 0xFFFFFFFF, h), o));
             Icons.draw(icon, x + 10, y - lift + 6, 12, R.alpha(0xFF071012, o));
             boolean shadow = R.noShadow;
             R.noShadow = true;   // dark text on the light button: a shadow would look doubled
             R.textCentered(label, x + BW / 2f, y - lift + 8, R.alpha(0xFF071012, o));
             R.noShadow = shadow;
         } else {
-            R.rounded(x, y - lift, BW, BH, 4f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, h), o));
-            R.roundedOutline(x, y - lift, BW, BH, 4f, 1f, R.alpha(R.lerpColor(0x40FFFFFF, Ui.accent, h), o));
+            R.rounded(x + 1, y - lift + 2, BW, BH, 4f, R.alpha(0x50000000, o));
+            R.rounded(x, y - lift, BW, BH, 4f, R.alpha(R.lerpColor(0xA80A0F12, 0xDC121C21, h), o));
+            R.rect(x + 6, y - lift + 0.5f, BW - 12, 0.5f, R.alpha(0x26FFFFFF, o));
+            R.roundedOutline(x, y - lift, BW, BH, 4f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, Ui.accentA(0xB0), h), o));
+            // on hover a line in the accent colour grows from the middle of the bottom edge
+            if (h > 0.01f) {
+                float lw = BW * 0.55f * h;
+                R.rect(x + BW / 2f - lw / 2f, y - lift + BH - 1.5f, lw, 1f, R.alpha(Ui.accent, o * h));
+            }
             Icons.draw(icon, x + 10, y - lift + 6, 12, R.alpha(R.lerpColor(0xFF9DB4B8, Ui.accent, h), o));
             R.textCentered(label, x + BW / 2f, y - lift + 8, R.alpha(Ui.text, o));
         }
@@ -679,8 +781,14 @@ public class FzMainMenu extends FzScreen {
         float h = anim(id).update(over ? 1 : 0);
         if (glass()) Glass.surface(x, y, w, SBH, Ui.rad(Math.min(SBH / 2f, 9f)), o, h, h * 0.22f, 1f);
         else {
-            R.rounded(x, y, w, SBH, 4f, R.alpha(R.lerpColor(0xB0101A1E, 0xE0182A30, h), o));
-            R.roundedOutline(x, y, w, SBH, 4f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, Ui.accent, h), o));
+            R.rounded(x + 1, y + 2, w, SBH, 4f, R.alpha(0x50000000, o));
+            R.rounded(x, y, w, SBH, 4f, R.alpha(R.lerpColor(0xA80A0F12, 0xDC121C21, h), o));
+            R.rect(x + 5, y + 0.5f, w - 10, 0.5f, R.alpha(0x26FFFFFF, o));
+            R.roundedOutline(x, y, w, SBH, 4f, 1f, R.alpha(R.lerpColor(0x22FFFFFF, Ui.accentA(0xB0), h), o));
+            if (h > 0.01f) {
+                float lw = w * 0.5f * h;
+                R.rect(x + w / 2f - lw / 2f, y + SBH - 1.5f, lw, 1f, R.alpha(Ui.accent, o * h));
+            }
         }
         float tw = 11 + 4 + R.width(label);
         float sx = x + (w - tw) / 2f;

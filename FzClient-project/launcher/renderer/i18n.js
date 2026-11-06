@@ -121,6 +121,7 @@ const EN = {
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
   'NEW：Alt+X のオーバーレイと録画をランチャーで（どのサーバーでも）': 'NEW: the Alt+X overlay and recording now run in the launcher (on any server)',
+  'NEW：タイトル画面の背景がセピアのパノラマに・ボタンとカードも新デザイン': 'NEW: a slowly turning sepia panorama behind the title screen, with new buttons and cards',
   'NEW：タイトル画面に最新のスクショ・クリップ（押すと Alt+X で大きく）': 'NEW: the newest screenshots and clips on the title screen (a click shows them big in Alt+X)',
   '録画：「直前を保存」のクリップが飛ぶ・順番が乱れるのを修正': 'Recording: saved clips no longer skip or play out of order',
   '録画：音が途切れない・ずっと止まらない・左上に REC マーク': 'Recording: smooth sound, no more frozen video, REC mark in the top left',
