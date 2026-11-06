@@ -2,3 +2,7 @@
 .vscode/
 FzClient-project/launcher/node_modules/
 FzClient-project/launcher/dist/
+
+# local test runs of the game
+FzClient-project/logs/
+FzClient-project/.mixin.out/
