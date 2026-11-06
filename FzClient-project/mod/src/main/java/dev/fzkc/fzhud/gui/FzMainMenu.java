@@ -78,7 +78,7 @@ public class FzMainMenu extends FzScreen {
     private float favX() { return 14; }
     private float favY() { return Math.max(logoY() + 10, vh * 0.30f); }
 
-    // ---- the FzClient shortcuts on the right: the same rows as the favourites, mirrored (header, size, spacing)
+    // ---- the FzClient shortcuts on the right: slim rows (icon, title, a short note), then the gallery
     private static final String[][] QUICK = {
             // id, icon, title, subtitle
             {"quick_fz", "menu_fz", "設定・MOD", "FzClient の機能"},
@@ -87,72 +87,85 @@ public class FzMainMenu extends FzScreen {
     };
     private static final int[] QUICK_TINT = {CYAN, MAGENTA};
     private static final int GALLERY_TINT = 0xFFD84A;
+    private static final float QH = 18, QGAP = 3;
     private float quickX() { return vw - favX() - FAV_W; }
-    private float quickY(int i) { return favRowY(i); }
+    private float quickY(int i) { return favY() + 16 + i * (QH + QGAP); }
 
     private void drawQuick(int mx, int my, float o) {
         String head = "FzClient";
-        float hx = quickX() + FAV_W - 2 - R.width(head);
-        R.text(head, hx, favY(), R.alpha(Ui.accent, o));
-        headLine(quickX() + 2, hx - 6, favY() + 4, true, Ui.accent, o);
-        for (int i = 0; i < QUICK.length; i++) quickCard(i, mx, my, o);
+        R.text(head, quickX() + 2, favY(), R.alpha(Ui.accent, o));
+        headLine(quickX() + 2 + R.width(head) + 6, quickX() + FAV_W - 2, favY() + 4, false, Ui.accent, o);
+        for (int i = 0; i < QUICK.length; i++) {
+            String[] q = QUICK[i];
+            quickRow(q[0], q[1], q[2], q[3], QUICK_TINT[i], quickY(i), mx, my, o);
+        }
         galleryCard(mx, my, o);
     }
 
-    // ---- the gallery: the newest screenshots / clips under the shortcuts (clips and the big view: the launcher's overlay)
-    private static final float THUMB_GAP = 4;
+    /** One slim row: a small tinted icon, the title, a muted note on the right; on hover it lights up and slides a little. */
+    private void quickRow(String id, String icon, String title, String note, int tint, float y, int mx, int my, float o) {
+        float h = anim(id).update(Ui.inside(mx, my, quickX(), y, FAV_W, QH) ? 1 : 0);
+        float x = quickX() - h * 2f;
+        int col = 0xFF000000 | tint;
+        if (glass()) Glass.surface(x, y, FAV_W, QH, Ui.rad(4f), o, h, 0f, 0.55f + h * 0.45f);
+        else {
+            R.rounded(x, y, FAV_W, QH, 3f, R.alpha(R.lerpColor(0x78080C0E, 0xD0121C21, h), o));
+            if (h > 0.01f) R.roundedOutline(x, y, FAV_W, QH, 3f, 1f, R.alpha(R.alpha(col, h * 0.6f), o));
+        }
+        R.rounded(x + 1.5f, y + 4, 1.5f, QH - 8, 0.75f, R.alpha(R.alpha(col, 0.4f + 0.6f * h), o));
+        Icons.draw(icon, x + 7, y + 4, 10, R.alpha(col, o));
+        R.text(title, x + 21, y + 5, R.alpha(Ui.text, o));
+        String n = Ui.trim(dev.fzkc.fzhud.util.Lang.t(note), FAV_W - 30 - R.width(title));
+        R.text(n, x + FAV_W - 5 - R.width(n), y + 5, R.alpha(R.lerpColor(0xFF6F8589, Ui.MUTED, h), o));
+    }
+
+    // ---- the gallery: a slim row, the newest screenshots / clips under it (clips and the big view: the launcher's overlay)
+    private static final float THUMB_GAP = 3;
     private float galY() { return quickY(QUICK.length); }
-    private float thumbW() { return (FAV_W - 8 - THUMB_GAP * (dev.fzkc.fzhud.util.RecentShots.MAX - 1)) / dev.fzkc.fzhud.util.RecentShots.MAX; }
+    private float thumbW() { return (FAV_W - THUMB_GAP * (dev.fzkc.fzhud.util.RecentShots.MAX - 1)) / dev.fzkc.fzhud.util.RecentShots.MAX; }
     private float thumbH() { return thumbW() * 9f / 16f; }
-    private float thumbX(int k) { return quickX() + 4 + k * (thumbW() + THUMB_GAP); }
-    private float thumbY() { return galY() + FAV_H - 2; }
+    private float thumbX(int k) { return quickX() + k * (thumbW() + THUMB_GAP); }
+    private float thumbY() { return galY() + QH + QGAP; }
     /** The pictures only when they fit above the footer. */
     private boolean galThumbs() { return thumbY() + thumbH() + 4 <= vh - 30; }
-    private float galH() { return galThumbs() ? FAV_H - 2 + thumbH() + 4 : FAV_H; }
+    private float galH() { return galThumbs() ? QH + QGAP + thumbH() : QH; }
     private int recentAsk;
 
     private void galleryCard(int mx, int my, float o) {
         java.util.List<dev.fzkc.fzhud.util.RecentShots.Item> items = dev.fzkc.fzhud.util.RecentShots.items();
-        float y = galY(), gh = galH();
-        float h = anim("quick_gal").update(Ui.inside(mx, my, quickX(), y, FAV_W, gh) ? 1 : 0);
-        float x = quickX() - h * 2f, dx = x - quickX();
-        card(x, y, FAV_W, gh, h, 0xFF000000 | GALLERY_TINT, o);
-        R.rounded(x + 4, y + 4, 22, 22, 11f, R.alpha(0x38000000 | GALLERY_TINT, o));
-        Icons.draw("screenshot", x + 8, y + 8, 14, R.alpha(0xFF000000 | GALLERY_TINT, o));
-        R.text("ギャラリー", x + 31, y + 5, R.alpha(Ui.text, o));
-        String sub = items.isEmpty() ? "F2 でスクショ・Alt+X で録画" : "スクショ・クリップ";
-        R.text(Ui.trim(dev.fzkc.fzhud.util.Lang.t(sub), FAV_W - 48), x + 31, y + 16, R.alpha(Ui.MUTED, o));
-        R.text("›", x + FAV_W - 10 + h * 2f, y + 11, R.alpha(R.lerpColor(0xFF5A666A, 0xFF000000 | GALLERY_TINT, h), o));
+        String note = items.isEmpty() ? "F2 でスクショ・Alt+X で録画" : "スクショ・クリップ";
+        quickRow("quick_gal", "screenshot", "ギャラリー", note, GALLERY_TINT, galY(), mx, my, o);
         if (!galThumbs()) return;
         float tw = thumbW(), th = thumbH(), ty = thumbY();
         for (int k = 0; k < dev.fzkc.fzhud.util.RecentShots.MAX; k++) {
-            float tx = thumbX(k) + dx;
             dev.fzkc.fzhud.util.RecentShots.Item it = k < items.size() ? items.get(k) : null;
             float th2 = anim("gal" + k).update(it != null && Ui.inside(mx, my, thumbX(k), ty, tw, th) ? 1 : 0);
-            R.rounded(tx, ty, tw, th, 3f, R.alpha(0x70000000, o));
-            if (it != null && it.tex != null) image(it.tex, tx, ty, tw, th, 0xFFFFFF, o);
+            float tx = thumbX(k), lift = th2 * 1f;
+            R.rounded(tx, ty - lift, tw, th, 3f, R.alpha(0x60000000, o));
+            if (it != null && it.tex != null) image(it.tex, tx, ty - lift, tw, th, 0xFFFFFF, o * (0.85f + 0.15f * th2));
             if (it != null && it.clip) {
                 // a play mark in the middle
-                float cx = tx + tw / 2f, cy = ty + th / 2f;
+                float cx = tx + tw / 2f, cy = ty - lift + th / 2f;
                 R.rounded(cx - 6, cy - 6, 12, 12, 6f, R.alpha(0xA0000000, o));
                 R.triangleRight(cx + 0.5f, cy, 3f, R.alpha(0xFFFFFFFF, o));
             }
-            R.roundedOutline(tx, ty, tw, th, 3f, 1f, R.alpha(R.lerpColor(0x30FFFFFF, 0xFF000000 | GALLERY_TINT, th2), o));
+            R.roundedOutline(tx, ty - lift, tw, th, 3f, 1f, R.alpha(R.lerpColor(0x22FFFFFF, 0xFF000000 | GALLERY_TINT, th2), o));
         }
     }
 
-    /** A click on the gallery card: a picture opens big in the launcher's overlay (or the file itself without it). */
+    /** A click on the gallery: a picture opens big in the launcher's overlay (or the file itself without it). */
     private boolean clickGallery(int mx, int my) {
         if (!Ui.inside(mx, my, quickX() - 2, galY(), FAV_W + 2, galH())) return false;
         java.util.List<dev.fzkc.fzhud.util.RecentShots.Item> items = dev.fzkc.fzhud.util.RecentShots.items();
         boolean link = dev.fzkc.fzhud.feature.LauncherLink.connected();
-        if (galThumbs()) {
+        if (galThumbs() && my >= thumbY()) {
             for (int k = 0; k < items.size() && k < dev.fzkc.fzhud.util.RecentShots.MAX; k++) {
                 if (!Ui.inside(mx, my, thumbX(k), thumbY(), thumbW(), thumbH())) continue;
                 if (link) dev.fzkc.fzhud.feature.LauncherLink.openGallery(items.get(k).file);
                 else openFile(new java.io.File(new java.io.File(mc.mcDataDir, "screenshots"), items.get(k).file));
                 return true;
             }
+            return true;   // the gaps between the pictures, or an empty slot: nothing
         }
         if (link) dev.fzkc.fzhud.feature.LauncherLink.openGallery(null);
         else openFile(new java.io.File(mc.mcDataDir, "screenshots"));
@@ -166,21 +179,6 @@ public class FzMainMenu extends FzScreen {
         } catch (Exception e) {
             org.lwjgl.Sys.openURL(f.toURI().toString());
         }
-    }
-
-    private void quickCard(int i, int mx, int my, float o) {
-        String[] q = QUICK[i];
-        int tint = QUICK_TINT[i];
-        float y = quickY(i);
-        float h = anim(q[0]).update(Ui.inside(mx, my, quickX(), y, FAV_W, FAV_H) ? 1 : 0);
-        float x = quickX() - h * 2f;   // slides a little towards the middle, like the favourites do
-        card(x, y, FAV_W, FAV_H, h, 0xFF000000 | tint, o);
-        // icon in a round badge where the favourites have their server icon
-        R.rounded(x + 4, y + 4, 22, 22, 11f, R.alpha(0x38000000 | tint, o));
-        Icons.draw(q[1], x + 8, y + 8, 14, R.alpha(0xFF000000 | tint, o));
-        R.text(q[2], x + 31, y + 5, R.alpha(Ui.text, o));
-        R.text(Ui.trim(dev.fzkc.fzhud.util.Lang.t(q[3]), FAV_W - 48), x + 31, y + 16, R.alpha(Ui.MUTED, o));
-        R.text("›", x + FAV_W - 10 + h * 2f, y + 11, R.alpha(R.lerpColor(0xFF5A666A, 0xFF000000 | tint, h), o));
     }
 
     /** Title screen buttons in liquid glass, when that style is picked and switched on for the title screen. */
@@ -806,9 +804,9 @@ public class FzMainMenu extends FzScreen {
             mc.displayGuiScreen(new GuiSelectWorld(this));
         } else if (Ui.inside(mx, my, colX(), rowY(1), BW, BH)) {
             mc.displayGuiScreen(new GuiMultiplayer(this));
-        } else if (Ui.inside(mx, my, quickX() - 2, quickY(0), FAV_W + 2, FAV_H)) {
+        } else if (Ui.inside(mx, my, quickX() - 2, quickY(0), FAV_W + 2, QH)) {
             mc.displayGuiScreen(new ModsScreen(this));
-        } else if (Ui.inside(mx, my, quickX() - 2, quickY(1), FAV_W + 2, FAV_H)) {
+        } else if (Ui.inside(mx, my, quickX() - 2, quickY(1), FAV_W + 2, QH)) {
             mc.displayGuiScreen(new CosmeticsScreen(this));
         } else if (clickGallery(mx, my)) {
             return;
