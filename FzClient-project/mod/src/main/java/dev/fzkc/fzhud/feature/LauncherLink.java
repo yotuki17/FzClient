@@ -161,11 +161,19 @@ public final class LauncherLink {
                 break;
             }
             case "bind": {
-                // a key chosen in the overlay: the same key binding as in Controls (saved in options.txt)
-                KeyBinding kb = binding(o.get("k").getAsString());
+                // a key chosen in the overlay: the same key binding as in Controls (saved in options.txt), and the
+                // Ctrl / Shift / Alt that go with it (FzClient's settings)
+                String id = o.get("k").getAsString();
+                KeyBinding kb = binding(id);
                 int code = o.get("code").getAsInt();
                 if (kb != null && code >= -100 && code < 256) {
                     mc.gameSettings.setOptionKeyBinding(kb, code);
+                    KeyBinding.resetKeyBindingArrayAndHash();
+                    int m = o.has("mods") ? o.get("mods").getAsInt() & 7 : modsOf(id).get();
+                    // the overlay without Ctrl or Alt would open while typing: it keeps Alt then
+                    if ("overlay".equals(id) && (m & 5) == 0) m |= 4;
+                    modsOf(id).index = code == 0 ? modsOf(id).def : m;
+                    Config.save();
                     send(stats());
                 }
                 break;
@@ -196,13 +204,13 @@ public final class LauncherLink {
 
     // ---------------------------------------------------------------- every client tick / frame
 
-    /** Client tick: keys in the game, the numbers 4 times a second while the overlay is open. */
+    /** Client tick: the numbers 4 times a second while the overlay is open (the keys: {@link #gameKey}). */
     public static void tick(Minecraft mc) {
-        boolean overlay = false;
-        while (KEY_OVERLAY.isPressed()) overlay = true;
-        if (overlay && mc.currentScreen == null && altDown()) key("overlay");
-        while (KEY_RECORD.isPressed()) key("record");
-        while (KEY_SAVE.isPressed()) key("save");
+        // the key bindings only hold the keys (Controls, options.txt); presses are matched with their Ctrl / Shift /
+        // Alt in gameKey, so nothing piles up here
+        while (KEY_OVERLAY.isPressed()) { }
+        while (KEY_RECORD.isPressed()) { }
+        while (KEY_SAVE.isPressed()) { }
         if (watching && ++ticks % 5 == 0) send(stats());
     }
 
@@ -217,12 +225,59 @@ public final class LauncherLink {
         if (watching) FrameStats.sampleCpu();
     }
 
-    /** Alt+X while a screen is open (key bindings only work in the game itself). True = it was ours. */
-    public static boolean screenKey(int key, boolean controlsScreen) {
-        int k = KEY_OVERLAY.getKeyCode();
-        if (k == 0 || key != k || !altDown() || controlsScreen) return false;
-        key("overlay");
+    private static final String[] IDS = {"overlay", "record", "save"};
+
+    /**
+     * A key or mouse button pressed in the game (no screen open; Minecraft's key code, mouse buttons -100 + n).
+     * Of our keys on that code, the one whose Ctrl / Shift / Alt are all held and that asks for the most of them
+     * wins: R for recording and Alt+R for saving work side by side. A key without any of them fires whatever else
+     * is held (Ctrl is often sprint, Shift sneak).
+     */
+    public static void gameKey(int code) {
+        String id = match(code, mods());
+        if (id != null) key(id);
+    }
+
+    /** Our key while a screen is open (key bindings only work in the game itself). True = it was ours. */
+    public static boolean screenKey(int code, boolean controlsScreen) {
+        if (controlsScreen) return false;   // binding a key in the controls: the key belongs to that
+        String id = match(code, mods());
+        // in a screen only with Ctrl or Alt: a plain key (or Shift + key) is typing there
+        if (id == null || (modsOf(id).get() & 5) == 0) return false;
+        key(id);
         return true;
+    }
+
+    private static String match(int code, int held) {
+        if (code == 0) return null;
+        String best = null;
+        int bestBits = -1;
+        for (String id : IDS) {
+            KeyBinding kb = binding(id);
+            int need = modsOf(id).get();
+            if (kb.getKeyCode() != code || (held & need) != need) continue;
+            int bits = Integer.bitCount(need);
+            if (bits > bestBits) { best = id; bestBits = bits; }
+        }
+        return best;
+    }
+
+    /** Ctrl 1, Shift 2, Alt 4 (held now). */
+    private static int mods() {
+        int m = 0;
+        if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)) m |= 1;
+        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) m |= 2;
+        if (Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU)) m |= 4;
+        return m;
+    }
+
+    private static dev.fzkc.fzhud.config.ChoiceSetting modsOf(String id) {
+        return "overlay".equals(id) ? Modules.keyModsOverlay : "record".equals(id) ? Modules.keyModsRecord : Modules.keyModsSave;
+    }
+
+    /** "Ctrl + Alt + " for a key's modifiers. */
+    private static String modsName(int m) {
+        return ((m & 1) != 0 ? "Ctrl + " : "") + ((m & 2) != 0 ? "Shift + " : "") + ((m & 4) != 0 ? "Alt + " : "");
     }
 
     /** The newest n screenshots / clips, with their small pictures (the answer comes as "recent"). */
@@ -237,10 +292,6 @@ public final class LauncherLink {
         JsonObject o = msg("gallery");
         if (file != null) o.addProperty("file", file);
         send(o);
-    }
-
-    private static boolean altDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
     }
 
     private static void key(String which) {
@@ -316,12 +367,14 @@ public final class LauncherLink {
         }
         o.add("switches", sw);
         JsonArray keys = new JsonArray();
-        for (String id : new String[] {"overlay", "record", "save"}) {
+        for (String id : IDS) {
             KeyBinding kb = binding(id);
+            int m = modsOf(id).get();
             JsonObject j = new JsonObject();
             j.addProperty("id", id);
             j.addProperty("code", kb.getKeyCode());
-            j.addProperty("name", kb.getKeyCode() == 0 ? "" : net.minecraft.client.settings.GameSettings.getKeyDisplayString(kb.getKeyCode()));
+            j.addProperty("mods", m);
+            j.addProperty("name", kb.getKeyCode() == 0 ? "" : modsName(m) + net.minecraft.client.settings.GameSettings.getKeyDisplayString(kb.getKeyCode()));
             keys.add(j);
         }
         o.add("keys", keys);

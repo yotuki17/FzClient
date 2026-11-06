@@ -511,8 +511,8 @@ ipcMain.on('ov:replay', (e, on) => {
   send('rec:settings', settings.get());
 });
 ipcMain.on('ov:switch', (e, i, on) => { if (play) play.link.send({ t: 'set', i: i | 0, on: !!on }); });
-ipcMain.on('ov:bind', (e, k, code) => {
-  if (play && ['overlay', 'record', 'save'].includes(k)) play.link.send({ t: 'bind', k, code: code | 0 });
+ipcMain.on('ov:bind', (e, k, code, mods) => {
+  if (play && ['overlay', 'record', 'save'].includes(k)) play.link.send({ t: 'bind', k, code: code | 0, mods: (mods | 0) & 7 });
 });
 ipcMain.on('ov:seconds', (e, sec) => {
   // read by the recorder whenever it needs it: no restart, the seconds kept so far stay

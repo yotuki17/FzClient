@@ -30,7 +30,7 @@ document.addEventListener('keydown', e => {
   if (waiting) return;   // choosing a key: see keyCapture
   if (e.key === 'Escape' && viewIdx >= 0) { e.preventDefault(); closeView(); return; }   // the big picture first
   if (viewIdx >= 0 && e.target.tagName !== 'VIDEO' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { openView(viewIdx + (e.key === 'ArrowLeft' ? -1 : 1)); return; }
-  if (e.key === 'Escape' || (e.altKey && (e.key === 'x' || e.key === 'X'))) { e.preventDefault(); close(); }
+  if (e.key === 'Escape' || isOverlayKey(e)) { e.preventDefault(); close(); }
 });
 $('veil').onclick = close;
 window.addEventListener('blur', () => document.body.classList.remove('on'));
@@ -82,10 +82,14 @@ function drawSeconds(r) {
 }
 
 // ---------------------------------------------------------------- keys (Minecraft key bindings, set through FzClient)
+// Each key can go with Ctrl / Shift / Alt (Ctrl 1, Shift 2, Alt 4): hold them while pressing the key.
 const KEY_LABELS = { overlay: 'オーバーレイ', record: '録画 開始 / 停止', save: '直前を保存' };
-let waiting = null;   // the key being chosen
+let waiting = null;    // the key being chosen
+let lonePress = 0;     // a Ctrl / Shift / Alt pressed alone while choosing (it becomes the key if let go alone)
 
 function drawKeys(keys) {
+  const ov = keys.find(k => k.id === 'overlay');
+  if (ov && ov.code) $('closeHint').textContent = t('{0} / Esc で閉じる', (ov.mods == null ? 'Alt + ' : '') + ov.name);
   const box = $('keys');
   if (box.children.length !== keys.length) {
     box.innerHTML = '';
@@ -102,7 +106,8 @@ function drawKeys(keys) {
     const b = box.children[i].lastChild;
     if (waiting === k.id) return;
     b.className = k.code ? '' : 'none';
-    b.textContent = !k.code ? t('なし') : (k.id === 'overlay' ? 'Alt + ' : '') + k.name;
+    // older FzClient versions send no "mods": the overlay key was always Alt + key then
+    b.textContent = !k.code ? t('なし') : (k.mods == null && k.id === 'overlay' ? 'Alt + ' : '') + k.name;
   });
 }
 
@@ -112,29 +117,41 @@ function startWaiting(id) {
   if (i < 0) return;
   if (waiting) finishWaiting(null);
   waiting = id;
+  lonePress = 0;
   const b = $('keys').children[i].lastChild;
   b.className = 'wait';
-  b.textContent = t('キーを押す…');
+  b.textContent = t(id === 'overlay' ? 'Alt / Ctrl ＋ キーを押す…' : 'キーを押す…（Ctrl・Shift・Alt と一緒も可）');
 }
 
-function finishWaiting(code) {
+function finishWaiting(code, mods) {
   const id = waiting;
   waiting = null;
-  if (code != null && id) fzo.bindKey(id, code);
+  lonePress = 0;
+  if (code != null && id) fzo.bindKey(id, code, mods || 0);
   drawKeys((stats && stats.keys) || []);
 }
 
-// Esc: cancel, Backspace / Delete: no key. For the overlay key Alt, Ctrl, Shift alone wait for the next key (it
-// is always Alt + something).
+function modsOf(e) {
+  return (e.ctrlKey ? 1 : 0) | (e.shiftKey ? 2 : 0) | (e.altKey ? 4 : 0);
+}
+
+// Esc: cancel, Backspace / Delete: no key. Ctrl / Shift / Alt held: they go with the next key; one let go alone
+// becomes the key itself (not for the overlay, which needs a key with Alt or Ctrl).
 document.addEventListener('keydown', e => {
   if (!waiting) return;
   e.preventDefault();
   e.stopPropagation();
   if (e.code === 'Escape') { finishWaiting(null); return; }
   if (e.code === 'Backspace' || e.code === 'Delete') { finishWaiting(0); return; }
-  if (/^(Alt|Control|Shift|Meta)/.test(e.code) && waiting === 'overlay') return;
+  if (/^(Alt|Control|Shift|Meta)/.test(e.code)) { lonePress = LWJGL[e.code] || 0; return; }
   const code = LWJGL[e.code];
-  if (code) finishWaiting(code);
+  if (code) finishWaiting(code, modsOf(e));
+}, true);
+document.addEventListener('keyup', e => {
+  if (!waiting || !lonePress || LWJGL[e.code] !== lonePress) return;
+  e.preventDefault();
+  if (waiting !== 'overlay' && modsOf(e) === 0) finishWaiting(lonePress, 0);
+  else lonePress = 0;
 }, true);
 // the middle button and the side buttons (Minecraft: -100 + its button number); a click elsewhere cancels
 document.addEventListener('mousedown', e => {
@@ -142,8 +159,18 @@ document.addEventListener('mousedown', e => {
   const mc = { 1: 2, 3: 3, 4: 4 }[e.button];
   if (mc == null) { if (!e.target.closest('.key')) finishWaiting(null); return; }
   e.preventDefault();
-  finishWaiting(waiting === 'overlay' ? null : -100 + mc);   // the overlay key is a keyboard key with Alt
+  const mods = modsOf(e);
+  // the overlay key: a mouse button only together with Alt or Ctrl
+  finishWaiting(waiting === 'overlay' && !(mods & 5) ? null : -100 + mc, mods);
 }, true);
+
+/** The overlay's own key (as set in the game) closes it too. */
+function isOverlayKey(e) {
+  const k = ((stats && stats.keys) || []).find(x => x.id === 'overlay');
+  if (!k || !k.code) return e.altKey && (e.key === 'x' || e.key === 'X');
+  const mods = k.mods == null ? 4 : k.mods;
+  return LWJGL[e.code] === k.code && modsOf(e) === mods;
+}
 
 /** KeyboardEvent.code -> LWJGL 2 key code (the keyboard's scan codes, what Minecraft saves). */
 const LWJGL = {

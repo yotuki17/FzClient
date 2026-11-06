@@ -310,6 +310,21 @@ public class FzHud {
      * Alt+X while any screen is open (title screen, inventory, chest menus, pause menu, chat...): key bindings
      * only work in the game itself, so the key is caught here before the screen sees it.
      */
+    /** The launcher's keys in the game itself (with their Ctrl / Shift / Alt: LauncherLink.gameKey). */
+    @SubscribeEvent
+    public void onLauncherKey(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
+        if (Minecraft.getMinecraft().currentScreen != null || !Keyboard.getEventKeyState() || Keyboard.isRepeatEvent()) return;
+        int k = Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey();
+        dev.fzkc.fzhud.feature.LauncherLink.gameKey(k);
+    }
+
+    @SubscribeEvent
+    public void onLauncherButton(net.minecraftforge.fml.common.gameevent.InputEvent.MouseInputEvent event) {
+        if (Minecraft.getMinecraft().currentScreen != null || !org.lwjgl.input.Mouse.getEventButtonState()) return;
+        int b = org.lwjgl.input.Mouse.getEventButton();
+        if (b >= 0) dev.fzkc.fzhud.feature.LauncherLink.gameKey(b - 100);
+    }
+
     @SubscribeEvent
     public void onOverlayKey(net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Pre event) {
         if (!Keyboard.getEventKeyState()) return;

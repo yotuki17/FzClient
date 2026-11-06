@@ -14,8 +14,8 @@ contextBridge.exposeInMainWorld('fzo', {
   saveReplay: () => ipcRenderer.send('ov:save'),
   setReplay: on => ipcRenderer.send('ov:replay', !!on),
   setSwitch: (i, on) => ipcRenderer.send('ov:switch', i | 0, !!on),
-  /** A key for 'overlay' / 'record' / 'save' (Minecraft key code, mouse buttons negative, 0 = none). */
-  bindKey: (k, code) => ipcRenderer.send('ov:bind', String(k), code | 0),
+  /** A key for 'overlay' / 'record' / 'save' (Minecraft key code, mouse buttons negative, 0 = none) with its Ctrl 1 / Shift 2 / Alt 4. */
+  bindKey: (k, code, mods) => ipcRenderer.send('ov:bind', String(k), code | 0, mods | 0),
   setReplaySeconds: s => ipcRenderer.send('ov:seconds', s | 0),
   openMenu: () => ipcRenderer.send('ov:menu'),
   openFolder: () => ipcRenderer.send('ov:folder'),

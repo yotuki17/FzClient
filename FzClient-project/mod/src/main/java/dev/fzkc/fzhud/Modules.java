@@ -220,6 +220,15 @@ public final class Modules {
     public static final Module hitDelayFix = new Module("hitdelayfix", "Hitreg", Category.PVP,
             "hitregを良くする", true).alwaysOn();
 
+    // ---- the launcher's keys (overlay, recording): which of Ctrl (1), Shift (2), Alt (4) go with each key.
+    //      The keys themselves are Minecraft key bindings (Controls, options.txt); set in the Alt+X overlay.
+    public static final Module launcherKeys = new Module("launcherkeys", "Launcher keys", Category.UTILITY,
+            "オーバーレイと録画のキーの Ctrl / Shift / Alt", true).alwaysOn();
+    private static final String[] KEY_MODS = {"0", "1", "2", "3", "4", "5", "6", "7"};
+    public static final ChoiceSetting keyModsOverlay = launcherKeys.add(new ChoiceSetting("overlay", "オーバーレイ", 4, KEY_MODS));
+    public static final ChoiceSetting keyModsRecord = launcherKeys.add(new ChoiceSetting("record", "録画", 0, KEY_MODS));
+    public static final ChoiceSetting keyModsSave = launcherKeys.add(new ChoiceSetting("save", "直前を保存", 0, KEY_MODS));
+
     // ---- Block outline
     public static final Module blockOutline = new Module("blockoutline", "Block Outline", Category.VISUAL,
             "ブロック枠の色・太さ", false);
@@ -478,10 +487,10 @@ public final class Modules {
 
     /** Always on and nothing to set, so the menus don't list it. */
     public static boolean hiddenInMenu(Module m) {
-        return m == hitDelayFix || m == cosmetics;
+        return m == hitDelayFix || m == cosmetics || m == launcherKeys;
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }
