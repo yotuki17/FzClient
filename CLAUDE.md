@@ -14,7 +14,7 @@ must be updated in the same commit before tagging:
    `<li>` list (what's new; add English for new lines in `renderer/i18n.js`)
 4. `docs/index.html` **and** `FzClient-project/website/index.html` → `Latest <b>vX.Y.Z</b>`
 5. Mod-side text the user sees (menu, settings, `assets/fzclient/lang/en.txt`) if the change adds or renames
-   features. The in-game "FzClient X.Y.Z" line comes from `mcmod.info` automatically.
+   features. The in-game "FzClient X.Y.Z" line comes from `assets/fzclient/version.txt` (filled from gradle.properties) automatically.
 
 Before tagging, grep for the previous version number (`git grep -n "X.Y.(Z-1)"`) to catch anything new.
 The installer name is fixed: `FzClient-Launcher-Setup.exe` (never put a version in download links).

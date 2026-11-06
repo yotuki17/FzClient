@@ -1,6 +1,7 @@
 {
   "package": "dev.fzkc.fzhud.mixin",
   "refmap": "mixins.fzhud.refmap.json",
+  "plugin": "dev.fzkc.fzhud.boot.FzMixinPlugin",
   "minVersion": "0.7",
   "compatibilityLevel": "JAVA_8",
   "client": [

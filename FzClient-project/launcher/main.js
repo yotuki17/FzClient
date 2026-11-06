@@ -15,6 +15,7 @@ const optifine = require('./src/core/optifine');
 const recorder = require('./src/core/recorder');
 const { Link } = require('./src/core/link');
 const { Capture } = require('./src/core/capture');
+const cleanup = require('./src/core/cleanup');
 
 shots.registerScheme();   // fzshot: pictures for the screenshot page (must happen before "ready")
 const modsDir = () => path.join(dirs().gameDir, 'mods');
@@ -22,6 +23,24 @@ const modsDir = () => path.join(dirs().gameDir, 'mods');
 let win;
 let running = null;      // the Minecraft process while it runs
 let loginCancelled = false;
+
+function ticketFile() { return path.join(app.getPath('userData'), 'launch.ticket'); }
+
+/** "token time": good for a few minutes, read and removed by FzClient when the game starts. */
+function writeTicket() {
+  try {
+    const token = require('crypto').randomBytes(24).toString('hex');
+    fs.writeFileSync(ticketFile(), token + ' ' + Date.now());
+    return token;
+  } catch (e) {
+    log('[ticket] ' + e.message);
+    return null;
+  }
+}
+
+function removeTicket() {
+  try { fs.rmSync(ticketFile(), { force: true }); } catch { }
+}
 
 function bundledJar() {
   // packaged: resources/fzclient.jar next to app.asar; dev: ./resources/fzclient.jar
@@ -128,9 +147,21 @@ function createWindow() {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
+  // unneeded caches, every start (only this launcher's own; see src/core/cleanup.js)
+  let freedEarly = 0;
+  try { freedEarly = cleanup.beforeReady(); } catch { }
   app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
   app.whenReady().then(() => {
     trimLog();
+    // before anything can download into the update folder (the mod check starts once the window has loaded)
+    try {
+      const d = dirs();
+      const freed = freedEarly + cleanup.afterReady({
+        bundledJar: bundledJar(), gameDir: d.gameDir,
+        media: { shots: path.join(d.gameDir, 'screenshots'), clips: path.join(d.gameDir, 'recordings') },
+      });
+      log('[cleanup] ' + cleanup.mb(freed) + ' of caches removed');
+    } catch (e) { log('[cleanup] ' + e.message); }
     shots.handle(() => path.join(dirs().gameDir, 'screenshots'), () => path.join(dirs().gameDir, 'recordings'), recorder.ffmpegPath);
     createWindow();
     updater.startLauncherUpdates(send, log);
@@ -679,13 +710,15 @@ async function launchGame() {
   const link = new Link(log);
   let linkProp = null;
   try { linkProp = await link.start(); } catch (e) { log('[link] ' + e.message); }
+  // the launch ticket: FzClient only runs when this launcher started the game (mod: boot/LaunchGuard.java)
+  const ticket = writeTicket();
   const output = gameLog();
   let child;
   try {
     child = await game.launch({
       account: acc, memoryMb: s.memoryMb, width: s.width, height: s.height, fullscreen: s.fullscreen,
       jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
-      optimizeJvm: !!s.optimizeJvm, jvmExtras: [...(s.optimizeJvm ? optimize.jvmExtras() : []), ...(linkProp ? [linkProp] : [])],
+      optimizeJvm: !!s.optimizeJvm, jvmExtras: [...(s.optimizeJvm ? optimize.jvmExtras() : []), ...(linkProp ? [linkProp] : []), ...(ticket ? ['-Dfzclient.ticket=' + ticket] : [])],
       highPriority: s.gamePriority === 'high',
       affinityMask: s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
       onProgress: (stage, done, total, bytesDone, bytesTotal) => {
@@ -698,6 +731,7 @@ async function launchGame() {
     });
   } catch (e) {
     output.end();
+    removeTicket();
     link.close();
     throw e;
   }
@@ -706,6 +740,7 @@ async function launchGame() {
   send('game:state', { running: true });
   child.on('exit', code => {
     running = null;
+    removeTicket();
     endPlay();
     output.end();
     log('[exit] ' + code);

@@ -83,7 +83,7 @@ tasks.processResources {
     inputs.property("version", project.version)
     inputs.property("mcversion", mcVersion)
     inputs.property("modid", modid)
-    filesMatching(listOf("mcmod.info")) {
+    filesMatching(listOf("mcmod.info", "assets/fzclient/version.txt")) {
         expand(inputs.properties)
     }
 }

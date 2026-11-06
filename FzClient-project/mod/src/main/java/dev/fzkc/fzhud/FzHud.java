@@ -104,6 +104,12 @@ public class FzHud {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        // only with the FzClient Launcher: in any other launcher nothing below runs (the mixins are off too)
+        if (!dev.fzkc.fzhud.boot.LaunchGuard.ok()) {
+            MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.boot.LockedNotice());
+            return;
+        }
+        dev.fzkc.fzhud.boot.LaunchGuard.consumeTicket();
         dev.fzkc.fzhud.account.Accounts.init();   // remember the launcher's account before anything switches
         elements.add(new Compass(0.5f, 0.07f));
         elements.add(new Keystrokes(0.86f, 0.005f));

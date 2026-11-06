@@ -30,20 +30,36 @@ public final class Branding {
     private Branding() {}
 
     /**
-     * The mod's version, read from mcmod.info inside the jar (Gradle writes gradle.properties' "version" there),
-     * so gradle.properties is the only place to change it. Not a compile-time constant on purpose: a constant
+     * The mod's version. Gradle writes gradle.properties' "version" into assets/fzclient/version.txt, so
+     * gradle.properties is the only place to change it. Not a compile-time constant on purpose: a constant
      * would be copied into every class that uses it and could stay old after a partial rebuild.
+     * <p>
+     * Not read from "/mcmod.info": every mod jar has one at that same path, and the class loader hands back
+     * whichever jar comes first (the menu showed "FzClient 1.2.0", which was 3D Skin Layers' version).
      */
     public static final String VERSION = readVersion();
 
     private static String readVersion() {
-        try (java.io.InputStream in = Branding.class.getResourceAsStream("/mcmod.info")) {
+        try (InputStream in = Branding.class.getResourceAsStream("/assets/fzclient/version.txt")) {
             if (in != null) {
-                com.google.gson.JsonElement e = new com.google.gson.JsonParser().parse(
-                        new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8));
-                com.google.gson.JsonObject o = (e.isJsonArray() ? e.getAsJsonArray().get(0) : e).getAsJsonObject();
-                String v = o.has("version") ? o.get("version").getAsString() : "";
+                java.util.Scanner s = new java.util.Scanner(in, "UTF-8").useDelimiter("\\A");
+                String v = s.hasNext() ? s.next().trim() : "";
                 if (!v.isEmpty() && !v.startsWith("$")) return v;
+            }
+        } catch (Throwable ignored) {
+        }
+        // fallback: the mcmod.info whose modid is ours, out of all of them on the class path
+        try {
+            java.util.Enumeration<java.net.URL> all = Branding.class.getClassLoader().getResources("mcmod.info");
+            while (all.hasMoreElements()) {
+                try (InputStream in = all.nextElement().openStream()) {
+                    JsonElement e = new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8));
+                    JsonObject o = (e.isJsonArray() ? e.getAsJsonArray().get(0) : e).getAsJsonObject();
+                    if (!o.has("modid") || !"fzclient".equals(o.get("modid").getAsString())) continue;
+                    String v = o.has("version") ? o.get("version").getAsString() : "";
+                    if (!v.isEmpty() && !v.startsWith("$")) return v;
+                } catch (Throwable ignored) {
+                }
             }
         } catch (Throwable ignored) {
         }

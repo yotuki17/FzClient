@@ -1,0 +1,670 @@
+[05:39:38] [main/DEBUG] [FML/]: Injecting tracing printstreams for STDOUT/STDERR.
+[05:39:38] [main/INFO] [FML/]: Forge Mod Loader version 11.15.1.2318 for Minecraft 1.8.9 loading
+[05:39:38] [main/INFO] [FML/]: Java is Java HotSpot(TM) 64-Bit Server VM, version 1.8.0_51, running on Windows 8.1:amd64:6.3, installed at C:\Users\fuzuk\AppData\Roaming\.fzclient\runtime\jre-legacy
+[05:39:38] [main/DEBUG] [FML/]: Java classpath at launch is C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\minecraftforge\forge\1.8.9-11.15.1.2318-1.8.9\forge-1.8.9-11.15.1.2318-1.8.9.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\minecraft\launchwrapper\1.12\launchwrapper-1.12.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\ow2\asm\asm-all\5.0.3\asm-all-5.0.3.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\typesafe\akka\akka-actor_2.11\2.3.3\akka-actor_2.11-2.3.3.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\typesafe\config\1.2.1\config-1.2.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-actors-migration_2.11\1.1.0\scala-actors-migration_2.11-1.1.0.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-compiler\2.11.1\scala-compiler-2.11.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\plugins\scala-continuations-library_2.11\1.0.2\scala-continuations-library_2.11-1.0.2.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\plugins\scala-continuations-plugin_2.11.1\1.0.2\scala-continuations-plugin_2.11.1-1.0.2.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-library\2.11.1\scala-library-2.11.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-parser-combinators_2.11\1.0.1\scala-parser-combinators_2.11-1.0.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-reflect\2.11.1\scala-reflect-2.11.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-swing_2.11\1.0.1\scala-swing_2.11-1.0.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-xml_2.11\1.0.2\scala-xml_2.11-1.0.2.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\lzma\lzma\0.0.1\lzma-0.0.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\sf\jopt-simple\jopt-simple\4.6\jopt-simple-4.6.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\java3d\vecmath\1.5.2\vecmath-1.5.2.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\sf\trove4j\trove4j\3.0.3\trove4j-3.0.3.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\mojang\netty\1.8.8\netty-1.8.8.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\oshi-project\oshi-core\1.1\oshi-core-1.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\dev\jna\jna\3.4.0\jna-3.4.0.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\dev\jna\platform\3.4.0\platform-3.4.0.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\ibm\icu\icu4j-core-mojang\51.2\icu4j-core-mojang-51.2.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\codecjorbis\20101023\codecjorbis-20101023.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\codecwav\20101023\codecwav-20101023.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\libraryjavasound\20101123\libraryjavasound-20101123.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\librarylwjglopenal\20100824\librarylwjglopenal-20100824.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\soundsystem\20120107\soundsystem-20120107.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\io\netty\netty-all\4.0.23.Final\netty-all-4.0.23.Final.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\google\guava\guava\17.0\guava-17.0.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\commons\commons-lang3\3.3.2\commons-lang3-3.3.2.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\commons-io\commons-io\2.4\commons-io-2.4.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\commons-codec\commons-codec\1.9\commons-codec-1.9.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\jinput\jinput\2.0.5\jinput-2.0.5.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\jutils\jutils\1.0.0\jutils-1.0.0.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\google\code\gson\gson\2.2.4\gson-2.2.4.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\mojang\authlib\1.5.21\authlib-1.5.21.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\mojang\realms\1.7.59\realms-1.7.59.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\commons\commons-compress\1.8.1\commons-compress-1.8.1.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\httpcomponents\httpclient\4.3.3\httpclient-4.3.3.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\commons-logging\commons-logging\1.1.3\commons-logging-1.1.3.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\httpcomponents\httpcore\4.3.2\httpcore-4.3.2.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\logging\log4j\log4j-api\2.0-beta9\log4j-api-2.0-beta9.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\logging\log4j\log4j-core\2.0-beta9\log4j-core-2.0-beta9.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\lwjgl\lwjgl\lwjgl\2.9.4-nightly-20150209\lwjgl-2.9.4-nightly-20150209.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\lwjgl\lwjgl\lwjgl_util\2.9.4-nightly-20150209\lwjgl_util-2.9.4-nightly-20150209.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\tv\twitch\twitch\6.5\twitch-6.5.jar;C:\Users\fuzuk\AppData\Roaming\.fzclient\versions\1.8.9\1.8.9.jar
+[05:39:38] [main/DEBUG] [FML/]: Java library path at launch is C:\Users\fuzuk\AppData\Roaming\.fzclient\natives\1.8.9
+[05:39:38] [main/DEBUG] [FML/]: Enabling runtime deobfuscation
+[05:39:38] [main/DEBUG] [FML/]: Instantiating coremod class FMLCorePlugin
+[05:39:38] [main/DEBUG] [FML/]: Added access transformer class net.minecraftforge.fml.common.asm.transformers.AccessTransformer to enqueued access transformers
+[05:39:38] [main/DEBUG] [FML/]: Enqueued coremod FMLCorePlugin
+[05:39:38] [main/DEBUG] [FML/]: Instantiating coremod class FMLForgePlugin
+[05:39:38] [main/DEBUG] [FML/]: Enqueued coremod FMLForgePlugin
+[05:39:38] [main/DEBUG] [FML/]: All fundamental core mods are successfully located
+[05:39:38] [main/DEBUG] [FML/]: Attempting to load commandline specified mods, relative to C:\Users\fuzuk\AppData\Local\Temp\claude\497e6e0b4f54abe9\d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8\scratchpad\testgame
+[05:39:38] [main/DEBUG] [FML/]: Discovering coremods
+[05:39:38] [main/DEBUG] [FML/]: Examining for coremod candidacy 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:38] [main/INFO] [FML/]: Loading tweaker org.spongepowered.asm.launch.MixinTweaker from 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:38] [main/DEBUG] [FML/]: Examining for coremod candidacy FzClient.jar
+[05:39:38] [main/INFO] [FML/]: Loading tweaker org.spongepowered.asm.launch.MixinTweaker from FzClient.jar
+[05:39:38] [main/INFO] [LaunchWrapper/]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[05:39:38] [main/INFO] [LaunchWrapper/]: Loading tweak class name org.spongepowered.asm.launch.MixinTweaker
+[05:39:38] [main/DEBUG] [mixin/]: MixinService [LaunchWrapper] was successfully booted in sun.misc.Launcher$AppClassLoader@55f96302
+[05:39:38] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.7.11 Source=file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar Service=LaunchWrapper Env=CLIENT
+[05:39:38] [main/DEBUG] [mixin/]: Adding new mixin transformer proxy #1
+[05:39:38] [main/DEBUG] [mixin/]: Initialising Mixin Platform Manager
+[05:39:38] [main/DEBUG] [mixin/]: Mixin platform: primary container is file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:38] [main/DEBUG] [mixin/]: Adding mixin platform agents for container file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:38] [main/DEBUG] [mixin/]: Instancing new MixinPlatformAgentFML for file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:38] [main/DEBUG] [mixin/]: ForceLoadAsMod was specified for 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar, attempting force-load
+[05:39:38] [main/DEBUG] [mixin/]: Instancing new MixinPlatformAgentDefault for file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/minecraftforge/forge/1.8.9-11.15.1.2318-1.8.9/forge-1.8.9-11.15.1.2318-1.8.9.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/minecraft/launchwrapper/1.12/launchwrapper-1.12.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/ow2/asm/asm-all/5.0.3/asm-all-5.0.3.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/typesafe/akka/akka-actor_2.11/2.3.3/akka-actor_2.11-2.3.3.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/typesafe/config/1.2.1/config-1.2.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-actors-migration_2.11/1.1.0/scala-actors-migration_2.11-1.1.0.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-compiler/2.11.1/scala-compiler-2.11.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2/scala-continuations-library_2.11-1.0.2.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/plugins/scala-continuations-plugin_2.11.1/1.0.2/scala-continuations-plugin_2.11.1-1.0.2.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-library/2.11.1/scala-library-2.11.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-parser-combinators_2.11/1.0.1/scala-parser-combinators_2.11-1.0.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-reflect/2.11.1/scala-reflect-2.11.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-swing_2.11/1.0.1/scala-swing_2.11-1.0.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-xml_2.11/1.0.2/scala-xml_2.11-1.0.2.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/lzma/lzma/0.0.1/lzma-0.0.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/sf/jopt-simple/jopt-simple/4.6/jopt-simple-4.6.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/java3d/vecmath/1.5.2/vecmath-1.5.2.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/sf/trove4j/trove4j/3.0.3/trove4j-3.0.3.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/mojang/netty/1.8.8/netty-1.8.8.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/oshi-project/oshi-core/1.1/oshi-core-1.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/dev/jna/jna/3.4.0/jna-3.4.0.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/dev/jna/platform/3.4.0/platform-3.4.0.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/ibm/icu/icu4j-core-mojang/51.2/icu4j-core-mojang-51.2.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/codecjorbis/20101023/codecjorbis-20101023.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/codecwav/20101023/codecwav-20101023.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/libraryjavasound/20101123/libraryjavasound-20101123.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/librarylwjglopenal/20100824/librarylwjglopenal-20100824.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/soundsystem/20120107/soundsystem-20120107.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/io/netty/netty-all/4.0.23.Final/netty-all-4.0.23.Final.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/google/guava/guava/17.0/guava-17.0.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/commons/commons-lang3/3.3.2/commons-lang3-3.3.2.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/commons-io/commons-io/2.4/commons-io-2.4.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/commons-codec/commons-codec/1.9/commons-codec-1.9.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/jinput/jinput/2.0.5/jinput-2.0.5.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/jutils/jutils/1.0.0/jutils-1.0.0.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/mojang/authlib/1.5.21/authlib-1.5.21.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/mojang/realms/1.7.59/realms-1.7.59.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/httpcomponents/httpclient/4.3.3/httpclient-4.3.3.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/httpcomponents/httpcore/4.3.2/httpcore-4.3.2.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/logging/log4j/log4j-api/2.0-beta9/log4j-api-2.0-beta9.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/logging/log4j/log4j-core/2.0-beta9/log4j-core-2.0-beta9.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/lwjgl/lwjgl/lwjgl/2.9.4-nightly-20150209/lwjgl-2.9.4-nightly-20150209.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/lwjgl/lwjgl/lwjgl_util/2.9.4-nightly-20150209/lwjgl_util-2.9.4-nightly-20150209.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/tv/twitch/twitch/6.5/twitch-6.5.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/versions/1.8.9/1.8.9.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar for mixin tweaker
+[05:39:38] [main/DEBUG] [mixin/]: file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar contains a mixin tweaker, adding agents
+[05:39:38] [main/DEBUG] [mixin/]: Adding mixin platform agents for container file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar
+[05:39:38] [main/DEBUG] [mixin/]: Instancing new MixinPlatformAgentFML for file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar
+[05:39:38] [main/DEBUG] [mixin/]: ForceLoadAsMod was specified for FzClient.jar, attempting force-load
+[05:39:38] [main/DEBUG] [mixin/]: Adding FzClient.jar to reparseable coremod collection
+[05:39:38] [main/DEBUG] [mixin/]: Instancing new MixinPlatformAgentDefault for file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar
+[05:39:38] [main/WARN] [LaunchWrapper/]: Tweak class name org.spongepowered.asm.launch.MixinTweaker has already been visited -- skipping
+[05:39:38] [main/INFO] [LaunchWrapper/]: Loading tweak class name net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[05:39:38] [main/INFO] [LaunchWrapper/]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[05:39:38] [main/INFO] [LaunchWrapper/]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLInjectionAndSortingTweaker
+[05:39:38] [main/INFO] [LaunchWrapper/]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[05:39:38] [main/DEBUG] [FML/]: Injecting coremod FMLCorePlugin {net.minecraftforge.fml.relauncher.FMLCorePlugin} class transformers
+[05:39:38] [main/TRACE] [FML/]: Registering transformer net.minecraftforge.fml.common.asm.transformers.BlamingTransformer
+[05:39:38] [main/DEBUG] [mixin/]: Preparing mixins for MixinEnvironment[PREINIT]
+[05:39:38] [main/TRACE] [FML/]: Registering transformer net.minecraftforge.fml.common.asm.transformers.SideTransformer
+[05:39:38] [main/TRACE] [FML/]: Registering transformer net.minecraftforge.fml.common.asm.transformers.EventSubscriptionTransformer
+[05:39:38] [main/TRACE] [FML/]: Registering transformer net.minecraftforge.fml.common.asm.transformers.EventSubscriberTransformer
+[05:39:38] [main/DEBUG] [FML/]: Injection complete
+[05:39:38] [main/DEBUG] [FML/]: Running coremod plugin for FMLCorePlugin {net.minecraftforge.fml.relauncher.FMLCorePlugin}
+[05:39:38] [main/DEBUG] [FML/]: Running coremod plugin FMLCorePlugin
+[05:39:39] [main/DEBUG] [FML/]: Read 825 binary patches
+[05:39:39] [main/DEBUG] [FML/]: Loading deobfuscation resource /deobfuscation_data-1.8.9.lzma with 27891 records
+[05:39:39] [main/INFO] [FML/]: Found valid fingerprint for Minecraft Forge. Certificate fingerprint e3c3d50c7c986df74c645c0ac54639741c90a557
+[05:39:39] [main/INFO] [FML/]: Found valid fingerprint for Minecraft. Certificate fingerprint cd99959656f753dc28d863b46769f7f8fbaefcfc
+[05:39:39] [main/DEBUG] [FML/]: Coremod plugin class FMLCorePlugin run successfully
+[05:39:39] [main/INFO] [LaunchWrapper/]: Calling tweak class net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper
+[05:39:39] [main/DEBUG] [FML/]: Injecting coremod FMLForgePlugin {net.minecraftforge.classloading.FMLForgePlugin} class transformers
+[05:39:39] [main/DEBUG] [FML/]: Injection complete
+[05:39:39] [main/DEBUG] [FML/]: Running coremod plugin for FMLForgePlugin {net.minecraftforge.classloading.FMLForgePlugin}
+[05:39:39] [main/DEBUG] [FML/]: Running coremod plugin FMLForgePlugin
+[05:39:39] [main/DEBUG] [FML/]: Coremod plugin class FMLForgePlugin run successfully
+[05:39:39] [main/INFO] [LaunchWrapper/]: Calling tweak class org.spongepowered.asm.launch.MixinTweaker
+[05:39:39] [main/DEBUG] [mixin/]: Processing prepare() for PlatformAgent[MixinPlatformAgentFML:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Processing prepare() for PlatformAgent[MixinPlatformAgentDefault:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Registering mixin config: 3dskinlayers.mixins.json
+[05:39:39] [main/INFO] [mixin/]: Compatibility level set to JAVA_8
+[05:39:39] [main/ERROR] [mixin/]: Mixin config 3dskinlayers.mixins.json does not specify "minVersion" property
+[05:39:39] [main/DEBUG] [mixin/]: Processing prepare() for PlatformAgent[MixinPlatformAgentFML:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Processing prepare() for PlatformAgent[MixinPlatformAgentDefault:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Registering mixin config: mixins.fzhud.json
+[05:39:39] [main/DEBUG] [mixin/]: Processing launch tasks for PlatformAgent[MixinPlatformAgentFML:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Creating FML remapper adapter: org.spongepowered.asm.bridge.RemapperAdapterFML
+[05:39:39] [main/DEBUG] [mixin/]: Checking for additional mixins for MixinEnvironment[PREINIT]
+[05:39:39] [main/INFO] [mixin/]: Initialised Mixin FML Remapper Adapter with net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper@6bab2585
+[05:39:39] [main/DEBUG] [mixin/]: Processing launch tasks for PlatformAgent[MixinPlatformAgentDefault:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/minecraftforge/forge/1.8.9-11.15.1.2318-1.8.9/forge-1.8.9-11.15.1.2318-1.8.9.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/minecraft/launchwrapper/1.12/launchwrapper-1.12.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/ow2/asm/asm-all/5.0.3/asm-all-5.0.3.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/typesafe/akka/akka-actor_2.11/2.3.3/akka-actor_2.11-2.3.3.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/typesafe/config/1.2.1/config-1.2.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-actors-migration_2.11/1.1.0/scala-actors-migration_2.11-1.1.0.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-compiler/2.11.1/scala-compiler-2.11.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/plugins/scala-continuations-library_2.11/1.0.2/scala-continuations-library_2.11-1.0.2.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/plugins/scala-continuations-plugin_2.11.1/1.0.2/scala-continuations-plugin_2.11.1-1.0.2.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-library/2.11.1/scala-library-2.11.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-parser-combinators_2.11/1.0.1/scala-parser-combinators_2.11-1.0.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-reflect/2.11.1/scala-reflect-2.11.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-swing_2.11/1.0.1/scala-swing_2.11-1.0.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/scala-lang/scala-xml_2.11/1.0.2/scala-xml_2.11-1.0.2.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/lzma/lzma/0.0.1/lzma-0.0.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/sf/jopt-simple/jopt-simple/4.6/jopt-simple-4.6.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/java3d/vecmath/1.5.2/vecmath-1.5.2.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/sf/trove4j/trove4j/3.0.3/trove4j-3.0.3.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/mojang/netty/1.8.8/netty-1.8.8.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/oshi-project/oshi-core/1.1/oshi-core-1.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/dev/jna/jna/3.4.0/jna-3.4.0.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/dev/jna/platform/3.4.0/platform-3.4.0.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/ibm/icu/icu4j-core-mojang/51.2/icu4j-core-mojang-51.2.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/codecjorbis/20101023/codecjorbis-20101023.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/codecwav/20101023/codecwav-20101023.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/libraryjavasound/20101123/libraryjavasound-20101123.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/librarylwjglopenal/20100824/librarylwjglopenal-20100824.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/paulscode/soundsystem/20120107/soundsystem-20120107.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/io/netty/netty-all/4.0.23.Final/netty-all-4.0.23.Final.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/google/guava/guava/17.0/guava-17.0.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/commons/commons-lang3/3.3.2/commons-lang3-3.3.2.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/commons-io/commons-io/2.4/commons-io-2.4.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/commons-codec/commons-codec/1.9/commons-codec-1.9.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/jinput/jinput/2.0.5/jinput-2.0.5.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/net/java/jutils/jutils/1.0.0/jutils-1.0.0.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/mojang/authlib/1.5.21/authlib-1.5.21.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/com/mojang/realms/1.7.59/realms-1.7.59.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/commons/commons-compress/1.8.1/commons-compress-1.8.1.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/httpcomponents/httpclient/4.3.3/httpclient-4.3.3.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/httpcomponents/httpcore/4.3.2/httpcore-4.3.2.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/logging/log4j/log4j-api/2.0-beta9/log4j-api-2.0-beta9.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/apache/logging/log4j/log4j-core/2.0-beta9/log4j-core-2.0-beta9.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/lwjgl/lwjgl/lwjgl/2.9.4-nightly-20150209/lwjgl-2.9.4-nightly-20150209.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/org/lwjgl/lwjgl/lwjgl_util/2.9.4-nightly-20150209/lwjgl_util-2.9.4-nightly-20150209.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/libraries/tv/twitch/twitch/6.5/twitch-6.5.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning file:/C:/Users/fuzuk/AppData/Roaming/.fzclient/versions/1.8.9/1.8.9.jar for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: Scanning asmgen:/ for mixin tweaker
+[05:39:39] [main/DEBUG] [mixin/]: inject() running with 2 agents
+[05:39:39] [main/DEBUG] [mixin/]: Processing inject() for PlatformAgent[MixinPlatformAgentFML:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Processing inject() for PlatformAgent[MixinPlatformAgentDefault:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Processing inject() for PlatformAgent[MixinPlatformAgentFML:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar]
+[05:39:39] [main/DEBUG] [mixin/]: Processing inject() for PlatformAgent[MixinPlatformAgentDefault:file:/C:/Users/fuzuk/AppData/Local/Temp/claude/497e6e0b4f54abe9/d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8/scratchpad/testgame/mods/FzClient.jar]
+[05:39:39] [main/INFO] [LaunchWrapper/]: Calling tweak class net.minecraftforge.fml.common.launcher.FMLDeobfTweaker
+[05:39:39] [main/DEBUG] [FML/]: Loaded 165 rules from AccessTransformer config file forge_at.cfg
+[05:39:39] [main/DEBUG] [mixin/]: Adding new mixin transformer proxy #2
+[05:39:39] [main/DEBUG] [FML/]: Validating minecraft
+[05:39:39] [main/DEBUG] [mixin/]: Preparing mixins for MixinEnvironment[INIT]
+[05:39:39] [main/DEBUG] [FML/]: Minecraft validated, launching...
+[05:39:39] [main/INFO] [LaunchWrapper/]: Loading tweak class name net.minecraftforge.fml.common.launcher.TerminalTweaker
+[05:39:39] [main/INFO] [LaunchWrapper/]: Loading tweak class name org.spongepowered.asm.mixin.EnvironmentStateTweaker
+[05:39:39] [main/INFO] [LaunchWrapper/]: Calling tweak class net.minecraftforge.fml.common.launcher.TerminalTweaker
+[05:39:39] [main/INFO] [LaunchWrapper/]: Calling tweak class org.spongepowered.asm.mixin.EnvironmentStateTweaker
+[05:39:39] [main/DEBUG] [mixin/]: Adding new mixin transformer proxy #3
+[05:39:39] [main/DEBUG] [mixin/]: Preparing mixins for MixinEnvironment[DEFAULT]
+[05:39:39] [main/DEBUG] [mixin/]: Selecting config 3dskinlayers.mixins.json
+[05:39:39] [main/DEBUG] [mixin/]: Selecting config mixins.fzhud.json
+[05:39:39] [main/DEBUG] [mixin/]: Preparing 3dskinlayers.mixins.json (3)
+[05:39:39] [main/DEBUG] [mixin/]: Found name transformer: net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer
+[05:39:39] [main/DEBUG] [mixin/]: Rebuilding transformer delegation list:
+[05:39:39] [main/DEBUG] [mixin/]: Found name transformer: net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    net.minecraftforge.fml.common.asm.transformers.PatchingTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Excluding: org.spongepowered.asm.mixin.transformer.Proxy
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    $wrapper.net.minecraftforge.fml.common.asm.transformers.BlamingTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    $wrapper.net.minecraftforge.fml.common.asm.transformers.SideTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Excluding: $wrapper.net.minecraftforge.fml.common.asm.transformers.EventSubscriptionTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    $wrapper.net.minecraftforge.fml.common.asm.transformers.EventSubscriberTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    net.minecraftforge.fml.common.asm.transformers.AccessTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    net.minecraftforge.fml.common.asm.transformers.ModAccessTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Adding:    net.minecraftforge.fml.common.asm.transformers.ItemStackTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Excluding: org.spongepowered.asm.mixin.transformer.Proxy
+[05:39:39] [main/DEBUG] [mixin/]:   Excluding: net.minecraftforge.fml.common.asm.transformers.TerminalTransformer
+[05:39:39] [main/DEBUG] [mixin/]:   Excluding: org.spongepowered.asm.mixin.transformer.Proxy
+[05:39:39] [main/DEBUG] [mixin/]: Transformer delegation list created with 8 entries
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraft/entity/player/EntityPlayer to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraft/client/renderer/entity/RendererLivingEntity to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraft/client/renderer/entity/RenderPlayer to metadata cache
+[05:39:39] [main/DEBUG] [mixin/]: Preparing mixins.fzhud.json (23)
+[05:39:39] [main/INFO] [STDOUT/]: [dev.fzkc.fzhud.boot.LaunchGuard:check:52]: [FzClient] Not started by the FzClient Launcher: FzClient stays off.
+[05:39:39] [main/INFO] [LaunchWrapper/]: Launching wrapped minecraft {net.minecraft.client.main.Main}
+[05:39:39] [main/INFO] [mixin/]: Mixing PlayerMixin from 3dskinlayers.mixins.json into net.minecraft.entity.player.EntityPlayer
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraft/entity/EntityLivingBase to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraft/entity/Entity to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraft/command/ICommandSender to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraftforge/common/capabilities/ICapabilitySerializable to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraftforge/common/capabilities/ICapabilityProvider to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraftforge/common/util/INBTSerializable to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/accessor/PlayerSettings to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for net/minecraft/world/World to metadata cache
+[05:39:39] [main/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/render/CustomizableModelPart to metadata cache
+[05:39:40] [Client thread/WARN] [FML/]: =============================================================
+[05:39:40] [Client thread/WARN] [FML/]: MOD HAS DIRECT REFERENCE System.exit() THIS IS NOT ALLOWED REROUTING TO FML!
+[05:39:40] [Client thread/WARN] [FML/]: Offendor: com/sun/jna/Native.main([Ljava/lang/String;)V
+[05:39:40] [Client thread/WARN] [FML/]: Use FMLCommonHandler.exitJava instead
+[05:39:40] [Client thread/WARN] [FML/]: =============================================================
+[05:39:40] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - LanguageManager took 0.002s
+[05:39:40] [Client thread/INFO] [STDOUT/]: [net.minecraftforge.fml.client.SplashProgress:start:246]: ---- Minecraft Crash Report ----
+
+WARNING: coremods are present:
+Contact their authors BEFORE contacting forge
+
+// You're mean.
+
+Time: 26/11/07 5:39
+Description: Loading screen debug info
+
+This is just a prompt for computer specs to be printed. THIS IS NOT A ERROR
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- System Details --
+Details:
+	Minecraft Version: 1.8.9
+	Operating System: Windows 8.1 (amd64) version 6.3
+	Java Version: 1.8.0_51, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 245888040 bytes (234 MB) / 715653120 bytes (682 MB) up to 1908932608 bytes (1820 MB)
+	JVM Flags: 1 total; -Xmx2048M
+	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 0
+	FML: 
+	Loaded coremods (and transformers): 
+	GL info: ' Vendor: 'NVIDIA Corporation' Version: '4.6.0 NVIDIA 621.01' Renderer: 'NVIDIA GeForce RTX 5070 Ti/PCIe/SSE2'
+[05:39:40] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - Animation took 0.000s
+[05:39:40] [Client thread/INFO] [FML/]: MinecraftForge v11.15.1.2318 Initialized
+[05:39:40] [Client thread/INFO] [FML/]: Replaced 229 ore recipies
+[05:39:41] [Client thread/DEBUG] [FML/]: File C:\Users\fuzuk\AppData\Local\Temp\claude\497e6e0b4f54abe9\d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8\scratchpad\testgame\config\injectedDependencies.json not found. No dependencies injected
+[05:39:41] [Client thread/DEBUG] [FML/]: Building injected Mod Containers [net.minecraftforge.fml.common.FMLContainer, net.minecraftforge.common.ForgeModContainer]
+[05:39:41] [Client thread/DEBUG] [FML/]: Attempting to load mods contained in the minecraft jar file and associated classes
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\minecraftforge\forge\1.8.9-11.15.1.2318-1.8.9\forge-1.8.9-11.15.1.2318-1.8.9.jar, examining for mod candidates
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\minecraft\launchwrapper\1.12\launchwrapper-1.12.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\ow2\asm\asm-all\5.0.3\asm-all-5.0.3.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\typesafe\akka\akka-actor_2.11\2.3.3\akka-actor_2.11-2.3.3.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\typesafe\config\1.2.1\config-1.2.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-actors-migration_2.11\1.1.0\scala-actors-migration_2.11-1.1.0.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-compiler\2.11.1\scala-compiler-2.11.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\plugins\scala-continuations-library_2.11\1.0.2\scala-continuations-library_2.11-1.0.2.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\plugins\scala-continuations-plugin_2.11.1\1.0.2\scala-continuations-plugin_2.11.1-1.0.2.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-library\2.11.1\scala-library-2.11.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-parser-combinators_2.11\1.0.1\scala-parser-combinators_2.11-1.0.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-reflect\2.11.1\scala-reflect-2.11.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-swing_2.11\1.0.1\scala-swing_2.11-1.0.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\scala-lang\scala-xml_2.11\1.0.2\scala-xml_2.11-1.0.2.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\lzma\lzma\0.0.1\lzma-0.0.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\sf\jopt-simple\jopt-simple\4.6\jopt-simple-4.6.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\java3d\vecmath\1.5.2\vecmath-1.5.2.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\sf\trove4j\trove4j\3.0.3\trove4j-3.0.3.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\mojang\netty\1.8.8\netty-1.8.8.jar, examining for mod candidates
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\oshi-project\oshi-core\1.1\oshi-core-1.1.jar, examining for mod candidates
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\dev\jna\jna\3.4.0\jna-3.4.0.jar, examining for mod candidates
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\dev\jna\platform\3.4.0\platform-3.4.0.jar, examining for mod candidates
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\ibm\icu\icu4j-core-mojang\51.2\icu4j-core-mojang-51.2.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\codecjorbis\20101023\codecjorbis-20101023.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\codecwav\20101023\codecwav-20101023.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\libraryjavasound\20101123\libraryjavasound-20101123.jar, examining for mod candidates
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\librarylwjglopenal\20100824\librarylwjglopenal-20100824.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\paulscode\soundsystem\20120107\soundsystem-20120107.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\io\netty\netty-all\4.0.23.Final\netty-all-4.0.23.Final.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\google\guava\guava\17.0\guava-17.0.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\commons\commons-lang3\3.3.2\commons-lang3-3.3.2.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\commons-io\commons-io\2.4\commons-io-2.4.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\commons-codec\commons-codec\1.9\commons-codec-1.9.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\jinput\jinput\2.0.5\jinput-2.0.5.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\net\java\jutils\jutils\1.0.0\jutils-1.0.0.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\google\code\gson\gson\2.2.4\gson-2.2.4.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\mojang\authlib\1.5.21\authlib-1.5.21.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\com\mojang\realms\1.7.59\realms-1.7.59.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\commons\commons-compress\1.8.1\commons-compress-1.8.1.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\httpcomponents\httpclient\4.3.3\httpclient-4.3.3.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\commons-logging\commons-logging\1.1.3\commons-logging-1.1.3.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\httpcomponents\httpcore\4.3.2\httpcore-4.3.2.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\logging\log4j\log4j-api\2.0-beta9\log4j-api-2.0-beta9.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\apache\logging\log4j\log4j-core\2.0-beta9\log4j-core-2.0-beta9.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\lwjgl\lwjgl\lwjgl\2.9.4-nightly-20150209\lwjgl-2.9.4-nightly-20150209.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\org\lwjgl\lwjgl\lwjgl_util\2.9.4-nightly-20150209\lwjgl_util-2.9.4-nightly-20150209.jar
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Roaming\.fzclient\libraries\tv\twitch\twitch\6.5\twitch-6.5.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Roaming\.fzclient\versions\1.8.9\1.8.9.jar, examining for mod candidates
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a minecraft related file at C:\Users\fuzuk\AppData\Local\Temp\claude\497e6e0b4f54abe9\d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8\scratchpad\testgame\mods\3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar, examining for mod candidates
+[05:39:41] [Client thread/TRACE] [FML/]: Skipping known library file C:\Users\fuzuk\AppData\Local\Temp\claude\497e6e0b4f54abe9\d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8\scratchpad\testgame\mods\FzClient.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Minecraft jar mods loaded successfully
+[05:39:41] [Client thread/INFO] [FML/]: Found 0 mods from the command line. Injecting into mod discoverer
+[05:39:41] [Client thread/INFO] [FML/]: Searching C:\Users\fuzuk\AppData\Local\Temp\claude\497e6e0b4f54abe9\d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8\scratchpad\testgame\mods for mods
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a candidate zip or jar file 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:41] [Client thread/TRACE] [FML/]:   Skipping already in list C:\Users\fuzuk\AppData\Local\Temp\claude\497e6e0b4f54abe9\d3e27e4b-e0a7-4fa2-ae57-128a64ea4eb8\scratchpad\testgame\mods\3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Found a candidate zip or jar file FzClient.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file forge-1.8.9-11.15.1.2318-1.8.9.jar for potential mods
+[05:39:41] [Client thread/DEBUG] [FML/]: The mod container forge-1.8.9-11.15.1.2318-1.8.9.jar appears to be missing an mcmod.info file
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file netty-1.8.8.jar for potential mods
+[05:39:41] [Client thread/DEBUG] [FML/]: The mod container netty-1.8.8.jar appears to be missing an mcmod.info file
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file oshi-core-1.1.jar for potential mods
+[05:39:41] [Client thread/DEBUG] [FML/]: The mod container oshi-core-1.1.jar appears to be missing an mcmod.info file
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file jna-3.4.0.jar for potential mods
+[05:39:41] [Client thread/DEBUG] [FML/]: The mod container jna-3.4.0.jar appears to be missing an mcmod.info file
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file platform-3.4.0.jar for potential mods
+[05:39:41] [Client thread/DEBUG] [FML/]: The mod container platform-3.4.0.jar appears to be missing an mcmod.info file
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file libraryjavasound-20101123.jar for potential mods
+[05:39:41] [Client thread/DEBUG] [FML/]: The mod container libraryjavasound-20101123.jar appears to be missing an mcmod.info file
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file 1.8.9.jar for potential mods
+[05:39:41] [Client thread/DEBUG] [FML/]: The mod container 1.8.9.jar appears to be missing an mcmod.info file
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar for potential mods
+[05:39:41] [Client thread/TRACE] [FML/]: Located mcmod.info file in file 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Identified a mod of type Lnet/minecraftforge/fml/common/Mod; (dev.tr7zw.skinlayers.SkinLayersMod) - loading
+[05:39:41] [Client thread/TRACE] [skinlayers3d/]: Parsed dependency info : [] [] []
+[05:39:41] [Client thread/DEBUG] [FML/]: Examining file FzClient.jar for potential mods
+[05:39:41] [Client thread/TRACE] [FML/]: Located mcmod.info file in file FzClient.jar
+[05:39:41] [Client thread/DEBUG] [FML/]: Identified a mod of type Lnet/minecraftforge/fml/common/Mod; (dev.fzkc.fzhud.FzHud) - loading
+[05:39:41] [Client thread/TRACE] [fzclient/]: Parsed dependency info : [] [] []
+[05:39:41] [Client thread/DEBUG] [fzclient/]: Attempting to load the file version.properties from FzClient.jar to locate a version number for fzclient
+[05:39:41] [Client thread/WARN] [fzclient/]: Mod fzclient is missing the required element 'version' and a version.properties file could not be found. Falling back to metadata version 1.0.34
+[05:39:41] [Client thread/INFO] [FML/]: Forge Mod Loader has identified 5 mods to load
+[05:39:41] [Client thread/TRACE] [FML/]: Received a system property request ''
+[05:39:41] [Client thread/TRACE] [FML/]: System property request managing the state of 0 mods
+[05:39:41] [Client thread/DEBUG] [FML/]: After merging, found state information for 0 mods
+[05:39:42] [Client thread/DEBUG] [FML/]: Found translations in forge-1.8.9-11.15.1.2318-1.8.9.jar [af_ZA, ar_SA, br_FR, ca_ES, cs_CZ, da_DK, de_DE, el_GR, en_US, es_ES, fa_IR, fi_FI, fr_FR, he_IL, hu_HU, it_IT, ja_JP, ko_KR, lt_LT, nb_NO, nl_NL, nn_NO, no_NO, pl_PL, pt_BR, pt_PT, ro_RO, ru_RU, sl_SI, sr_SP, sv_SE, tr_TR, uk_UA, vi_VN, zh_CN, zh_TW]
+[05:39:42] [Client thread/DEBUG] [FML/]: Found translations in forge-1.8.9-11.15.1.2318-1.8.9.jar [af_ZA, ar_SA, br_FR, ca_ES, cs_CZ, da_DK, de_DE, el_GR, en_US, es_ES, fa_IR, fi_FI, fr_FR, he_IL, hu_HU, it_IT, ja_JP, ko_KR, lt_LT, nb_NO, nl_NL, nn_NO, no_NO, pl_PL, pt_BR, pt_PT, ro_RO, ru_RU, sl_SI, sr_SP, sv_SE, tr_TR, uk_UA, vi_VN, zh_CN, zh_TW]
+[05:39:42] [Client thread/DEBUG] [skinlayers3d/]: Enabling mod skinlayers3d
+[05:39:42] [Client thread/DEBUG] [FML/]: Found translations in 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar [en_US]
+[05:39:42] [Client thread/DEBUG] [fzclient/]: Enabling mod fzclient
+[05:39:42] [Client thread/TRACE] [FML/]: Verifying mod requirements are satisfied
+[05:39:42] [Client thread/TRACE] [FML/]: All mod requirements are satisfied
+[05:39:42] [Client thread/TRACE] [FML/]: Sorting mods into an ordered list
+[05:39:42] [Client thread/TRACE] [FML/]: Mod sorting completed successfully
+[05:39:42] [Client thread/DEBUG] [FML/]: Mod sorting data
+[05:39:42] [Client thread/DEBUG] [FML/]: 	skinlayers3d(3dSkinLayers:1.2.0): 3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar ()
+[05:39:42] [Client thread/DEBUG] [FML/]: 	fzclient(FzClient:1.0.34): FzClient.jar ()
+[05:39:42] [Client thread/TRACE] [mcp/mcp]: Sending event FMLConstructionEvent to mod mcp
+[05:39:42] [Client thread/TRACE] [mcp/mcp]: Sent event FMLConstructionEvent to mod mcp
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Construction - Minecraft Coder Pack took 0.001s
+[05:39:42] [Client thread/TRACE] [FML/FML]: Sending event FMLConstructionEvent to mod FML
+[05:39:42] [Client thread/TRACE] [FML/FML]: Mod FML is using network checker : Invoking method checkModLists
+[05:39:42] [Client thread/TRACE] [FML/FML]: Testing mod FML to verify it accepts its own version in a remote connection
+[05:39:42] [Client thread/TRACE] [FML/FML]: The mod FML accepts its own version (8.0.99.99)
+[05:39:42] [Client thread/INFO] [FML/FML]: Attempting connection with missing mods [mcp, FML, Forge, skinlayers3d, fzclient] at CLIENT
+[05:39:42] [Client thread/INFO] [FML/FML]: Attempting connection with missing mods [mcp, FML, Forge, skinlayers3d, fzclient] at SERVER
+[05:39:42] [Client thread/TRACE] [FML/FML]: Sent event FMLConstructionEvent to mod FML
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Construction - Forge Mod Loader took 0.137s
+[05:39:42] [Client thread/TRACE] [Forge/Forge]: Sending event FMLConstructionEvent to mod Forge
+[05:39:42] [Client thread/TRACE] [FML/Forge]: Mod Forge is using network checker : No network checking performed
+[05:39:42] [Client thread/TRACE] [FML/Forge]: Testing mod Forge to verify it accepts its own version in a remote connection
+[05:39:42] [Client thread/TRACE] [FML/Forge]: The mod Forge accepts its own version (11.15.1.2318)
+[05:39:42] [Client thread/TRACE] [Forge/Forge]: Sent event FMLConstructionEvent to mod Forge
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Construction - Minecraft Forge took 0.005s
+[05:39:42] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sending event FMLConstructionEvent to mod skinlayers3d
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: java.nio.file.NoSuchFileException: config\skinlayers.json
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:79)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:97)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:102)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:230)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.nio.file.spi.FileSystemProvider.newOutputStream(FileSystemProvider.java:434)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.nio.file.Files.newOutputStream(Files.java:216)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.nio.file.Files.write(Files.java:3292)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at dev.tr7zw.skinlayers.SkinLayersModBase.writeConfig(SkinLayersModBase.java:53)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at dev.tr7zw.skinlayers.SkinLayersModBase.onInitialize(SkinLayersModBase.java:45)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at dev.tr7zw.skinlayers.SkinLayersMod.<init>(SkinLayersMod.java:23)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.lang.reflect.Constructor.newInstance(Constructor.java:422)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.lang.Class.newInstance(Class.java:442)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraftforge.fml.common.ILanguageAdapter$JavaAdapter.getNewInstance(ILanguageAdapter.java:174)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraftforge.fml.common.FMLModContainer.constructMod(FMLModContainer.java:534)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.lang.reflect.Method.invoke(Method.java:497)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventSubscriber.handleEvent(EventSubscriber.java:74)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.SynchronizedEventSubscriber.handleEvent(SynchronizedEventSubscriber.java:47)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventBus.dispatch(EventBus.java:322)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventBus.dispatchQueuedEvents(EventBus.java:304)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventBus.post(EventBus.java:275)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraftforge.fml.common.LoadController.sendEventToModContainer(LoadController.java:211)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraftforge.fml.common.LoadController.propogateStateMessage(LoadController.java:189)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.lang.reflect.Method.invoke(Method.java:497)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventSubscriber.handleEvent(EventSubscriber.java:74)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.SynchronizedEventSubscriber.handleEvent(SynchronizedEventSubscriber.java:47)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventBus.dispatch(EventBus.java:322)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventBus.dispatchQueuedEvents(EventBus.java:304)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at com.google.common.eventbus.EventBus.post(EventBus.java:275)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraftforge.fml.common.LoadController.distributeStateMessage(LoadController.java:118)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraftforge.fml.common.Loader.loadMods(Loader.java:512)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraftforge.fml.client.FMLClientHandler.beginMinecraftLoading(FMLClientHandler.java:208)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraft.client.Minecraft.func_71384_a(Minecraft.java:417)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraft.client.Minecraft.func_99999_d(Minecraft.java:329)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraft.client.main.Main.main(SourceFile:124)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at java.lang.reflect.Method.invoke(Method.java:497)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraft.launchwrapper.Launch.launch(Launch.java:135)
+[05:39:42] [Client thread/INFO] [STDERR/skinlayers3d]: [dev.tr7zw.skinlayers.SkinLayersModBase:writeConfig:55]: 	at net.minecraft.launchwrapper.Launch.main(Launch.java:28)
+[05:39:42] [Client thread/TRACE] [FML/skinlayers3d]: Mod skinlayers3d is using network checker : Accepting version 1.2.0
+[05:39:42] [Client thread/TRACE] [FML/skinlayers3d]: Testing mod skinlayers3d to verify it accepts its own version in a remote connection
+[05:39:42] [Client thread/TRACE] [FML/skinlayers3d]: The mod skinlayers3d accepts its own version (1.2.0)
+[05:39:42] [Client thread/DEBUG] [FML/skinlayers3d]: Attempting to inject @SidedProxy classes into skinlayers3d
+[05:39:42] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sent event FMLConstructionEvent to mod skinlayers3d
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Construction - 3dSkinLayers took 0.014s
+[05:39:42] [Client thread/TRACE] [fzclient/fzclient]: Sending event FMLConstructionEvent to mod fzclient
+[05:39:42] [Client thread/TRACE] [FML/fzclient]: Mod fzclient is using network checker : Accepting version 1.0.34
+[05:39:42] [Client thread/TRACE] [FML/fzclient]: Testing mod fzclient to verify it accepts its own version in a remote connection
+[05:39:42] [Client thread/TRACE] [FML/fzclient]: The mod fzclient accepts its own version (1.0.34)
+[05:39:42] [Client thread/DEBUG] [FML/fzclient]: Attempting to inject @SidedProxy classes into fzclient
+[05:39:42] [Client thread/TRACE] [fzclient/fzclient]: Sent event FMLConstructionEvent to mod fzclient
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Construction - FzClient took 0.070s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Construction took 0.227s
+[05:39:42] [Client thread/DEBUG] [FML/]: Mod signature data
+[05:39:42] [Client thread/DEBUG] [FML/]:  	Valid Signatures:
+[05:39:42] [Client thread/DEBUG] [FML/]: 		(e3c3d50c7c986df74c645c0ac54639741c90a557) FML	(Forge Mod Loader	8.0.99.99)	forge-1.8.9-11.15.1.2318-1.8.9.jar
+[05:39:42] [Client thread/DEBUG] [FML/]: 		(e3c3d50c7c986df74c645c0ac54639741c90a557) Forge	(Minecraft Forge	11.15.1.2318)	forge-1.8.9-11.15.1.2318-1.8.9.jar
+[05:39:42] [Client thread/DEBUG] [FML/]:  	Missing Signatures:
+[05:39:42] [Client thread/DEBUG] [FML/]: 		mcp	(Minecraft Coder Pack	9.19)	minecraft.jar
+[05:39:42] [Client thread/DEBUG] [FML/]: 		skinlayers3d	(3dSkinLayers	1.2.0)	3dSkinLayers-forge-mc1.8.9-1.2.0.temp.temp.jar
+[05:39:42] [Client thread/DEBUG] [FML/]: 		fzclient	(FzClient	1.0.34)	FzClient.jar
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - Default took 0.001s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:Forge Mod Loader took 0.001s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:Minecraft Forge took 0.001s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:3dSkinLayers took 0.002s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:FzClient took 0.001s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Reloading took 0.007s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - Reloading listeners took 0.008s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resources took 0.013s
+[05:39:42] [Client thread/DEBUG] [Forge Mod Loader/]: Mod Forge Mod Loader is missing a pack.mcmeta file, substituting a dummy one
+[05:39:42] [Client thread/DEBUG] [Minecraft Forge/]: Mod Minecraft Forge is missing a pack.mcmeta file, substituting a dummy one
+[05:39:42] [Client thread/DEBUG] [3dSkinLayers/]: Mod 3dSkinLayers is missing a pack.mcmeta file, substituting a dummy one
+[05:39:42] [Client thread/DEBUG] [FzClient/]: Mod FzClient is missing a pack.mcmeta file, substituting a dummy one
+[05:39:42] [Client thread/INFO] [FML/]: Processing ObjectHolder annotations
+[05:39:42] [Client thread/INFO] [FML/]: Found 384 ObjectHolder annotations
+[05:39:42] [Client thread/INFO] [FML/]: Identifying ItemStackHolder annotations
+[05:39:42] [Client thread/INFO] [FML/]: Found 0 ItemStackHolder annotations
+[05:39:42] [Client thread/TRACE] [mcp/mcp]: Sending event FMLPreInitializationEvent to mod mcp
+[05:39:42] [Client thread/TRACE] [mcp/mcp]: Sent event FMLPreInitializationEvent to mod mcp
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: PreInitialization - Minecraft Coder Pack took 0.000s
+[05:39:42] [Client thread/TRACE] [FML/FML]: Sending event FMLPreInitializationEvent to mod FML
+[05:39:42] [Client thread/TRACE] [FML/FML]: Sent event FMLPreInitializationEvent to mod FML
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: PreInitialization - Forge Mod Loader took 0.005s
+[05:39:42] [Client thread/TRACE] [Forge/Forge]: Sending event FMLPreInitializationEvent to mod Forge
+[05:39:42] [Client thread/INFO] [FML/Forge]: Configured a dormant chunk cache size of 0
+[05:39:42] [Client thread/TRACE] [Forge/Forge]: Sent event FMLPreInitializationEvent to mod Forge
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: PreInitialization - Minecraft Forge took 0.021s
+[05:39:42] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sending event FMLPreInitializationEvent to mod skinlayers3d
+[05:39:42] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sent event FMLPreInitializationEvent to mod skinlayers3d
+[05:39:42] [Forge Version Check/INFO] [ForgeVersionCheck/Forge]: [Forge] Starting version check at http://files.minecraftforge.net/maven/net/minecraftforge/forge/promotions_slim.json
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: PreInitialization - 3dSkinLayers took 0.000s
+[05:39:42] [Client thread/TRACE] [fzclient/fzclient]: Sending event FMLPreInitializationEvent to mod fzclient
+[05:39:42] [Client thread/TRACE] [fzclient/fzclient]: Sent event FMLPreInitializationEvent to mod fzclient
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: PreInitialization - FzClient took 0.000s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: PreInitialization took 0.027s
+[05:39:42] [Client thread/INFO] [FML/]: Applying holder lookups
+[05:39:42] [Client thread/INFO] [FML/]: Holder lookups applied
+[05:39:42] [Client thread/INFO] [FML/]: Injecting itemstacks
+[05:39:42] [Client thread/INFO] [FML/]: Itemstack injection complete
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - TextureManager took 0.000s
+[05:39:42] [Forge Version Check/DEBUG] [ForgeVersionCheck/Forge]: [Forge] Received version check data:
+Moved Permanently
+[05:39:42] [Forge Version Check/DEBUG] [ForgeVersionCheck/Forge]: Failed to process update information
+com.google.gson.JsonSyntaxException: java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1
+	at com.google.gson.Gson.fromJson(Gson.java:815) ~[Gson.class:?]
+	at com.google.gson.Gson.fromJson(Gson.java:768) ~[Gson.class:?]
+	at com.google.gson.Gson.fromJson(Gson.java:717) ~[Gson.class:?]
+	at com.google.gson.Gson.fromJson(Gson.java:689) ~[Gson.class:?]
+	at net.minecraftforge.common.ForgeVersion$1.process(ForgeVersion.java:156) [ForgeVersion$1.class:?]
+	at net.minecraftforge.common.ForgeVersion$1.run(ForgeVersion.java:131) [ForgeVersion$1.class:?]
+Caused by: java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1
+	at com.google.gson.stream.JsonReader.beginObject(JsonReader.java:374) ~[JsonReader.class:?]
+	at com.google.gson.internal.bind.MapTypeAdapterFactory$Adapter.read(MapTypeAdapterFactory.java:183) ~[MapTypeAdapterFactory$Adapter.class:?]
+	at com.google.gson.internal.bind.MapTypeAdapterFactory$Adapter.read(MapTypeAdapterFactory.java:145) ~[MapTypeAdapterFactory$Adapter.class:?]
+	at com.google.gson.Gson.fromJson(Gson.java:803) ~[Gson.class:?]
+	... 5 more
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - SoundHandler took 0.368s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - FontRenderer took 0.002s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - FontRenderer took 0.001s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - GrassColorReloadListener took 0.002s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - FoliageColorReloadListener took 0.002s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Rendering Setup - GL Setup took 0.000s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Step: Rendering Setup - Loading Texture Map took 0.003s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - B3DLoader took 0.000s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - OBJLoader took 0.000s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - ModelFluid$FluidLoader took 0.000s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - ItemLayerModel$Loader took 0.000s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - MultiLayerModel$Loader took 0.000s
+[05:39:42] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - ModelDynBucket$LoaderDynBucket took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: ModelLoader: blocks took 0.278s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: ModelLoader: items took 0.053s
+[05:39:43] [Client thread/INFO] [FML/]: Max texture size: 16384
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Texture stitching - missingno took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Texture creation took 0.001s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - ModelManager took 0.537s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Rendering Setup - Loading Model Manager took 0.559s
+[05:39:43] [Client thread/INFO] [mixin/]: Mixing PlayerRendererMixin from 3dskinlayers.mixins.json into net.minecraft.client.renderer.entity.RenderPlayer
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/renderer/entity/Render to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/accessor/PlayerEntityModelAccessor to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/renderlayers/HeadLayerFeatureRenderer to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/renderlayers/BodyLayerFeatureRenderer to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/renderer/entity/layers/LayerRenderer to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/Minecraft to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/util/IThreadListener to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/profiler/IPlayerUsage to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/entity/EntityPlayerSP to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/entity/AbstractClientPlayer to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/util/Vec3 to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/SkinLayersModBase to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/Config to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/model/ModelPlayer to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/model/ModelRenderer to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/renderer/GlStateManager to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for dev/tr7zw/skinlayers/SkinUtil to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/renderer/entity/RenderManager to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for net/minecraft/client/model/ModelBase to metadata cache
+[05:39:43] [Client thread/TRACE] [mixin/]: Added class metadata for org/spongepowered/asm/mixin/injection/callback/CallbackInfo to metadata cache
+[05:39:43] [Client thread/INFO] [mixin/]: Mixing RendererLivingEntityMixin from 3dskinlayers.mixins.json into net.minecraft.client.renderer.entity.RendererLivingEntity
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - RenderItem took 0.002s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Rendering Setup - Loading Item Renderer took 0.225s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - EntityRenderer took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - BlockRendererDispatcher took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resource - RenderGlobal took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Rendering Setup - Loading Entity Renderer took 0.069s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Rendering Setup took 0.856s
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sending event FMLInitializationEvent to mod mcp
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sent event FMLInitializationEvent to mod mcp
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Initialization - Minecraft Coder Pack took 0.000s
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sending event FMLInitializationEvent to mod FML
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sent event FMLInitializationEvent to mod FML
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Initialization - Forge Mod Loader took 0.000s
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sending event FMLInitializationEvent to mod Forge
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sent event FMLInitializationEvent to mod Forge
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Initialization - Minecraft Forge took 0.000s
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sending event FMLInitializationEvent to mod skinlayers3d
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sent event FMLInitializationEvent to mod skinlayers3d
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Initialization - 3dSkinLayers took 0.000s
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sending event FMLInitializationEvent to mod fzclient
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sent event FMLInitializationEvent to mod fzclient
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Initialization - FzClient took 0.001s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Initialization took 0.001s
+[05:39:43] [Client thread/TRACE] [FML/]: Attempting to deliver 0 IMC messages to mod mcp
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sending event IMCEvent to mod mcp
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sent event IMCEvent to mod mcp
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: InterModComms$IMC - Minecraft Coder Pack took 0.001s
+[05:39:43] [Client thread/TRACE] [FML/]: Attempting to deliver 0 IMC messages to mod FML
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sending event IMCEvent to mod FML
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sent event IMCEvent to mod FML
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: InterModComms$IMC - Forge Mod Loader took 0.000s
+[05:39:43] [Client thread/TRACE] [FML/]: Attempting to deliver 0 IMC messages to mod Forge
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sending event IMCEvent to mod Forge
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sent event IMCEvent to mod Forge
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: InterModComms$IMC - Minecraft Forge took 0.000s
+[05:39:43] [Client thread/TRACE] [FML/]: Attempting to deliver 0 IMC messages to mod skinlayers3d
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sending event IMCEvent to mod skinlayers3d
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sent event IMCEvent to mod skinlayers3d
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: InterModComms$IMC - 3dSkinLayers took 0.000s
+[05:39:43] [Client thread/TRACE] [FML/]: Attempting to deliver 0 IMC messages to mod fzclient
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sending event IMCEvent to mod fzclient
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sent event IMCEvent to mod fzclient
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: InterModComms$IMC - FzClient took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: InterModComms$IMC took 0.002s
+[05:39:43] [Client thread/INFO] [FML/]: Injecting itemstacks
+[05:39:43] [Client thread/INFO] [FML/]: Itemstack injection complete
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sending event FMLPostInitializationEvent to mod mcp
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sent event FMLPostInitializationEvent to mod mcp
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: PostInitialization - Minecraft Coder Pack took 0.000s
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sending event FMLPostInitializationEvent to mod FML
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sent event FMLPostInitializationEvent to mod FML
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: PostInitialization - Forge Mod Loader took 0.000s
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sending event FMLPostInitializationEvent to mod Forge
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sent event FMLPostInitializationEvent to mod Forge
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: PostInitialization - Minecraft Forge took 0.026s
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sending event FMLPostInitializationEvent to mod skinlayers3d
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sent event FMLPostInitializationEvent to mod skinlayers3d
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: PostInitialization - 3dSkinLayers took 0.000s
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sending event FMLPostInitializationEvent to mod fzclient
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sent event FMLPostInitializationEvent to mod fzclient
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: PostInitialization - FzClient took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: PostInitialization took 0.027s
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sending event FMLLoadCompleteEvent to mod mcp
+[05:39:43] [Client thread/TRACE] [mcp/mcp]: Sent event FMLLoadCompleteEvent to mod mcp
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: LoadComplete - Minecraft Coder Pack took 0.000s
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sending event FMLLoadCompleteEvent to mod FML
+[05:39:43] [Client thread/TRACE] [FML/FML]: Sent event FMLLoadCompleteEvent to mod FML
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: LoadComplete - Forge Mod Loader took 0.000s
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sending event FMLLoadCompleteEvent to mod Forge
+[05:39:43] [Client thread/DEBUG] [FML/Forge]: Forge RecipeSorter Baking:
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   14: RecipeEntry("Before", UNKNOWN, )
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   13: RecipeEntry("minecraft:shaped", SHAPED, net.minecraft.item.crafting.ShapedRecipes) Before: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   12: RecipeEntry("forge:shapedore", SHAPED, net.minecraftforge.oredict.ShapedOreRecipe) Before: minecraft:shapeless After: minecraft:shaped
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   11: RecipeEntry("minecraft:mapextending", SHAPED, net.minecraft.item.crafting.RecipesMapExtending) Before: minecraft:shapeless After: minecraft:shaped
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   10: RecipeEntry("minecraft:shapeless", SHAPELESS, net.minecraft.item.crafting.ShapelessRecipes) After: minecraft:shaped
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   9: RecipeEntry("minecraft:repair", SHAPELESS, net.minecraft.item.crafting.RecipeRepairItem) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   8: RecipeEntry("forge:shapelessore", SHAPELESS, net.minecraftforge.oredict.ShapelessOreRecipe) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   7: RecipeEntry("minecraft:armordyes", SHAPELESS, net.minecraft.item.crafting.RecipesArmorDyes) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   6: RecipeEntry("minecraft:fireworks", SHAPELESS, net.minecraft.item.crafting.RecipeFireworks) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   5: RecipeEntry("minecraft:pattern_add", SHAPELESS, net.minecraft.item.crafting.RecipesBanners$RecipeAddPattern) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   4: RecipeEntry("minecraft:pattern_dupe", SHAPELESS, net.minecraft.item.crafting.RecipesBanners$RecipeDuplicatePattern) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   3: RecipeEntry("minecraft:bookcloning", SHAPELESS, net.minecraft.item.crafting.RecipeBookCloning) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   2: RecipeEntry("minecraft:mapcloning", SHAPELESS, net.minecraft.item.crafting.RecipesMapCloning) After: minecraft:shapeless
+[05:39:43] [Client thread/DEBUG] [FML/Forge]:   1: RecipeEntry("After", UNKNOWN, )
+[05:39:43] [Client thread/DEBUG] [FML/Forge]: Sorting recipies
+[05:39:43] [Client thread/TRACE] [Forge/Forge]: Sent event FMLLoadCompleteEvent to mod Forge
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: LoadComplete - Minecraft Forge took 0.003s
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sending event FMLLoadCompleteEvent to mod skinlayers3d
+[05:39:43] [Client thread/TRACE] [skinlayers3d/skinlayers3d]: Sent event FMLLoadCompleteEvent to mod skinlayers3d
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: LoadComplete - 3dSkinLayers took 0.000s
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sending event FMLLoadCompleteEvent to mod fzclient
+[05:39:43] [Client thread/TRACE] [fzclient/fzclient]: Sent event FMLLoadCompleteEvent to mod fzclient
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: LoadComplete - FzClient took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: LoadComplete took 0.003s
+[05:39:43] [Client thread/DEBUG] [FML/]: Freezing block and item id maps
+[05:39:43] [Client thread/INFO] [FML/]: Forge Mod Loader has successfully loaded 5 mods
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - Default took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:Forge Mod Loader took 0.001s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:Minecraft Forge took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:3dSkinLayers took 0.001s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - FMLFileResourcePack:FzClient took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Reloading Texture Manager - minecraft:textures/atlas/blocks.png took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Reloading Texture Manager - minecraft:textures/font/ascii.png took 0.001s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Reloading Texture Manager - minecraft:dynamic/lightMap_1 took 0.000s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Reloading Texture Manager - minecraft:textures/misc/forcefield.png took 0.001s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Step: Reloading Texture Manager - minecraft:textures/font/ascii_sga.png took 0.001s
+[05:39:43] [Client thread/DEBUG] [FML/]: Bar Finished: Reloading Texture Manager took 0.003s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: ModelLoader: blocks took 0.178s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: ModelLoader: items took 0.048s
+[05:39:44] [Client thread/INFO] [FML/]: Max texture size: 16384
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: Texture stitching took 0.097s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: Mipmap generation took 0.097s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: Texture stitching took 0.008s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: Texture creation took 0.020s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: Reloading took 1.021s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Step: Loading Resources - Reloading listeners took 1.021s
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: Loading Resources took 1.024s
+[05:39:44] [Client thread/DEBUG] [Forge Mod Loader/]: Mod Forge Mod Loader is missing a pack.mcmeta file, substituting a dummy one
+[05:39:44] [Client thread/DEBUG] [Minecraft Forge/]: Mod Minecraft Forge is missing a pack.mcmeta file, substituting a dummy one
+[05:39:44] [Client thread/DEBUG] [3dSkinLayers/]: Mod 3dSkinLayers is missing a pack.mcmeta file, substituting a dummy one
+[05:39:44] [Client thread/DEBUG] [FzClient/]: Mod FzClient is missing a pack.mcmeta file, substituting a dummy one
+[05:39:44] [Client thread/DEBUG] [FML/]: Bar Finished: Loading took 3.711s
