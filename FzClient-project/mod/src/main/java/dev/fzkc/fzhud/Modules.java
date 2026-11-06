@@ -150,10 +150,9 @@ public final class Modules {
     public static final Module cosmetics = new Module("cosmetics", "Cosmetics", Category.VISUAL,
             "マントとオーラ。ほかの FzClient ユーザーにも見えます", true).alwaysOn();
     public static final ChoiceSetting cosCape = cosmetics.add(new ChoiceSetting("cape", "マント", 0,
-            "なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ", "自作（PNG）"));
+            "なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ"));
     public static final ChoiceSetting cosAura = cosmetics.add(new ChoiceSetting("aura", "オーラ", 0, "なし", "ハート", "炎", "魔法", "音符", "雪", "虹"));
     public static final BoolSetting cosOthers = cosmetics.add(new BoolSetting("others", "ほかの FzClient ユーザーのコスメを表示", true));
-    public static final BoolSetting cosOthersCustom = cosmetics.add(new BoolSetting("othercustom", "ほかの人の自作マントも表示", true));
 
     // ---- Party detector (waiting lobbies)
     public static final Module partyDetect = new Module("partydetect", "Party Detector", Category.SERVER,

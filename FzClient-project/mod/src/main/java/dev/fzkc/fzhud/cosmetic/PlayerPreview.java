@@ -85,6 +85,10 @@ public final class PlayerPreview {
         GlStateManager.pushMatrix();
         GlStateManager.enableColorMaterial();
         GlStateManager.enableDepth();
+        GlStateManager.depthMask(true);
+        // what was drawn before (the in-game HUD: hotbar items, other mods' HUDs) left depth behind that hid part of
+        // the model (half of it cut off, the blurred menu glass showing through): start the model on a clean depth
+        GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
         // 1 model block = size screen units; model y already points down like the screen
         GlStateManager.translate(x, footY, 100f);
         GlStateManager.scale(-size, size, size);

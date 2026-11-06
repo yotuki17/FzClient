@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +28,7 @@ import java.util.Random;
  * and sent to the FzClient server, so other FzClient users see them too.
  */
 public class CosmeticsScreen extends FzScreen {
-    private static final String[] CAPE_NAMES = {"なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ", "自作"};
+    private static final String[] CAPE_NAMES = {"なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ"};
     private static final String[] AURA_NAMES = {"なし", "ハート", "炎", "魔法", "音符", "雪", "虹"};
     /** Sprite and tint for each aura tile (none has no icon). */
     private static final int[][] AURA_ICON = {{-1, 0}, {0, 0xFF4F7E}, {5, 0xFFA63C}, {2, 0xB07CFF}, {3, 0x5CE1E6}, {4, 0xEEF6FF}, {2, 0xFFD84A}};
@@ -76,10 +75,6 @@ public class CosmeticsScreen extends FzScreen {
     private float[] auraTile(int i) {
         int c = auraCols();
         return new float[]{cx0() + (i % c) * (ATW + GAP), auraY() + 14 + (i / c) * (ATH + GAP), ATW, ATH};
-    }
-    private float[] folderBtn() {
-        float w = R.width(Lang.t("フォルダを開く")) + 16;
-        return new float[]{cx0() + cw() - w, capeY() - 2, w, 14};
     }
     private float[] closeBtn() {
         float w = R.width(Lang.t("閉じる")) + 18;
@@ -134,15 +129,6 @@ public class CosmeticsScreen extends FzScreen {
             }
             R.textCentered(Lang.t(CAPE_NAMES[i]), t[0] + t[2] / 2f, t[1] + t[3] - 13, R.alpha(sel ? Ui.text : Ui.textA(0xB0), o));
         }
-        // custom cape: where the file goes, and what is wrong with it
-        if (capeSel == 5) {
-            float[] fb = folderBtn();
-            Ui.button(fb[0], fb[1], fb[2], fb[3], Lang.t("フォルダを開く"), anim("folder").update(Ui.within(mx, my, fb[0], fb[1], fb[2], fb[3]) ? 1 : 0), o);
-            String err = Cosmetics.myCapeError();
-            String msg = err != null ? Lang.t(err) : "config/fzclient-cape.png";
-            float ty = capeTile(Equip.CAPES.length - 1)[1] + CTH + 4;
-            R.text(msg, cx0(), ty, R.alpha(err != null ? 0xFFFF8A8A : Ui.MUTED, o));
-        }
 
         // auras
         R.text(Lang.t("オーラ"), cx0(), auraY(), R.alpha(Ui.accent, o));
@@ -159,7 +145,6 @@ public class CosmeticsScreen extends FzScreen {
 
         // who sees what
         toggleRow("others", "ほかの FzClient ユーザーのコスメを表示", Modules.cosOthers.get(), showY(), mx, my, o);
-        toggleRow("custom", "ほかの人の自作マントも表示", Modules.cosOthersCustom.get(), showY() + 18, mx, my, o);
 
         Decoration.corner(vw, vh, o);
     }
@@ -244,13 +229,6 @@ public class CosmeticsScreen extends FzScreen {
                 return;
             }
         }
-        if (Modules.cosCape.get() == 5) {
-            float[] fb = folderBtn();
-            if (Ui.inside(mx, my, fb[0], fb[1], fb[2], fb[3])) {
-                openFolder();
-                return;
-            }
-        }
         for (int i = 0; i < Equip.AURAS.length; i++) {
             float[] t = auraTile(i);
             if (Ui.inside(mx, my, t[0], t[1], t[2], t[3])) {
@@ -260,7 +238,6 @@ public class CosmeticsScreen extends FzScreen {
             }
         }
         if (Ui.inside(mx, my, cx0(), showY() - 2, cw(), 16)) Modules.cosOthers.value = !Modules.cosOthers.get();
-        else if (Ui.inside(mx, my, cx0(), showY() + 16, cw(), 16)) Modules.cosOthersCustom.value = !Modules.cosOthersCustom.get();
         else if (Ui.within(mx, my, px() + 10, py() + 10, PW, H() - 20)) dragX = mx;
     }
 
@@ -281,14 +258,5 @@ public class CosmeticsScreen extends FzScreen {
     @Override
     protected void key(char c, int keyCode) {
         if (keyCode == 1) mc.displayGuiScreen(parent);
-    }
-
-    private static void openFolder() {
-        File f = Cosmetics.myCapeFileForUser().getParentFile();
-        f.mkdirs();
-        try {
-            org.lwjgl.Sys.openURL("file:///" + f.getAbsolutePath().replace('\\', '/'));
-        } catch (Throwable ignored) {
-        }
     }
 }

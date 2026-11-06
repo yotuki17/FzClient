@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
  * what older versions saved.
  */
 public final class Equip {
-    public static final String[] CAPES = {"", "fzclient", "aurora", "midnight", "sakura", "custom"};
+    public static final String[] CAPES = {"", "fzclient", "aurora", "midnight", "sakura"};
     public static final String[] AURAS = {"", "hearts", "flame", "magic", "notes", "snow", "rainbow"};
 
     public String cape = "", capeHash = "", aura = "";

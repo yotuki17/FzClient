@@ -57,16 +57,6 @@ public final class Cosmetics {
 
     /** What the other FzClient players wear, by UUID. */
     private static final Map<UUID, Equip> others = new ConcurrentHashMap<UUID, Equip>();
-    /** Downloaded custom capes by hash (null value = being loaded or failed). */
-    private static final Map<String, ResourceLocation> customCapes = new ConcurrentHashMap<String, ResourceLocation>();
-    private static final Set<String> loading = Collections.synchronizedSet(new HashSet<String>());
-
-    // your own custom cape (config/fzclient-cape.png)
-    private static ResourceLocation myCape;
-    private static DynamicTexture myCapeTex;
-    private static long myCapeStamp = -1, myCapeCheckAt;
-    private static volatile byte[] myCapePng;
-    private static volatile String myCapeError;
 
     private static Thread thread;
 
@@ -109,192 +99,14 @@ public final class Cosmetics {
     public static ResourceLocation cape(AbstractClientPlayer p) {
         Equip e = of(p);
         if (e == null || e.cape.isEmpty()) return null;
-        if (!"custom".equals(e.cape)) return BUILTIN.get(e.cape);
-        if (isMe(p)) return myCustomCape();
-        if (!Modules.cosOthersCustom.get() || e.capeHash.isEmpty()) return null;
-        ResourceLocation rl = customCapes.get(e.capeHash);
-        if (rl == null) download(e.capeHash);
-        return rl;
+        return BUILTIN.get(e.cape);
     }
 
-    /** The texture of a built-in cape id, or your own custom cape for "custom" (null when there is none). */
+    /** The texture of a built-in cape id (null for none). */
     public static ResourceLocation capeTexture(String id) {
-        return "custom".equals(id) ? myCustomCape() : BUILTIN.get(id);
+        return BUILTIN.get(id);
     }
 
-    /** Where your custom cape picture goes. */
-    public static File myCapeFileForUser() {
-        return myCapeFile();
-    }
-
-    /** Problem with your own cape file, for the settings page (null when fine). */
-    public static String myCapeError() {
-        return myCapeError;
-    }
-
-    // ------------------------------------------------------------------ textures
-
-    private static File myCapeFile() {
-        return new File(new File(Minecraft.getMinecraft().mcDataDir, "config"), "fzclient-cape.png");
-    }
-
-    /** Reads and checks a cape picture: PNG, twice as wide as tall, up to 1024 wide. */
-    private static BufferedImage readCape(byte[] png) throws Exception {
-        BufferedImage img = ImageIO.read(new ByteArrayInputStream(png));
-        if (img == null) throw new Exception("PNG を読めませんでした");
-        if (img.getWidth() != img.getHeight() * 2 || img.getWidth() < 64 || img.getWidth() > 1024)
-            throw new Exception("横:縦 = 2:1 の画像にしてください（64×32 など）");
-        return img;
-    }
-
-    // ---- any picture works as a cape:
-    //  - a normal cape texture (twice as wide as tall, 64×32 layout) is used as it is;
-    //  - an OptiFine-style cape (46×22 layout) is placed into a 64×32 layout;
-    //  - anything else (a photo, a logo, a square picture...) is fitted onto the back of the cape (cropped to the
-    //    cape's shape, centred), with the sides and the inside in the picture's own colour.
-
-    static BufferedImage toCape(BufferedImage src) {
-        int w = src.getWidth(), h = src.getHeight();
-        if (w == h * 2 && w >= 64 && w <= 1024) return src;
-        if (w * 22 == h * 46 && w >= 46) {
-            int s = w / 46;
-            BufferedImage out = new BufferedImage(64 * s, 32 * s, BufferedImage.TYPE_INT_ARGB);
-            out.getGraphics().drawImage(src, 0, 0, null);
-            return out;
-        }
-        int S = 8;   // 512×256: 8 pixels per cape pixel
-        BufferedImage out = new BufferedImage(64 * S, 32 * S, BufferedImage.TYPE_INT_ARGB);
-        java.awt.Graphics2D g = out.createGraphics();
-        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        g.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING, java.awt.RenderingHints.VALUE_RENDER_QUALITY);
-        java.awt.Color avg = average(src);
-        java.awt.Color dark = new java.awt.Color(avg.getRed() * 6 / 10, avg.getGreen() * 6 / 10, avg.getBlue() * 6 / 10);
-        // sides, top, bottom and the inside: the picture's colour
-        g.setColor(dark);
-        g.fillRect(0, 0, 22 * S, 17 * S);
-        // back of the cape (seen from behind): the picture, cropped to 10:16 and centred
-        int fx = S, fy = S, fw = 10 * S, fh = 16 * S;
-        double scale = Math.max(fw / (double) w, fh / (double) h);
-        int dw = (int) Math.ceil(w * scale), dh = (int) Math.ceil(h * scale);
-        java.awt.Shape clip = g.getClip();
-        g.setClip(fx, fy, fw, fh);
-        g.drawImage(src, fx + (fw - dw) / 2, fy + (fh - dh) / 2, dw, dh, null);
-        g.setClip(clip);
-        g.dispose();
-        return out;
-    }
-
-    private static java.awt.Color average(BufferedImage img) {
-        long r = 0, gg = 0, b = 0, n = 0;
-        int stepX = Math.max(1, img.getWidth() / 64), stepY = Math.max(1, img.getHeight() / 64);
-        for (int y = 0; y < img.getHeight(); y += stepY) {
-            for (int x = 0; x < img.getWidth(); x += stepX) {
-                int c = img.getRGB(x, y);
-                if (((c >>> 24) & 255) < 128) continue;
-                r += (c >> 16) & 255; gg += (c >> 8) & 255; b += c & 255; n++;
-            }
-        }
-        if (n == 0) return new java.awt.Color(20, 24, 40);
-        return new java.awt.Color((int) (r / n), (int) (gg / n), (int) (b / n));
-    }
-
-    private static BufferedImage shrink(BufferedImage img, int by) {
-        int w = Math.max(64, img.getWidth() / by), h = w / 2;
-        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        java.awt.Graphics2D g = out.createGraphics();
-        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g.drawImage(img, 0, 0, w, h, null);
-        g.dispose();
-        return out;
-    }
-
-    private static byte[] encode(BufferedImage img) throws Exception {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ImageIO.write(img, "png", out);
-        return out.toByteArray();
-    }
-
-    /** Your config/fzclient-cape.png, reloaded when the file changes. */
-    private static ResourceLocation myCustomCape() {
-        long now = System.currentTimeMillis();
-        if (now >= myCapeCheckAt) {
-            myCapeCheckAt = now + 2000L;
-            File f = myCapeFile();
-            long stamp = f.isFile() ? f.lastModified() ^ f.length() : 0;
-            if (stamp != myCapeStamp) {
-                myCapeStamp = stamp;
-                myCapePng = null;
-                if (myCapeTex != null) {
-                    Minecraft.getMinecraft().getTextureManager().deleteTexture(myCape);
-                    myCapeTex = null;
-                    myCape = null;
-                }
-                if (stamp == 0) {
-                    myCapeError = "config/fzclient-cape.png がありません";
-                } else {
-                    try {
-                        byte[] png = Files.readAllBytes(f.toPath());
-                        if (png.length > 8 * 1024 * 1024) throw new Exception("ファイルが大きすぎます（8MB まで）");
-                        BufferedImage src = ImageIO.read(new ByteArrayInputStream(png));
-                        if (src == null) throw new Exception("画像を読めませんでした（PNG / JPG）");
-                        BufferedImage img = toCape(src);
-                        byte[] out = encode(img);
-                        if (out.length > 256 * 1024) { img = shrink(img, 2); out = encode(img); }
-                        if (out.length > 256 * 1024) { img = shrink(img, 2); out = encode(img); }
-                        myCapeTex = new DynamicTexture(img);
-                        myCape = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("fzclient_mycape", myCapeTex);
-                        myCapePng = out;   // what is uploaded: always a normal cape layout
-                        myCapeError = null;
-                    } catch (Exception ex) {
-                        myCapeError = ex.getMessage();
-                    }
-                }
-            }
-        }
-        return myCape;
-    }
-
-    /** Fetches someone's custom cape in the background; it shows up once it has arrived. */
-    private static void download(final String hash) {
-        if (!hash.matches("[0-9a-f]{40}") || !loading.add(hash)) return;
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    HttpURLConnection c = (HttpURLConnection) new URL(FzUsers.ENDPOINT_URL + "/cos/cape/" + hash).openConnection();
-                    c.setConnectTimeout(8000);
-                    c.setReadTimeout(8000);
-                    c.setRequestProperty("User-Agent", "FzClient/" + dev.fzkc.fzhud.feature.Branding.VERSION);
-                    if (c.getResponseCode() != 200) return;
-                    InputStream in = c.getInputStream();
-                    ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                    byte[] b = new byte[8192];
-                    for (int n; (n = in.read(b)) > 0 && buf.size() < 300 * 1024; ) buf.write(b, 0, n);
-                    in.close();
-                    final BufferedImage img = readCape(buf.toByteArray());
-                    Minecraft.getMinecraft().addScheduledTask(new Runnable() {
-                        @Override
-                        public void run() {
-                            DynamicTexture tex = new DynamicTexture(img);
-                            customCapes.put(hash, Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("fzclient_cape_" + hash.substring(0, 12), tex));
-                        }
-                    });
-                } catch (Throwable ignored) {
-                    // try again later
-                } finally {
-                    if (!customCapes.containsKey(hash)) {
-                        // allow a new try in a minute
-                        final String h = hash;
-                        new java.util.Timer(true).schedule(new java.util.TimerTask() {
-                            @Override public void run() { loading.remove(h); }
-                        }, 60000L);
-                    }
-                }
-            }
-        }, "FzClient-Cape");
-        t.setDaemon(true);
-        t.start();
-    }
 
     // ------------------------------------------------------------------ tick: layers, auras, sync
 
@@ -306,7 +118,6 @@ public final class Cosmetics {
             thread.setDaemon(true);
             thread.start();
         }
-        if (Modules.cosCape.get() == 5) myCustomCape();   // keep the file fresh for publishing
     }
 
     // ------------------------------------------------------------------ server
@@ -316,7 +127,6 @@ public final class Cosmetics {
         String changedTo = null;
         long changedAt = 0, fetchedAt = 0, failUntil = 0;
         Set<UUID> fetchedFor = new HashSet<UUID>();
-        String uploadedPngHash = "";
         while (true) {
             try {
                 Thread.sleep(1000L);
@@ -325,20 +135,16 @@ public final class Cosmetics {
 
                 // ---- publish what you wear (2 s after the last change, so slider drags send once)
                 Equip e = mine();
-                byte[] png = "custom".equals(e.cape) ? myCapePng : null;
-                if (!"custom".equals(e.cape)) uploadedPngHash = "";   // the server drops unused custom capes
-                String pngHash = png == null ? "" : sha1(png);
-                String want = e.toJson().toString() + "|" + pngHash;
+                String want = e.toJson().toString();
                 if (!want.equals(changedTo)) {
                     changedTo = want;
                     changedAt = now;
                 }
-                if (!want.equals(sent) && now - changedAt > 2000L && now > failUntil && !("custom".equals(e.cape) && png == null)) {
+                if (!want.equals(sent) && now - changedAt > 2000L && now > failUntil) {
                     try {
-                        JsonObject r = publish(mc, e, png != null && !pngHash.equals(uploadedPngHash) ? png : null);
+                        JsonObject r = publish(mc, e);
                         if (r != null && r.has("ok")) {
                             sent = want;
-                            if (png != null) uploadedPngHash = pngHash;
                         } else {
                             failUntil = now + 60000L;
                         }
@@ -379,7 +185,7 @@ public final class Cosmetics {
     }
 
     /** Proves who you are (Mojang session join, like joining a server) and stores what you wear. */
-    private static JsonObject publish(Minecraft mc, Equip e, byte[] png) throws Exception {
+    private static JsonObject publish(Minecraft mc, Equip e) throws Exception {
         com.mojang.authlib.GameProfile profile = mc.getSession().getProfile();
         String token = mc.getSession().getToken();
         if (profile == null || profile.getId() == null || token == null || token.length() < 20) return null;   // offline account
@@ -389,16 +195,9 @@ public final class Cosmetics {
         body.addProperty("name", profile.getName());
         body.addProperty("serverId", serverId);
         body.add("data", e.toJson());
-        if (png != null) body.addProperty("cape", java.util.Base64.getEncoder().encodeToString(png));
         return FzUsers.post("/cos/set", body);
     }
 
-    private static String sha1(byte[] b) throws Exception {
-        byte[] d = MessageDigest.getInstance("SHA-1").digest(b);
-        StringBuilder sb = new StringBuilder();
-        for (byte x : d) sb.append(String.format("%02x", x));
-        return sb.toString();
-    }
 
     private static UUID uuid(String hex) {
         if (hex == null || !hex.matches("[0-9a-f]{32}")) return null;

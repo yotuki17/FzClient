@@ -124,6 +124,7 @@ const EN = {
   'NEW：タイトル画面をセピアのパノラマ背景に・FzClient 欄をスリムに': 'NEW: a sepia panorama behind the title screen, and a slimmer FzClient list',
   'NEW：タイトル画面に最新のスクショ・クリップ（押すと Alt+X で大きく）': 'NEW: the newest screenshots and clips on the title screen (a click shows them big in Alt+X)',
   '録画：「直前を保存」のクリップが飛ぶ・順番が乱れるのを修正': 'Recording: saved clips no longer skip or play out of order',
+  'コスメ：プレビューの人が半分欠けるのを修正・自作マントは終了': 'Cosmetics: fixed the preview player being cut in half; custom capes are gone',
   '録画：音が途切れない・ずっと止まらない・左上に REC マーク': 'Recording: smooth sound, no more frozen video, REC mark in the top left',
   'NEW：ギャラリー・スクショとクリップをランチャーとオーバーレイで': 'NEW: gallery of screenshots and clips in the launcher and the overlay',
   '録画：開始・停止の音、右下に小さな録画マーク、キーと秒数を Alt+X で': 'Recording: start / stop sounds, a small mark in the bottom right, keys and length in Alt+X',
