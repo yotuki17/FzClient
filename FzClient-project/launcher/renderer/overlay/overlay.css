@@ -89,3 +89,56 @@ body.on .hint { opacity: 1; }
 .key button.none { color: var(--muted); }
 @keyframes pulse { 50% { border-color: rgba(232, 62, 206, .3); } }
 .note.small { font-size: 11px; }
+
+/* ---------- the bar at the top: show / hide the panels (like a game bar) */
+.bar { position: fixed; top: 18px; left: 50%; transform: translate(-50%, -10px); display: flex; gap: 4px; padding: 5px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; backdrop-filter: blur(14px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35); opacity: 0; transition: opacity .18s, transform .22s cubic-bezier(.2, .8, .2, 1); z-index: 3; }
+body.on .bar { opacity: 1; transform: translate(-50%, 0); }
+.bar button { width: 40px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+  transition: background .15s; }
+.bar button:hover { background: rgba(255, 255, 255, .08); }
+.bar button.on { background: rgba(92, 225, 230, .18); }
+.bar svg { width: 18px; height: 18px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bar svg .fill { fill: var(--muted); stroke: none; }
+.bar button.on svg { stroke: var(--cyan); }
+.bar button.on svg .fill { fill: #e5484d; }
+.panel.hidden { display: none; }
+
+/* ---------- the gallery: the newest screenshots and clips, between the columns at the bottom */
+.gallery { position: fixed; left: 348px; right: 348px; bottom: 48px; padding-bottom: 10px; opacity: 0; transform: translateY(12px);
+  transition: opacity .18s, transform .22s cubic-bezier(.2, .8, .2, 1); }
+body.on .gallery { opacity: 1; transform: none; }
+.gallery.hidden { display: none; }
+.strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.strip::-webkit-scrollbar { height: 6px; }
+.strip::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .15); border-radius: 3px; }
+.thumb { position: relative; flex: none; width: 176px; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; border: 1px solid var(--line);
+  background: var(--card); padding: 0; cursor: pointer; transition: border-color .15s; }
+.thumb:hover { border-color: var(--cyan); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .noimg { width: 100%; height: 100%; display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+.thumb.clip::after { content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+  background: rgba(0, 0, 0, .55); border: 1px solid rgba(255, 255, 255, .35); pointer-events: none; }
+.thumb.clip::before { content: ""; position: absolute; left: 50%; top: 50%; margin: -6px 0 0 -3px; border-left: 10px solid #fff;
+  border-top: 6px solid transparent; border-bottom: 6px solid transparent; z-index: 1; pointer-events: none; }
+.thumb span { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 6px 3px; font-size: 10px; text-align: left;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .7)); }
+
+/* ---------- a picture or clip shown big */
+.ovview { position: fixed; left: 348px; right: 348px; top: 70px; bottom: 48px; z-index: 4; display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px; background: rgba(6, 10, 12, .94); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px 48px; }
+.ovview.on { display: flex; }
+.ovview figure { margin: 0; flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.ovview img, .ovview video { max-width: 100%; max-height: calc(100% - 24px); border-radius: 8px; background: #000; }
+.ovview video { display: none; }
+.ovview.vid video { display: block; }
+.ovview.vid img { display: none; }
+.ovview figcaption { color: var(--muted); font-size: 11px; }
+.ovview .vbar { display: flex; gap: 8px; }
+.vnav { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 56px; border: 0; border-radius: 8px;
+  background: rgba(255, 255, 255, .06); color: var(--text); font-size: 26px; cursor: pointer; }
+.vnav:hover { background: rgba(255, 255, 255, .14); }
+.vnav.prev { left: 8px; }
+.vnav.next { right: 8px; }

@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('fz', {
     remove: () => ipcRenderer.invoke('rec:remove'),
     onProgress: cb => ipcRenderer.on('rec:progress', (e, d) => cb(d)),
     onSettings: cb => ipcRenderer.on('rec:settings', (e, d) => cb(d)),
+    onSound: cb => ipcRenderer.on('sound', (e, kind) => cb(kind)),
   },
   optifine: {
     status: () => ipcRenderer.invoke('optifine:status'),
@@ -71,8 +72,8 @@ contextBridge.exposeInMainWorld('fz', {
   shots: {
     list: () => ipcRenderer.invoke('shots:list'),
     copy: file => ipcRenderer.invoke('shots:copy', file),
-    reveal: file => ipcRenderer.invoke('shots:reveal', file),
-    remove: file => ipcRenderer.invoke('shots:remove', file),
+    reveal: (file, kind) => ipcRenderer.invoke('shots:reveal', file, kind),
+    remove: (file, kind) => ipcRenderer.invoke('shots:remove', file, kind),
   },
   accounts: {
     list: () => ipcRenderer.invoke('accounts:list'),

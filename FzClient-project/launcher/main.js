@@ -131,7 +131,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
   app.whenReady().then(() => {
     trimLog();
-    shots.handle(() => path.join(dirs().gameDir, 'screenshots'));
+    shots.handle(() => path.join(dirs().gameDir, 'screenshots'), () => path.join(dirs().gameDir, 'recordings'), recorder.ffmpegPath);
     createWindow();
     updater.startLauncherUpdates(send, log);
     // look for a new FzClient right away, so pressing Play does not have to wait for it
@@ -380,7 +380,7 @@ function hideOverlay() {
   if (play) play.link.send({ t: 'watch', on: false });
 }
 
-/** The REC mark in the corner of the game's monitor while the recorder runs (left out of captures, clicks go through). */
+/** The small recording mark in the bottom right of the game's monitor while the recorder runs (left out of captures, clicks go through). */
 let badge = null, badgeTimer = null, badgeReady = false;
 function updateBadge() {
   const r = play && play.capture ? play.capture.state() : null;
@@ -391,7 +391,7 @@ function updateBadge() {
   }
   if (!badge || badge.isDestroyed()) {
     badge = new BrowserWindow({
-      show: false, width: 220, height: 40, frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false,
+      show: false, width: 22, height: 22, frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false,
       resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, focusable: false,
       skipTaskbar: true, alwaysOnTop: true, title: 'FzClient REC',
       webPreferences: { preload: path.join(__dirname, 'src', 'overlay', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
@@ -409,7 +409,7 @@ function updateBadge() {
   if (!badge.isVisible()) {
     const { screen } = require('electron');
     const b = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds;
-    badge.setPosition(b.x + 14, b.y + 14);
+    badge.setPosition(b.x + b.width - 22 - 10, b.y + b.height - 22 - 10);   // bottom right, out of the way
     badge.showInactive();
   }
   // the game puts itself on top again whenever it gets the focus: stay over it
@@ -459,6 +459,7 @@ function startPlay(child, link, tools) {
   const capture = tools ? new Capture({
     game: { pid: child.pid, gameDir: dirs().gameDir }, tools, options: recOptions,
     notify: recNotify, changed: () => { pushOverlay(); updateBadge(); }, log,
+    sound: kind => { if (settings.get().recSound !== false) send('sound', kind); },   // the launcher's window plays it: never in the recording
   }) : null;
   play = { child, link, capture, active: false };
   link.on('message', gameMessage);
@@ -523,8 +524,11 @@ ipcMain.handle('rec:remove', () => {
 // ---------------------------------------------------------------- screenshots
 ipcMain.handle('shots:list', () => shots.list());
 ipcMain.handle('shots:copy', (e, file) => shots.copy(file));
-ipcMain.handle('shots:reveal', (e, file) => shots.reveal(file));
-ipcMain.handle('shots:remove', (e, file) => shots.remove(file));
+ipcMain.handle('shots:reveal', (e, file, kind) => shots.reveal(file, kind === 'clip' ? 'clip' : 'shot'));
+ipcMain.handle('shots:remove', (e, file, kind) => shots.remove(file, kind === 'clip' ? 'clip' : 'shot'));
+// the overlay's gallery
+ipcMain.handle('ov:gallery', () => shots.list().slice(0, 60));
+ipcMain.on('ov:reveal', (e, file, kind) => { hideOverlay(); shots.reveal(file, kind === 'clip' ? 'clip' : 'shot'); });
 
 // ---------------------------------------------------------------- accounts
 function publicAccount(a) {

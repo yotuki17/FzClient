@@ -1,9 +1,6 @@
-html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; user-select: none;
-  font: 600 13px/1 "Segoe UI", "Yu Gothic UI", "Meiryo", system-ui, sans-serif; color: #fff; }
-.badge { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px;
-  border-radius: 8px; background: rgba(10, 16, 18, .72); border: 1px solid rgba(255, 255, 255, .12); white-space: nowrap; }
-.badge i { width: 10px; height: 10px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 8px #e5484d; }
-.badge.rec i { animation: blink 1.2s ease-in-out infinite; }
-.badge.replay i { background: #5ce1e6; box-shadow: 0 0 6px #5ce1e6; }
-.badge.replay { opacity: .8; font-weight: 400; }
-@keyframes blink { 50% { opacity: .25; } }
+html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
+/* a small dot, nothing else: red and blinking while recording, a quiet cyan while the last seconds are kept */
+.dot { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  background: #5ce1e6; opacity: .55; box-shadow: 0 0 0 2px rgba(0, 0, 0, .35); }
+.dot.rec { background: #e5484d; opacity: 1; box-shadow: 0 0 0 2px rgba(0, 0, 0, .35), 0 0 8px #e5484d; animation: blink 1.2s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .3; } }

@@ -352,3 +352,13 @@ input[type=range] { flex: 1; accent-color: var(--cyan); }
 .list .card.sel, .shot.sel { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset; }
 /* a mod that does the same job as a part of FzClient, or is known to be heavy */
 .card small.warn, .note.warn { color: #ffcf6b; }
+
+/* ---------- clips in the gallery */
+.shot.clip::after { content: ""; position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%;
+  background: rgba(0,0,0,.55) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 7v10l8-5z' fill='white'/%3E%3C/svg%3E") center / 22px no-repeat;
+  border: 1px solid rgba(255,255,255,.35); pointer-events: none; }
+.shot .noimg { width: 100%; height: 100%; display: grid; place-items: center; color: var(--muted); font-size: 12px; background: var(--panel2); }
+.shot .tag { position: absolute; top: 6px; left: 6px; padding: 1px 7px; border-radius: 6px; font-size: 10px; font-weight: 600; background: rgba(232,62,206,.85); color: #fff; }
+.viewer video { max-width: 100%; max-height: calc(100vh - 190px); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.6); background: #000; display: none; }
+.viewer.vid video { display: block; }
+.viewer.vid img { display: none; }

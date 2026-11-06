@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy"
-      content="default-src 'self'; img-src 'self' data: https://mc-heads.net https://cdn.modrinth.com https://media.forgecdn.net fzshot:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+      content="default-src 'self'; img-src 'self' data: https://mc-heads.net https://cdn.modrinth.com https://media.forgecdn.net fzshot:; media-src fzshot:; style-src 'self' 'unsafe-inline'; script-src 'self'">
 <title>FzClient Launcher</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -28,8 +28,8 @@
     <svg viewBox="0 0 24 24"><path d="M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3a4 4 0 0 1-8 0z"/></svg><span>スキン</span></button>
   <button class="nav" data-page="opt" title="最適化">
     <svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><span>最適化</span></button>
-  <button class="nav" data-page="shots" title="スクショ">
-    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>スクショ</span></button>
+  <button class="nav" data-page="shots" title="ギャラリー">
+    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>ギャラリー</span></button>
   <button class="nav" data-page="settings" title="設定">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>設定</span></button>
   <div class="grow"></div>
@@ -51,12 +51,12 @@
       <div class="status" id="status"></div>
     </div>
     <div class="news">
-      <div class="news-h">FzClient 1.0.26</div>
+      <div class="news-h">FzClient 1.0.27</div>
       <ul>
         <li>NEW：Alt+X のオーバーレイと録画をランチャーで（どのサーバーでも）</li>
-        <li>録画：音が途切れない・ずっと止まらない・左上に REC マーク</li>
+        <li>録画：開始・停止の音、右下に小さな録画マーク、キーと秒数を Alt+X で</li>
         <li>最適化：Windows・ネットワーク・NVIDIA・Java の設定と FPS 計測</li>
-        <li>スキン・マントの切り替え、スクショを見る</li>
+        <li>NEW：ギャラリー・スクショとクリップをランチャーとオーバーレイで</li>
         <li>Modrinth と CurseForge から MOD を探して入れる・自動で更新</li>
         <li>HUD・Keystrokes・CPS・リーチ表示を自由に配置</li>
         <li>ズーム、1.7 アニメーション、ブロックアウトライン</li>
@@ -184,8 +184,9 @@
 
   <!-- SCREENSHOTS -->
   <section class="page" id="page-shots">
-    <h1>スクリーンショット</h1>
+    <h1>スクリーンショット・クリップ</h1>
     <div class="row-actions">
+      <div class="seg" id="galKind"><button data-k="all" class="on">すべて</button><button data-k="shot">スクショ</button><button data-k="clip">クリップ</button></div>
       <button class="btn" id="shotFolder">フォルダを開く</button>
       <button class="btn" id="shotReload">再読み込み</button>
       <span class="count" id="shotCount"></span>
@@ -235,8 +236,12 @@
       <div class="ctl"><label class="chk"><input type="checkbox" id="recReplay"> 残しておく</label><input type="number" id="recSec" min="10" max="120" step="5"> 秒</div>
     </div>
     <div class="set">
-      <label>録画中のマーク<small>録画しているあいだ、画面の左上に REC と出します（録画には映りません）</small></label>
+      <label>録画中のマーク<small>録画しているあいだ、画面の右下に小さな印を出します（録画には映りません）</small></label>
       <div class="ctl"><label class="chk"><input type="checkbox" id="recBadge"> 表示する</label></div>
+    </div>
+    <div class="set">
+      <label>録画の音<small>録画の開始・停止と、直前を保存したときに音を鳴らします（録画には入りません）</small></label>
+      <div class="ctl"><label class="chk"><input type="checkbox" id="recSound"> 鳴らす</label></div>
     </div>
     <div class="set">
       <label>ログ</label>
@@ -296,7 +301,7 @@
 
 <div class="viewer" id="viewer">
   <button class="vnav prev" id="vPrev">‹</button>
-  <figure><img id="vImg" alt=""><figcaption id="vCap"></figcaption></figure>
+  <figure><img id="vImg" alt=""><video id="vVid" controls preload="metadata"></video><figcaption id="vCap"></figcaption></figure>
   <button class="vnav next" id="vNext">›</button>
   <div class="vbar">
     <button class="btn" id="vCopy">コピー</button>

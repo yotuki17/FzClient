@@ -18,4 +18,7 @@ contextBridge.exposeInMainWorld('fzo', {
   setReplaySeconds: s => ipcRenderer.send('ov:seconds', s | 0),
   openMenu: () => ipcRenderer.send('ov:menu'),
   openFolder: () => ipcRenderer.send('ov:folder'),
+  /** The newest screenshots and clips: [{ file, kind, time }] */
+  gallery: () => ipcRenderer.invoke('ov:gallery'),
+  reveal: (file, kind) => ipcRenderer.send('ov:reveal', String(file), String(kind)),
 });

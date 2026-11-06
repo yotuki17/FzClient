@@ -34,8 +34,8 @@ class Capture {
    * game: { pid, gameDir }, tools: { ffmpeg, helper }, options(): { replay, replaySeconds, area, fps },
    * notify(text, error): a finished save (or a failure), changed(): the state changed.
    */
-  constructor({ game, tools, options, notify, changed, log }) {
-    Object.assign(this, { game, tools, options, notify, changed, log });
+  constructor({ game, tools, options, notify, changed, log, sound }) {
+    Object.assign(this, { game, tools, options, notify, changed, log, sound: sound || (() => {}) });
     this.helper = null;
     this.startedAt = 0;
     this.encoder = 0;
@@ -80,6 +80,7 @@ class Capture {
       this.waiting.push({ from: this.recordFrom, to: this.newest(), name: `FzClient_${stamp()}.mp4`, stopAfter: true });
       this.recordFrom = -1;
       this.setStatus('保存しています…');
+      this.sound('stop');
       return;
     }
     this.gaveUp = false;   // asked for by hand: every encoder gets another chance
@@ -89,6 +90,7 @@ class Capture {
     this.recordFrom = Math.max(this.base, this.newest());
     this.recordStartedAt = Date.now();
     this.setStatus('録画中');
+    this.sound('start');
   }
 
   /** Saves the last N seconds (only while they are being kept). */
@@ -101,6 +103,7 @@ class Capture {
     const to = this.newest();
     this.waiting.push({ from: Math.max(this.base, to - Math.ceil(o.replaySeconds / 2) + 1), to, name: `FzClient_replay_${stamp()}.mp4`, stopAfter: false });
     this.setStatus('保存しています…');
+    this.sound('save');
   }
 
   /** The options changed (the "keep the last seconds" switch, area, FPS): start again where it matters. */

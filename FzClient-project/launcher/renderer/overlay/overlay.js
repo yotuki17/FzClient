@@ -14,10 +14,13 @@ fzo.onShow(() => {
   stats = null;
   render();
   drawStats();
+  loadGallery();
   requestAnimationFrame(() => document.body.classList.add('on'));
 });
 document.addEventListener('keydown', e => {
   if (waiting) return;   // choosing a key: see keyCapture
+  if (e.key === 'Escape' && viewIdx >= 0) { e.preventDefault(); closeView(); return; }   // the big picture first
+  if (viewIdx >= 0 && e.target.tagName !== 'VIDEO' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { openView(viewIdx + (e.key === 'ArrowLeft' ? -1 : 1)); return; }
   if (e.key === 'Escape' || (e.altKey && (e.key === 'x' || e.key === 'X'))) { e.preventDefault(); close(); }
 });
 $('veil').onclick = close;
@@ -254,3 +257,90 @@ fzo.onStats(s => {
   drawKeys(s.keys || []);
   $('keyBox').style.display = state.link && s.keys ? '' : 'none';
 });
+
+// ---------------------------------------------------------------- the bar: which panels are shown (kept on this PC)
+const PANELS = ['perf', 'rec', 'gallery', 'quick'];
+let shown = { perf: true, rec: true, gallery: true, quick: true };
+try { Object.assign(shown, JSON.parse(localStorage.getItem('ovPanels') || '{}')); } catch { /* fresh */ }
+function applyPanels() {
+  for (const p of PANELS) {
+    $(p).classList.toggle('hidden', !shown[p]);
+    document.querySelector(`#bar [data-p="${p}"]`).classList.toggle('on', !!shown[p]);
+  }
+  if (!shown.gallery) closeView();
+}
+document.querySelectorAll('#bar button').forEach(b => {
+  b.onclick = () => {
+    shown[b.dataset.p] = !shown[b.dataset.p];
+    try { localStorage.setItem('ovPanels', JSON.stringify(shown)); } catch { /* not kept */ }
+    applyPanels();
+    if (b.dataset.p === 'gallery' && shown.gallery) loadGallery();
+  };
+});
+
+// ---------------------------------------------------------------- gallery: the newest screenshots and clips
+let gallery = [], viewIdx = -1, lastStatus = '';
+const src = (s, big) => 'fzshot://' + (s.kind === 'clip' ? (big ? 'clip' : 'cthumb') : (big ? 'img' : 'thumb')) + '/' + encodeURIComponent(s.file);
+
+async function loadGallery() {
+  if (!shown.gallery) return;
+  try { gallery = await fzo.gallery(); } catch { gallery = []; }
+  const box = $('strip');
+  box.innerHTML = '';
+  $('galEmpty').style.display = gallery.length ? 'none' : '';
+  gallery.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'thumb' + (s.kind === 'clip' ? ' clip' : '');
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.alt = '';
+    img.src = src(s, false);
+    img.onerror = () => { const d = document.createElement('div'); d.className = 'noimg'; d.textContent = t('クリップ'); img.replaceWith(d); };
+    const cap = document.createElement('span');
+    cap.textContent = new Date(s.time).toLocaleString();
+    b.append(img, cap);
+    b.onclick = () => openView(i);
+    box.appendChild(b);
+  });
+}
+
+function openView(i) {
+  if (!gallery.length) return;
+  viewIdx = (i + gallery.length) % gallery.length;
+  const s = gallery[viewIdx], clip = s.kind === 'clip', v = $('ovVid');
+  $('ovView').classList.toggle('vid', clip);
+  if (clip) {
+    $('ovImg').removeAttribute('src');
+    v.src = src(s, true);
+    v.play().catch(() => {});
+  } else {
+    stopVideo();
+    $('ovImg').src = src(s, true);
+  }
+  $('ovCap').textContent = `${s.file}  ·  ${viewIdx + 1} / ${gallery.length}`;
+  $('ovView').classList.add('on');
+}
+function stopVideo() {
+  const v = $('ovVid');
+  v.pause();
+  v.removeAttribute('src');
+  v.load();
+}
+function closeView() {
+  stopVideo();
+  $('ovView').classList.remove('on');
+  viewIdx = -1;
+}
+$('ovPrev').onclick = () => openView(viewIdx - 1);
+$('ovNext').onclick = () => openView(viewIdx + 1);
+$('ovClose').onclick = closeView;
+$('ovReveal').onclick = () => { const s = gallery[viewIdx]; if (s) { closeView(); fzo.reveal(s.file, s.kind); } };
+$('galFolder').onclick = () => fzo.openFolder();
+// a new clip was saved while the overlay is open: show it
+fzo.onState(s => {
+  const st = (s.rec && s.rec.status) || '';
+  if (st !== lastStatus && /^保存しました/.test(st)) loadGallery();
+  lastStatus = st;
+});
+window.addEventListener('blur', closeView);
+applyPanels();

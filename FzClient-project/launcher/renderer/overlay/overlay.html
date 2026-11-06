@@ -2,12 +2,18 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' fzshot:; media-src fzshot:; style-src 'self'; script-src 'self'">
 <title>FzClient Overlay</title>
 <link rel="stylesheet" href="overlay.css">
 </head>
 <body>
 <div class="veil" id="veil"></div>
+<div class="bar" id="bar">
+  <button data-p="perf" title="パフォーマンス"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 6-8"/><path d="M3 21h18"/></svg></button>
+  <button data-p="rec" title="録画"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" class="fill"/></svg></button>
+  <button data-p="gallery" title="ギャラリー"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg></button>
+  <button data-p="quick" title="クイック設定"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+</div>
 
 <div class="col left">
   <section class="panel" id="perf">
@@ -47,6 +53,17 @@
   </section>
 </div>
 
+<section class="panel gallery" id="gallery">
+  <h2>ギャラリー<span class="enc"><button class="link" id="galFolder">フォルダを開く</button></span></h2>
+  <div class="strip" id="strip"></div>
+  <p class="note" id="galEmpty">まだスクリーンショットもクリップもありません</p>
+</section>
+<div class="ovview" id="ovView">
+  <button class="vnav prev" id="ovPrev">‹</button>
+  <figure><img id="ovImg" alt=""><video id="ovVid" controls></video><figcaption id="ovCap"></figcaption></figure>
+  <button class="vnav next" id="ovNext">›</button>
+  <div class="vbar"><button class="btn" id="ovReveal">フォルダで表示</button><button class="btn" id="ovClose">閉じる</button></div>
+</div>
 <div class="hint">Alt+X / Esc で閉じる</div>
 <script src="../i18n.js"></script>
 <script src="overlay.js"></script>

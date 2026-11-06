@@ -164,4 +164,7 @@ function remove() {
   fs.rmSync(dir(), { recursive: true, force: true });
 }
 
-module.exports = { status, prepare, forLaunch, remove };
+/** ffmpeg, when it is there (the gallery makes pictures of clips with it). */
+function ffmpegPath() { return fs.existsSync(ffmpegExe()) ? ffmpegExe() : null; }
+
+module.exports = { status, prepare, forLaunch, remove, ffmpegPath };

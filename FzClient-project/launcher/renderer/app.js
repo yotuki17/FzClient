@@ -511,31 +511,58 @@ document.querySelectorAll('#mrSource button').forEach(b => b.onclick = () => {
   mrSearch(true);
 });
 
-// ---------------------------------------------------------------- screenshots
-let shotList = [], shotIdx = -1;
+// ---------------------------------------------------------------- screenshots and clips
+let shotList = [], shotIdx = -1, galKind = 'all';
 async function loadShots() {
-  shotList = await fz.shots.list();
+  const all = await fz.shots.list();
+  shotList = galKind === 'all' ? all : all.filter(s => s.kind === galKind);
   const g = $('shotGrid');
   g.innerHTML = '';
-  $('shotCount').textContent = t('{0} 枚', shotList.length);
-  if (!shotList.length) g.appendChild(el('div', 'empty', t('まだスクリーンショットがありません。ゲーム中に F2 で撮れます。')));
+  const nShot = all.filter(s => s.kind === 'shot').length, nClip = all.length - nShot;
+  $('shotCount').textContent = t('スクショ {0} 枚・クリップ {1} 本', nShot, nClip);
+  if (!shotList.length) {
+    g.appendChild(el('div', 'empty', galKind === 'clip'
+      ? t('まだクリップがありません。ゲーム中に Alt+X から録画できます。')
+      : t('まだスクリーンショットがありません。ゲーム中に F2 で撮れます。')));
+  }
   shotList.forEach((s, i) => {
-    const b = el('button', 'shot');
+    const b = el('button', 'shot' + (s.kind === 'clip' ? ' clip' : ''));
     const img = el('img');
     img.loading = 'lazy';
     img.alt = '';
-    img.src = 'fzshot://thumb/' + encodeURIComponent(s.file);
+    img.src = (s.kind === 'clip' ? 'fzshot://cthumb/' : 'fzshot://thumb/') + encodeURIComponent(s.file);
+    img.onerror = () => img.replaceWith(el('div', 'noimg', t('クリップ')));
     b.appendChild(img);
+    if (s.kind === 'clip') b.appendChild(el('i', 'tag', /_replay_/.test(s.file) ? t('直前') : t('クリップ')));
     b.appendChild(el('span', null, esc(new Date(s.time).toLocaleString())));
     b.onclick = () => openShot(i);
     g.appendChild(b);
   });
 }
+document.querySelectorAll('#galKind button').forEach(b => {
+  b.onclick = () => {
+    galKind = b.dataset.k;
+    document.querySelectorAll('#galKind button').forEach(x => x.classList.toggle('on', x === b));
+    closeShot();
+    loadShots();
+  };
+});
 function openShot(i) {
   if (!shotList.length) { closeShot(); return; }
   shotIdx = (i + shotList.length) % shotList.length;
-  const s = shotList[shotIdx];
-  $('vImg').src = 'fzshot://img/' + encodeURIComponent(s.file);
+  const s = shotList[shotIdx], clip = s.kind === 'clip', v = $('vVid');
+  $('viewer').classList.toggle('vid', clip);
+  if (clip) {
+    $('vImg').removeAttribute('src');
+    v.src = 'fzshot://clip/' + encodeURIComponent(s.file);
+    v.play().catch(() => {});
+  } else {
+    v.pause();
+    v.removeAttribute('src');
+    v.load();
+    $('vImg').src = 'fzshot://img/' + encodeURIComponent(s.file);
+  }
+  $('vCopy').style.display = clip ? 'none' : '';
   $('vCap').textContent = `${s.file}  ·  ${shotIdx + 1} / ${shotList.length}`;
   $('vDel').textContent = t('削除');
   $('vDel').classList.remove('sure');
@@ -543,6 +570,10 @@ function openShot(i) {
   document.querySelectorAll('#shotGrid .shot').forEach((b, j) => b.classList.toggle('sel', j === shotIdx));
 }
 function closeShot() {
+  const v = $('vVid');
+  v.pause();
+  v.removeAttribute('src');
+  v.load();
   $('viewer').classList.remove('on');
   shotIdx = -1;
   document.querySelectorAll('#shotGrid .shot.sel').forEach(b => b.classList.remove('sel'));
@@ -554,12 +585,12 @@ $('vNext').onclick = () => openShot(shotIdx + 1);
 $('vClose').onclick = closeShot;
 $('viewer').onclick = e => { if (e.target === $('viewer') && !docked()) closeShot(); };
 $('vCopy').onclick = async () => { try { await fz.shots.copy(shotList[shotIdx].file); toast(t('画像をコピーしました')); } catch (e) { toast(errText(e), true); } };
-$('vReveal').onclick = () => fz.shots.reveal(shotList[shotIdx].file);
+$('vReveal').onclick = () => fz.shots.reveal(shotList[shotIdx].file, shotList[shotIdx].kind);
 $('vDel').onclick = async () => {
   const b = $('vDel');
   if (!b.classList.contains('sure')) { b.classList.add('sure'); b.textContent = t('もう一度押すと削除'); return; }
   try {
-    await fz.shots.remove(shotList[shotIdx].file);
+    await fz.shots.remove(shotList[shotIdx].file, shotList[shotIdx].kind);
     toast(t('ごみ箱に移しました'));
     const keep = shotIdx;
     await loadShots();
@@ -567,12 +598,12 @@ $('vDel').onclick = async () => {
   } catch (e) { toast(errText(e), true); }
 };
 document.addEventListener('keydown', e => {
-  if (shotIdx < 0) return;
+  if (shotIdx < 0 || e.target.tagName === 'VIDEO') return;   // the player uses the arrows to seek
   if (e.key === 'ArrowLeft') openShot(shotIdx - 1);
   else if (e.key === 'ArrowRight') openShot(shotIdx + 1);
   else if (e.key === 'Escape') closeShot();
 });
-$('shotFolder').onclick = () => fz.open.folder('screenshots');
+$('shotFolder').onclick = () => fz.open.folder(galKind === 'clip' ? 'recordings' : 'screenshots');
 $('shotReload').onclick = loadShots;
 
 // ---------------------------------------------------------------- settings
@@ -637,8 +668,10 @@ function showRecSettings(s) {
   $('recReplay').checked = !!s.recReplay;
   $('recSec').value = s.recReplaySeconds || 30;
   $('recBadge').checked = s.recBadge !== false;
+  $('recSound').checked = s.recSound !== false;
 }
 $('recBadge').onchange = () => save({ recBadge: $('recBadge').checked });
+$('recSound').onchange = () => save({ recSound: $('recSound').checked });
 $('recArea').onchange = () => save({ recArea: $('recArea').value });
 $('recFps').onchange = () => save({ recFps: +$('recFps').value });
 $('recReplay').onchange = () => save({ recReplay: $('recReplay').checked });
@@ -1201,3 +1234,27 @@ $('optMeasure').onclick = async () => {
   btn.disabled = false;
   btn.textContent = t('計測');
 };
+
+// ---------------------------------------------------------------- recording sounds (played here, so they are never recorded)
+// start: two notes going up, stop: two going down, "saved the last seconds": one short chime.
+let soundCtx = null;
+fz.rec.onSound(kind => {
+  try {
+    soundCtx = soundCtx || new AudioContext();
+    const notes = { start: [660, 990], stop: [990, 660], save: [1320] }[kind];
+    if (!notes) return;
+    const now = soundCtx.currentTime;
+    notes.forEach((f, i) => {
+      const o = soundCtx.createOscillator(), g = soundCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = f;
+      const at = now + i * 0.11;
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.18, at + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + (kind === 'save' ? 0.35 : 0.16));
+      o.connect(g).connect(soundCtx.destination);
+      o.start(at);
+      o.stop(at + 0.4);
+    });
+  } catch { /* no sound device */ }
+});
