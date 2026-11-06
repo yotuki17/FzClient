@@ -406,8 +406,7 @@ public final class Modules {
     public static final BoolSetting historyOn = chat.add(new BoolSetting("history", "チャットとコマンドの履歴を残す", true));
     public static final BoolSetting historyKeep = chat.add(new BoolSetting("keep", "メニューやサーバー移動でチャットを消さない", true));
     public static final BoolSetting historySent = chat.add(new BoolSetting("sent", "送信履歴（↑キー）を次回に引き継ぐ", true));
-    public static final BoolSetting historyRestore = chat.add(new BoolSetting("restore", "前回のチャットを起動時に復元する", true));
-    public static final SliderSetting historyLines = chat.add(new SliderSetting("lines", "復元する行数", 20, 100, 10, 100, "行"));
+    public static final SliderSetting historyScroll = chat.add(new SliderSetting("scrollback", "さかのぼれるチャットの行数（ゲーム中ずっと）", 500, 20000, 500, 10000, "行"));
     public static final BoolSetting historyLog = chat.add(new BoolSetting("log", "チャットを日付別ファイルに保存", true));
 
     public static final HeaderSetting chatHead5 = chat.add(new HeaderSetting("h_ime", "日本語入力"));

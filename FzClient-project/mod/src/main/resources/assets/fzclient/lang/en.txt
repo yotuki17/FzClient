@@ -146,8 +146,7 @@ DeepLのAPIキー	DeepL API key
 チャットとコマンドの履歴を残す	Keep chat and command history
 メニューに戻ってもサーバーを移動してもチャットを消さない	Keep chat when leaving to the menu or switching servers
 送ったメッセージ・コマンドの履歴（↑キー）を次回の起動に引き継ぐ	Keep sent messages / commands (Up key) across restarts
-前回のチャットを起動時に復元する	Restore the last chat on startup
-復元する行数	Lines to restore
+さかのぼれるチャットの行数（ゲーム中ずっと）	Chat scrollback lines (whole session)
 行	 lines
 チャットを日付ごとのファイルに保存（logs/fzclient-chat）	Save chat to a file per day (logs/fzclient-chat)
 日本語入力	Japanese input
@@ -160,7 +159,6 @@ DeepLのAPIキー	DeepL API key
 [別ウィンドウ] Enterでそのまま送信（OFFならチャット欄に入れるだけ）	[Window] Enter sends (off: just fills the chat box)
 クロマ（虹色）の流れる速さ	Speed of the chroma (rainbow) color
 1周にかかる秒数	Seconds per cycle
-ここまで前回のチャット	End of previous chat
 最近送ったメッセージ	Recent messages
 最近使ったコマンド	Recent commands
 （クリックでチャット欄に入れる）	 (click to put it in the chat box)

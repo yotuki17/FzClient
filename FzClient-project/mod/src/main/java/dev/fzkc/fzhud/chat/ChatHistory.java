@@ -9,7 +9,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.multiplayer.ServerData;
@@ -20,7 +19,6 @@ import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatStyle;
 import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -33,7 +31,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -47,7 +44,8 @@ import java.util.concurrent.Executors;
 /**
  * Chat and command history that survives:
  *  - going back to the main menu / switching servers (vanilla wipes both)
- *  - restarting the game (sent messages for the ↑ key, and the last chat lines)
+ *  - restarting the game (only the sent messages for the ↑ key)
+ *  - the vanilla 100-line limit: the whole session stays in the chat box to scroll back through
  * Also writes every chat line to a text file per day, and /fzhistory lists past commands to click on.
  */
 public final class ChatHistory {
@@ -68,12 +66,21 @@ public final class ChatHistory {
         return new File(Minecraft.getMinecraft().mcDataDir, "logs/fzclient-chat");
     }
 
-    // ============================================================ save / restore
+    // ============================================================ scrollback
+
+    /**
+     * Used by MixinGuiNewChat: how many chat lines the chat box keeps while the game runs (vanilla 100), so you can
+     * scroll far back through everything said in this session. Nothing of it is kept for the next launch.
+     */
+    public static int maxLines() {
+        return Modules.chatHistoryEnabled() ? Math.max(100, (int) Modules.historyScroll.get()) : 100;
+    }
+
+    // ============================================================ sent messages (Up key) for the next launch
 
     private static boolean restored;
     private static long nextSave;
     private static int savedHash;
-    private static Field chatLinesField;
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
@@ -89,37 +96,12 @@ public final class ChatHistory {
         long now = System.currentTimeMillis();
         if (restored && now > nextSave) {
             nextSave = now + 60000L;
-            int h = stateHash();
+            int h = mc.ingameGUI.getChatGUI().getSentMessages().hashCode();
             if (h != savedHash) {
                 savedHash = h;
                 final JsonObject data = snapshot();
                 IO.execute(() -> write(data));
             }
-        }
-    }
-
-    private static int stateHash() {
-        GuiNewChat chat = Minecraft.getMinecraft().ingameGUI.getChatGUI();
-        List<ChatLine> lines = chatLines(chat);
-        return chat.getSentMessages().size() * 31 + (lines == null || lines.isEmpty() ? 0 : lines.get(0).getUpdatedCounter() * 17 + lines.size());
-    }
-
-    @SuppressWarnings("unchecked")
-    private static List<ChatLine> chatLines(GuiNewChat chat) {
-        try {
-            if (chatLinesField == null) {
-                for (String n : new String[]{"chatLines", "field_146252_h"}) {
-                    try {
-                        chatLinesField = GuiNewChat.class.getDeclaredField(n);
-                        chatLinesField.setAccessible(true);
-                        break;
-                    } catch (NoSuchFieldException ignored) {
-                    }
-                }
-            }
-            return chatLinesField == null ? null : (List<ChatLine>) chatLinesField.get(chat);
-        } catch (Throwable t) {
-            return null;
         }
     }
 
@@ -129,25 +111,10 @@ public final class ChatHistory {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.ingameGUI == null) return root;
         GuiNewChat chat = mc.ingameGUI.getChatGUI();
-
         JsonArray sent = new JsonArray();
         List<String> s = new ArrayList<>(chat.getSentMessages());
         for (int i = Math.max(0, s.size() - MAX_SENT); i < s.size(); i++) sent.add(new com.google.gson.JsonPrimitive(s.get(i)));
         root.add("sent", sent);
-
-        JsonArray lines = new JsonArray();
-        List<ChatLine> cl = chatLines(chat);
-        if (cl != null) {
-            int max = (int) Modules.historyLines.get();
-            // chatLines is newest first; store oldest first
-            for (int i = Math.min(cl.size(), max) - 1; i >= 0; i--) {
-                try {
-                    lines.add(new com.google.gson.JsonPrimitive(IChatComponent.Serializer.componentToJson(cl.get(i).getChatComponent())));
-                } catch (Throwable ignored) {
-                }
-            }
-        }
-        root.add("chat", lines);
         return root;
     }
 
@@ -167,14 +134,14 @@ public final class ChatHistory {
 
     private static void save() {
         try {
-            if (!Modules.chatHistoryEnabled()) return;
+            if (!Modules.chatHistoryEnabled() || !Modules.historySent.get()) return;
             write(snapshot());
         } catch (Throwable ignored) {
         }
     }
 
     private static void restore() {
-        if (!Modules.chatHistoryEnabled()) return;
+        if (!Modules.chatHistoryEnabled() || !Modules.historySent.get()) return;
         File f = new File(dir(), "history.json");
         if (!f.exists()) return;
         try {
@@ -186,22 +153,8 @@ public final class ChatHistory {
                 r.close();
             }
             GuiNewChat chat = Minecraft.getMinecraft().ingameGUI.getChatGUI();
-            if (Modules.historySent.get() && root.has("sent") && chat.getSentMessages().isEmpty()) {
+            if (root.has("sent") && chat.getSentMessages().isEmpty()) {
                 for (JsonElement e : root.getAsJsonArray("sent")) chat.addToSentMessages(e.getAsString());
-            }
-            if (Modules.historyRestore.get() && root.has("chat")) {
-                int n = 0;
-                for (JsonElement e : root.getAsJsonArray("chat")) {
-                    try {
-                        chat.printChatMessage(IChatComponent.Serializer.jsonToComponent(e.getAsString()));
-                        n++;
-                    } catch (Throwable ignored) {
-                    }
-                }
-                if (n > 0) {
-                    chat.printChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GRAY + "──── "
-                            + EnumChatFormatting.GRAY + Lang.t("ここまで前回のチャット") + EnumChatFormatting.DARK_GRAY + " ────"));
-                }
             }
         } catch (Throwable ignored) {
         }

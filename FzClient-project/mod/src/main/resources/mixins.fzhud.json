@@ -25,6 +25,7 @@
     "MixinRenderItem",
     "MixinInventoryEffectRenderer",
     "MixinNetHandlerPlayClient",
-    "MixinRendererLivingEntity"
+    "MixinRendererLivingEntity",
+    "MixinGuiNewChat"
   ]
 }

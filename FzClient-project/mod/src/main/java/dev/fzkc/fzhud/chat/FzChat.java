@@ -231,23 +231,44 @@ public class FzChat extends GuiNewChat {
         unread[tab] = false;
     }
 
-    private void remap(List<ChatLine> drawn, List<ChatLine> all) {
-        Map<ChatLine, Msg> keep = new IdentityHashMap<ChatLine, Msg>();
-        for (ChatLine full : all) {
-            Msg m = msgs.get(full);
-            if (m == null) {
-                String plain = EnumChatFormatting.getTextWithoutFormattingCodes(full.getChatComponent().getUnformattedText());
-                m = new Msg(full, classify(plain), sender(plain));
-                if (mapped && m.cat != ALL && m.cat != tab) unread[m.cat] = true;
-            }
-            keep.put(full, m);
+    private Msg msgOf(ChatLine full) {
+        Msg m = msgs.get(full);
+        if (m == null) {
+            String plain = EnumChatFormatting.getTextWithoutFormattingCodes(full.getChatComponent().getUnformattedText());
+            m = new Msg(full, classify(plain), sender(plain));
+            if (mapped && m.cat != ALL && m.cat != tab) unread[m.cat] = true;
         }
+        return m;
+    }
+
+    private void remap(List<ChatLine> drawn, List<ChatLine> all) {
+        // The chat keeps the whole session (thousands of lines): when only new lines came in on top, map just
+        // those instead of re-wrapping every message. A full rebuild only after a refresh (all lines are new
+        // objects then) or once enough removed lines are left in the maps.
+        boolean known = !drawn.isEmpty() && !all.isEmpty() && pieces.containsKey(drawn.get(drawn.size() - 1))
+                && msgs.containsKey(all.get(all.size() - 1));
+        boolean full = !known || msgs.size() > all.size() + 300 || pieces.size() > drawn.size() + 600;
+        if (!full) {
+            for (ChatLine l : all) {
+                if (msgs.containsKey(l)) break;
+                msgs.put(l, msgOf(l));
+            }
+            int newDrawn = 0;
+            while (newDrawn < drawn.size() && !pieces.containsKey(drawn.get(newDrawn))) newDrawn++;
+            mapPieces(drawn.subList(0, newDrawn), all);
+            return;
+        }
+        Map<ChatLine, Msg> keep = new IdentityHashMap<ChatLine, Msg>();
+        for (ChatLine l : all) keep.put(l, msgOf(l));
         msgs.clear();
         msgs.putAll(keep);
         mapped = true;
-
-        // drawn lines are newest first; each message's pieces sit together, its top line last
         pieces.clear();
+        mapPieces(drawn, all);
+    }
+
+    /** Drawn lines are newest first; each message's pieces sit together, its top line last. */
+    private void mapPieces(List<ChatLine> drawn, List<ChatLine> all) {
         int width = MathHelper.floor_float(getChatWidth() / getChatScale());
         int p = 0, left = 0;
         Msg cur = null;

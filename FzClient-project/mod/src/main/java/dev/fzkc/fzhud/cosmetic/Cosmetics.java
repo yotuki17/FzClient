@@ -84,9 +84,21 @@ public final class Cosmetics {
         return me != null && me.equals(p.getUniqueID());
     }
 
+    /**
+     * Invisible: the invisible flag the server sends, or an Invisibility effect the client knows about (your own
+     * potions always, other players' when the server sends their effects). Either way no cosmetics are drawn.
+     */
+    public static boolean invisible(EntityPlayer p) {
+        try {
+            return p.isInvisible() || p.isPotionActive(net.minecraft.potion.Potion.invisibility);
+        } catch (Throwable t) {
+            return p.isInvisible();
+        }
+    }
+
     /** What this player wears, or null for nothing. Never anything on invisible players. */
     public static Equip of(EntityPlayer p) {
-        if (p == null || p.isInvisible()) return null;
+        if (p == null || invisible(p)) return null;
         if (isMe(p)) {
             Equip e = mine();
             return e.empty() ? null : e;

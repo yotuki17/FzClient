@@ -15,6 +15,11 @@ public abstract class MixinAbstractClientPlayer {
     @Inject(require = 0, method = "getLocationCape", at = @At("HEAD"), cancellable = true)
     private void fzhud$cosmeticCape(CallbackInfoReturnable<ResourceLocation> cir) {
         try {
+            AbstractClientPlayer self = (AbstractClientPlayer) (Object) this;
+            if (Cosmetics.invisible(self)) {
+                cir.setReturnValue(null);   // no cape at all on an invisible player (any cape, not just ours)
+                return;
+            }
             ResourceLocation rl = Cosmetics.cape((AbstractClientPlayer) (Object) this);
             if (rl != null) cir.setReturnValue(rl);
         } catch (Throwable ignored) {

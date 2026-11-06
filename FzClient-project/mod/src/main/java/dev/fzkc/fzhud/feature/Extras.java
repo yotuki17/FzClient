@@ -248,7 +248,7 @@ public final class Extras {
     private static String lastKey;
     private static int repeat;
     private static IChatComponent lastShown;
-    private static Field chatLinesField;
+    private static Field chatLinesField, drawnLinesField;
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onChat(ClientChatReceivedEvent event) {
@@ -275,6 +275,7 @@ public final class Extras {
     }
 
     /** Removes the newest chat line if it is the one we printed last (for "(x2)" stacking). */
+    @SuppressWarnings("unchecked")
     private static boolean removeNewest(IChatComponent shown) {
         if (shown == null) return false;
         try {
@@ -293,8 +294,29 @@ public final class Extras {
             @SuppressWarnings("unchecked")
             List<ChatLine> lines = (List<ChatLine>) chatLinesField.get(chat);
             if (lines.isEmpty() || lines.get(0).getChatComponent() != shown) return false;
-            lines.remove(0);
-            chat.refreshChat();
+            ChatLine gone = lines.remove(0);
+            // take its wrapped pieces off the top of the drawn lines; refreshChat() would re-wrap the whole
+            // scrollback (thousands of lines) for every stacked message
+            List<ChatLine> drawn = null;
+            if (drawnLinesField == null) {
+                for (String n : new String[]{"drawnChatLines", "field_146253_i"}) {
+                    try {
+                        drawnLinesField = GuiNewChat.class.getDeclaredField(n);
+                        drawnLinesField.setAccessible(true);
+                        break;
+                    } catch (NoSuchFieldException ignored) {
+                    }
+                }
+            }
+            if (drawnLinesField != null) drawn = (List<ChatLine>) drawnLinesField.get(chat);
+            if (drawn == null) {
+                chat.refreshChat();
+                return true;
+            }
+            while (!drawn.isEmpty() && drawn.get(0).getUpdatedCounter() == gone.getUpdatedCounter()
+                    && drawn.get(0).getChatLineID() == gone.getChatLineID()) {
+                drawn.remove(0);
+            }
             return true;
         } catch (Throwable t) {
             return false;
