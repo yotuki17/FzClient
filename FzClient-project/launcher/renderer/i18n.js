@@ -124,6 +124,8 @@ const EN = {
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
   'NEW：Alt+X のオーバーレイと録画をランチャーで（どのサーバーでも）': 'NEW: the Alt+X overlay and recording now run in the launcher (on any server)',
+  'NEW：タブに統計とタグ（Watcher・Xadia）を表示・影つき／すっきりの見た目': 'NEW: stats and tags (Watcher, Xadia) in the tab list, with shaded and clean styles',
+  'NEW：/fzstats で詳しい統計（今日・今週・今月も）。Bed Wars・Duels・TNT Tag・Bow Spleef・MM': 'NEW: detailed stats with /fzstats (today, this week, this month too). Bed Wars, Duels, TNT Tag, Bow Spleef, MM',
   '修正：タイトル画面のお気に入りサーバーが全部「オフライン」になる': 'Fix: favourite servers on the title screen all showing Offline',
   'FzClient はこのランチャーから起動したときだけ動くように': 'FzClient now only runs when started from this launcher',
   '起動のたびに要らないキャッシュを自動で削除・タイトルの版表示を修正': 'Unneeded caches are cleaned on every start; fixed the version shown on the title screen',

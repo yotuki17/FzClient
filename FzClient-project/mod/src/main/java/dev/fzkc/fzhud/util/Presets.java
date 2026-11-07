@@ -39,6 +39,8 @@ public final class Presets {
     /** Settings that stay yours: not exported, not overwritten when a code is loaded. */
     private static boolean personal(Module m, Setting s) {
         if (m == Modules.language) return true;
+        // API keys never go into a code someone else could load
+        if (s instanceof dev.fzkc.fzhud.config.TextSetting && ((dev.fzkc.fzhud.config.TextSetting) s).secret) return true;
         return m == Modules.chat && (s.key.equals("deeplkey") || s.key.equals("mentionwords"));
     }
 

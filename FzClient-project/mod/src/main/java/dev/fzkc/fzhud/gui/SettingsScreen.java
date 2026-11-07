@@ -327,6 +327,8 @@ public class SettingsScreen extends FzScreen {
             TextSetting ts = (TextSetting) s;
             boolean focused = editing == ts;
             String text = ts.get();
+            // keys are not shown on screen (streams, screenshots) unless you click into the box
+            if (ts.secret && !focused && !text.isEmpty()) text = dev.fzkc.fzhud.util.Lang.t("●●●●●●●● 設定済み");
             // not editing: show the end of a long text (as before); editing: follow the caret
             int caret = focused ? clampCursor(text) : text.length();
             Ui.textBox(rx - 210, y + 5, 210, 18, text,

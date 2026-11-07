@@ -162,6 +162,27 @@ public final class Modules {
     public static final SliderSetting partyDetectMin = partyDetect.add(new SliderSetting("min", "知らせる人数", 2, 4, 1, 2, "人以上"));
     public static final BoolSetting partyDetectSound = partyDetect.add(new BoolSetting("sound", "見つけた時に音を鳴らす", true));
 
+    // ---- Player stats (tab list columns, /fzstats, Watcher / Xadia tags)
+    public static final Module stats = new Module("playerstats", "Player Stats", Category.SERVER,
+            "タブに統計とタグを表示・/fzstats で詳しい統計（今日・今週・今月も）", true);
+    public static final HeaderSetting statsHeadTab = stats.add(new HeaderSetting("h_tab", "タブリスト"));
+    public static final BoolSetting statsTab = stats.add(new BoolSetting("tab", "タブに統計を表示（Bed Wars・Duels・TNT Tag・Bow Spleef・Murder Mystery）", true));
+    /** 0 = like the normal tab list, 1 = shaded (column titles, shaded rows), 2 = clean (column titles, no stripes). */
+    public static final ChoiceSetting statsTabStyle = stats.add(new ChoiceSetting("tabstyle", "タブの見た目", 1,
+            "いつもの", "影つき（shaded）", "すっきり（clean）"));
+    public static final BoolSetting statsTabLobby = stats.add(new BoolSetting("lobby", "ロビーでも統計を表示", false));
+    public static final BoolSetting statsRankColors = stats.add(new BoolSetting("rankcolors", "試合中の名前をランクの色にする（チームの文字はそのまま）", true));
+    public static final BoolSetting statsTagsInTab = stats.add(new BoolSetting("tabtags", "タブにタグを表示", true));
+    public static final HeaderSetting statsHeadTags = stats.add(new HeaderSetting("h_tags", "タグ（空のキーは Mellow の設定から自動で読み込み）"));
+    public static final BoolSetting statsWatcher = stats.add(new BoolSetting("watcher", "Watcher のタグを使う", false));
+    public static final TextSetting statsWatcherKey = stats.add(new TextSetting("watcherkey", "Watcher API キー", "", 128).secret());
+    public static final BoolSetting statsXadia = stats.add(new BoolSetting("xadia", "Xadia のタグを使う", false));
+    public static final TextSetting statsXadiaKey = stats.add(new TextSetting("xadiakey", "Xadia API キー", "", 128).secret());
+    public static final BoolSetting statsXadiaVerified = stats.add(new BoolSetting("xadiaverified", "Xadia は確認済みのタグだけ", false));
+    public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "データ"));
+    public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー（空なら Bordic：Bed Wars と Duels だけ）", "", 64).secret());
+    public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "今日・今週・今月の統計のために記録する（この PC だけ）", true));
+
     // ---- Drop protection (only resources and blocks can be dropped)
     public static final Module dropLock = new Module("droplock", "Drop Protection", Category.PVP,
             "鉄・金・エメラルド・ダイヤ・ブロック以外を捨てないようにする", true);
@@ -490,6 +511,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, cosmetics, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, stats, cosmetics, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

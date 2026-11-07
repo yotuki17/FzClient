@@ -1,0 +1,310 @@
+package dev.fzkc.fzhud.stats;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import dev.fzkc.fzhud.Modules;
+
+import java.net.URLEncoder;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Player tags from Watcher and Xadia (community lists of cheaters, snipers and so on). Both need the player's
+ * own API key from that service. Results are kept for ten minutes.
+ */
+public final class Tags {
+    private Tags() {}
+
+    /** One tag: a short badge for the tab list ("[BC]") and a longer text for the chat. */
+    public static final class Tag {
+        public final String source, badge, text;
+
+        Tag(String source, String badge, String text) {
+            this.source = source;
+            this.badge = badge;
+            this.text = text;
+        }
+    }
+
+    private static final long FRESH_MS = 10 * 60_000L, RETRY_MS = 2 * 60_000L;
+
+    private static final class Entry {
+        volatile List<Tag> watcher, xadia;
+        volatile long watcherAt, xadiaAt, watcherFail, xadiaFail;
+        volatile boolean watcherLoading, xadiaLoading;
+        volatile String watcherError, xadiaError;
+    }
+
+    private static final Map<UUID, Entry> CACHE = new ConcurrentHashMap<>();
+    private static final ExecutorService POOL = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "FzClient-Tags");
+        t.setDaemon(true);
+        return t;
+    });
+    /** Watcher allows 60 lookups a minute per key; we stay a little below that. */
+    private static final Deque<Long> watcherCalls = new ArrayDeque<>();
+    private static volatile long watcherPausedUntil;
+
+    static boolean watcherOn() { return Modules.statsWatcher.get() && !Modules.statsWatcherKey.get().trim().isEmpty(); }
+
+    static boolean xadiaOn() { return Modules.statsXadia.get() && !Modules.statsXadiaKey.get().trim().isEmpty(); }
+
+    /** The tags known right now (empty while loading); asks for missing ones in the background. */
+    public static List<Tag> get(UUID id) {
+        Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
+        long now = System.currentTimeMillis();
+        if (watcherOn() && !e.watcherLoading && now - e.watcherAt > FRESH_MS && now - e.watcherFail > RETRY_MS) {
+            e.watcherLoading = true;
+            POOL.execute(() -> loadWatcher(id, e));
+        }
+        if (xadiaOn() && !e.xadiaLoading && now - e.xadiaAt > FRESH_MS && now - e.xadiaFail > RETRY_MS) {
+            e.xadiaLoading = true;
+            List<UUID> one = new ArrayList<>();
+            one.add(id);
+            POOL.execute(() -> loadXadia(one));
+        }
+        return known(e);
+    }
+
+    /** Many players at once: Xadia takes up to 100 in one request. */
+    public static void prefetch(List<UUID> ids) {
+        long now = System.currentTimeMillis();
+        List<UUID> xadia = new ArrayList<>();
+        for (UUID id : ids) {
+            Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
+            if (watcherOn() && !e.watcherLoading && now - e.watcherAt > FRESH_MS && now - e.watcherFail > RETRY_MS) {
+                e.watcherLoading = true;
+                POOL.execute(() -> loadWatcher(id, e));
+            }
+            if (xadiaOn() && !e.xadiaLoading && now - e.xadiaAt > FRESH_MS && now - e.xadiaFail > RETRY_MS) {
+                e.xadiaLoading = true;
+                xadia.add(id);
+            }
+        }
+        for (int from = 0; from < xadia.size(); from += 100) {
+            List<UUID> part = new ArrayList<>(xadia.subList(from, Math.min(xadia.size(), from + 100)));
+            POOL.execute(() -> loadXadia(part));
+        }
+    }
+
+    /** Errors from the last lookups (for the stats command), or an empty list. */
+    public static List<String> problems(UUID id) {
+        Entry e = CACHE.get(id);
+        List<String> out = new ArrayList<>();
+        if (e == null) return out;
+        if (watcherOn() && e.watcherError != null) out.add(e.watcherError);
+        if (xadiaOn() && e.xadiaError != null) out.add(e.xadiaError);
+        return out;
+    }
+
+    public static boolean loading(UUID id) {
+        Entry e = CACHE.get(id);
+        return e != null && (e.watcherLoading || e.xadiaLoading);
+    }
+
+    public static void clear() { CACHE.clear(); }
+
+    private static List<Tag> known(Entry e) {
+        List<Tag> w = watcherOn() ? e.watcher : null, x = xadiaOn() ? e.xadia : null;
+        if ((w == null || w.isEmpty()) && (x == null || x.isEmpty())) return Collections.emptyList();
+        List<Tag> out = new ArrayList<>();
+        if (w != null) out.addAll(w);
+        if (x != null) out.addAll(x);
+        return out;
+    }
+
+    // ------------------------------------------------------------------ Watcher
+
+    private static void loadWatcher(UUID id, Entry e) {
+        try {
+            if (!reserveWatcher()) {
+                e.watcherFail = System.currentTimeMillis() - RETRY_MS + 15_000L;   // try again in 15 s
+                return;
+            }
+            String key = Modules.statsWatcherKey.get().trim();
+            String body = Http.get("Watcher", "https://api.watchertag.com/api/v1/cubelify?key="
+                    + URLEncoder.encode(key, "UTF-8") + "&uuid=" + id.toString().replace("-", ""), null, null);
+            JsonObject r = new JsonParser().parse(body).getAsJsonObject();
+            JsonElement err = r.get("error");
+            if (err != null && !err.isJsonNull() && !"false".equals(err.getAsString())) {
+                throw new java.io.IOException("Watcher: error");
+            }
+            List<Tag> tags = new ArrayList<>();
+            JsonArray arr = r.getAsJsonArray("tags");
+            if (arr != null) {
+                for (JsonElement te : arr) {
+                    JsonObject t = te.getAsJsonObject();
+                    String label = clean(PlayerData.str(t, "text"));
+                    if (label.isEmpty()) continue;
+                    String color = t.has("color") && t.get("color").isJsonPrimitive() ? nearest(t.get("color").getAsInt()) : "§c";
+                    String tip = clean(PlayerData.str(t, "tooltip"));
+                    tags.add(new Tag("Watcher", badge(watcherIcon(label), color),
+                            color + "§l" + label + "§r" + (tip.isEmpty() ? "" : " §7(" + tip + ")")));
+                }
+            }
+            e.watcher = tags;
+            e.watcherAt = System.currentTimeMillis();
+            e.watcherError = null;
+        } catch (Http.Status s) {
+            if (s.code == 429) watcherPausedUntil = System.currentTimeMillis() + 60_000L;
+            e.watcherFail = System.currentTimeMillis();
+            e.watcherError = s.code == 401 || s.code == 403 ? "Watcher: API キーが違います" : s.getMessage();
+        } catch (Exception ex) {
+            e.watcherFail = System.currentTimeMillis();
+            e.watcherError = "Watcher: " + (ex.getMessage() == null ? "error" : ex.getMessage());
+        } finally {
+            e.watcherLoading = false;
+        }
+    }
+
+    private static synchronized boolean reserveWatcher() {
+        long now = System.currentTimeMillis();
+        if (now < watcherPausedUntil) return false;
+        while (!watcherCalls.isEmpty() && now - watcherCalls.peekFirst() >= 60_000L) watcherCalls.removeFirst();
+        if (watcherCalls.size() >= 50) return false;
+        watcherCalls.addLast(now);
+        return true;
+    }
+
+    private static String watcherIcon(String label) {
+        switch (label.toLowerCase(Locale.ROOT)) {
+            case "blatant": case "bc": return "BC";
+            case "closet": case "cc": return "CC";
+            case "boosting": case "booster": return "B";
+            case "sniper": return "S";
+            default: return label.length() > 3 ? label.substring(0, 3) : label;
+        }
+    }
+
+    // ------------------------------------------------------------------ Xadia
+
+    private static void loadXadia(List<UUID> ids) {
+        try {
+            JsonArray players = new JsonArray();
+            for (UUID id : ids) players.add(new com.google.gson.JsonPrimitive(id.toString().replace("-", "")));
+            JsonObject req = new JsonObject();
+            req.add("players", players);
+            req.addProperty("verified_only", Modules.statsXadiaVerified.get());
+            String body = Http.post("Xadia", "https://xadia.club/v1/players", req.toString(), "X-API-Key",
+                    Modules.statsXadiaKey.get().trim());
+            JsonArray results = new JsonParser().parse(body).getAsJsonObject().getAsJsonArray("results");
+            if (results == null) throw new java.io.IOException("Xadia: bad answer");
+            long now = System.currentTimeMillis();
+            for (JsonElement re : results) {
+                JsonObject p = re.getAsJsonObject();
+                String q = PlayerData.str(p, "query");
+                UUID id = q == null ? null : match(ids, q);
+                if (id == null) continue;
+                List<Tag> tags = new ArrayList<>();
+                JsonElement found = p.get("found");
+                JsonArray arr = p.getAsJsonArray("tags");
+                if (found != null && found.getAsBoolean() && arr != null) {
+                    for (JsonElement te : arr) {
+                        JsonObject t = te.getAsJsonObject();
+                        String type = PlayerData.str(t, "type");
+                        String label = clean(PlayerData.str(t, "label"));
+                        String reason = clean(PlayerData.str(t, "reason"));
+                        JsonElement v = t.get("verified");
+                        String color = xadiaColor(type);
+                        if ("possibly_cheating".equals(type)) label = "Risky";
+                        String text = color + "§l" + label + "§r";
+                        if (v != null && !v.isJsonNull()) text += v.getAsBoolean() ? " §a[Verified]" : " §e[Unverified]";
+                        if (!reason.isEmpty()) text += " §7(" + reason + ")";
+                        tags.add(new Tag("Xadia", badge(xadiaIcon(type, label), color), text));
+                    }
+                }
+                Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
+                e.xadia = tags;
+                e.xadiaAt = now;
+                e.xadiaError = null;
+            }
+        } catch (Exception ex) {
+            String msg = ex instanceof Http.Status && (((Http.Status) ex).code == 401 || ((Http.Status) ex).code == 403)
+                    ? "Xadia: API キーが違います" : ex.getMessage();
+            for (UUID id : ids) {
+                Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
+                e.xadiaFail = System.currentTimeMillis();
+                e.xadiaError = msg == null ? "Xadia: error" : msg;
+            }
+        } finally {
+            for (UUID id : ids) {
+                Entry e = CACHE.get(id);
+                if (e != null) {
+                    e.xadiaLoading = false;
+                    if (e.xadiaAt == 0 && e.xadiaFail == 0) e.xadiaAt = System.currentTimeMillis();   // not in the answer: no tags
+                }
+            }
+        }
+    }
+
+    private static UUID match(List<UUID> ids, String q) {
+        String s = q.replace("-", "").toLowerCase(Locale.ROOT);
+        for (UUID id : ids) if (id.toString().replace("-", "").equals(s)) return id;
+        return null;
+    }
+
+    private static String xadiaColor(String type) {
+        if (type == null) return "§d";
+        switch (type) {
+            case "hacker": return "§c";
+            case "sniper": return "§4";
+            case "legit_sniper": return "§3";
+            case "caution": return "§e";
+            case "possibly_cheating": return "§6";
+            default: return "§d";
+        }
+    }
+
+    private static String xadiaIcon(String type, String label) {
+        if (type != null) {
+            switch (type) {
+                case "hacker": return "H";
+                case "sniper": return "S";
+                case "caution": return "C";
+                case "possibly_cheating": return "R";
+                case "legit_sniper": return "LS";
+                case "alt": return "A";
+                default: break;
+            }
+        }
+        return label.length() > 3 ? label.substring(0, 3) : label;
+    }
+
+    // ------------------------------------------------------------------ helpers
+
+    private static String badge(String icon, String color) { return "§8[" + color + icon + "§8]"; }
+
+    private static String clean(String s) {
+        return s == null ? "" : s.replaceAll("§.", "").replaceAll("[\\s\\p{Cntrl}]+", " ").trim();
+    }
+
+    private static final int[] PALETTE = {0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
+            0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF};
+
+    /** The Minecraft colour code closest to an RGB colour. */
+    private static String nearest(int rgb) {
+        int best = 12, dist = Integer.MAX_VALUE;
+        for (int i = 0; i < PALETTE.length; i++) {
+            int dr = ((rgb >> 16) & 255) - ((PALETTE[i] >> 16) & 255);
+            int dg = ((rgb >> 8) & 255) - ((PALETTE[i] >> 8) & 255);
+            int db = (rgb & 255) - (PALETTE[i] & 255);
+            int d = dr * dr + dg * dg + db * db;
+            if (d < dist) {
+                dist = d;
+                best = i;
+            }
+        }
+        return "§" + "0123456789abcdef".charAt(best);
+    }
+}

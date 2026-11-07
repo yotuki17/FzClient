@@ -195,12 +195,87 @@ public class TabList extends HudElement {
     private int builtTick = Integer.MIN_VALUE, builtWidthGen = Integer.MIN_VALUE;
     private boolean builtIcon, builtPing, builtEnglish;
 
+    // ---- stats columns (Player Stats): column titles, one cell per player and column, column widths
+    private static final float STAT_GAP = 7f;
+    private boolean statsOn;
+    private String[] statHeads = new String[0];
+    private String[][] statCells = new String[0][];
+    private float[] statW = new float[0];
+    private float statsW;
+
+    /** Total width of the stats columns (0 when they are off). */
+    private float statsWidth() { return statsOn ? statsW : 0f; }
+
+    /** Style of the stats tab list: 0 normal, 1 shaded, 2 clean (column titles in 1 and 2). */
+    private int statsStyle() { return statsOn ? dev.fzkc.fzhud.Modules.statsTabStyle.get() : 0; }
+
+    /**
+     * The name shown for one player when stats are on: tag badges and the Bed Wars star in front, and in a game
+     * the rank colour instead of the team colour (the team letter in front stays as it is).
+     */
+    private static String statsName(NetworkPlayerInfo info, String shown, dev.fzkc.fzhud.stats.PlayerData d,
+                                     java.util.List<dev.fzkc.fzhud.stats.Tags.Tag> tags, dev.fzkc.fzhud.stats.Game g) {
+        StringBuilder sb = new StringBuilder();
+        for (dev.fzkc.fzhud.stats.Tags.Tag t : tags) sb.append(t.badge);
+        if (sb.length() > 0) sb.append(' ');
+        if (d != null && !d.nicked) {
+            String star = g.tabPrefix(d.of(g));
+            if (!star.isEmpty()) sb.append(star).append(' ');
+            ScorePlayerTeam team = info.getPlayerTeam();
+            if (!dev.fzkc.fzhud.stats.Stats.lobby && dev.fzkc.fzhud.Modules.statsRankColors.get()
+                    && info.getDisplayName() == null && team != null) {
+                shown = team.getColorPrefix() + d.rankColor + info.getGameProfile().getName() + team.getColorSuffix();
+            }
+        }
+        return sb.append(shown).toString();
+    }
+
+    private void buildStats(int n) {
+        dev.fzkc.fzhud.stats.Game g = dev.fzkc.fzhud.stats.Stats.current;
+        statHeads = g.tabHeadsPublic();
+        int cols = statHeads.length;
+        if (statCells.length < n || (statCells.length > 0 && statCells[0].length != cols)) statCells = new String[Math.max(n, 1)][cols];
+        statW = new float[cols];
+        for (int c = 0; c < cols; c++) statW[c] = R.width(statHeads[c]);
+        boolean tagsOn = dev.fzkc.fzhud.Modules.statsTagsInTab.get();
+        for (int i = 0; i < n; i++) {
+            NetworkPlayerInfo info = players.get(i);
+            java.util.UUID id = info.getGameProfile().getId();
+            String[] row = statCells[i];
+            java.util.Arrays.fill(row, "");
+            if (id == null || id.version() != 4) continue;   // NPCs: nothing to look up
+            dev.fzkc.fzhud.stats.PlayerData d = dev.fzkc.fzhud.stats.StatsApi.get(id, info.getGameProfile().getName());
+            java.util.List<dev.fzkc.fzhud.stats.Tags.Tag> tags = tagsOn
+                    ? dev.fzkc.fzhud.stats.Tags.get(id) : java.util.Collections.<dev.fzkc.fzhud.stats.Tags.Tag>emptyList();
+            names.set(i, statsName(info, names.get(i), d, tags, g));
+            if (d == null) {
+                if (cols > 0) row[0] = "§8…";
+            } else if (d.nicked) {
+                if (cols > 0) row[0] = "§c§lNICK";
+            } else {
+                java.util.Map<String, Long> c = d.of(g);
+                if (c.isEmpty()) {
+                    if (cols > 0) row[0] = "§8-";
+                } else {
+                    String[] v = g.tabPublic(c);
+                    System.arraycopy(v, 0, row, 0, Math.min(cols, v.length));
+                }
+            }
+            for (int c = 0; c < cols; c++) statW[c] = Math.max(statW[c], R.width(row[c]));
+        }
+        float w = 0;
+        for (float x : statW) w += x + STAT_GAP;
+        statsW = w;
+    }
+
     private void build(Minecraft mc, GuiPlayerTabOverlay overlay) {
         boolean icon = fzIcon.get(), ping = pingNumbers.get(), english = dev.fzkc.fzhud.util.Lang.english();
+        boolean stats = dev.fzkc.fzhud.stats.Stats.tabActive();
         if (builtTick == dev.fzkc.fzhud.util.Stamp.ticks && builtIcon == icon && builtPing == ping
-                && builtEnglish == english && builtWidthGen == R.widthGen) {
+                && builtEnglish == english && builtWidthGen == R.widthGen && statsOn == stats) {
             return;
         }
+        statsOn = stats;
         players.clear();
         players.addAll(mc.thePlayer.sendQueue.getPlayerInfoMap());
         players.sort(ORDER);
@@ -226,6 +301,14 @@ public class TabList extends HudElement {
             pingMs[i] = info.getResponseTime();
             pingText[i] = dev.fzkc.fzhud.util.Fmt.num(pingMs[i]);
             if (ping) pw = Math.max(pw, R.width(pingText[i]) * 0.5f);
+        }
+        if (statsOn) {
+            buildStats(n);
+            nw = 0;
+            for (int i = 0; i < n; i++) {
+                float iw = icon && isMe[i] ? ICON_W + ICON_GAP : 0f;
+                nw = Math.max(nw, iw + R.width(names.get(i)));
+            }
         }
         nameW = nw;
         pingW = ping ? pw : 0;
@@ -269,13 +352,16 @@ public class TabList extends HudElement {
         List<String> names = this.names;
         float nameW = this.nameW, pingW = this.pingW;
         float headW = heads.get() ? HEAD + 3 : 0;
-        float colW = headW + nameW + (pingNumbers.get() ? 6 + pingW : 0);
+        float statsW = statsWidth();
+        int style = statsStyle();
+        float titleRow = style != 0 && n > 0 ? ROW + 2 : 0;   // column titles above the players
+        float colW = headW + nameW + (statsW > 0 ? STAT_GAP + statsW : 0) + (pingNumbers.get() ? 6 + pingW : 0);
         float bodyW = cols * colW + (cols - 1) * COL_GAP;
         float w = bodyW;
         for (String s : header) w = Math.max(w, R.width(s));
         for (String s : footer) w = Math.max(w, R.width(s));
         w += PAD * 2;
-        float h = PAD + header.size() * ROW + (header.isEmpty() ? 0 : 3) + rows * ROW
+        float h = PAD + header.size() * ROW + (header.isEmpty() ? 0 : 3) + titleRow + rows * ROW
                 + (footer.isEmpty() ? 0 : 3) + footer.size() * ROW + PAD - 1;
         lastW = w;
         lastH = h;
@@ -289,14 +375,38 @@ public class TabList extends HudElement {
         if (!header.isEmpty()) y += 3;
 
         float bodyX = (w - bodyW) / 2f;
-        // row stripes all in one draw (a stripe never overlaps another row's head or text)
-        if (stripes.get()) {
+        // where the stats columns start inside a column of players
+        float statX = headW + nameW + STAT_GAP;
+        if (titleRow > 0) {
+            // column titles; shaded: on a darker band, clean: with a thin line under them
+            R.batchBegin();
+            for (int col = 0; col < cols; col++) {
+                float x = bodyX + col * (colW + COL_GAP);
+                if (style == 1) R.batchRect(x - 2, y - 1, colW + 4, ROW, R.alpha(0x30000000, alpha));
+                else R.batchRect(x - 2, y + ROW, colW + 4, 0.5f, R.alpha(0x40FFFFFF, alpha));
+            }
+            R.batchEnd();
+            for (int col = 0; col < cols; col++) {
+                float x = bodyX + col * (colW + COL_GAP);
+                R.text("§7" + dev.fzkc.fzhud.util.Lang.t("名前"), x + headW, y, R.alpha(0xFFFFFFFF, alpha));
+                float sx = x + statX;
+                for (int c = 0; c < statHeads.length; c++) {
+                    R.textCentered("§7" + statHeads[c], sx + statW[c] / 2f, y, R.alpha(0xFFFFFFFF, alpha));
+                    sx += statW[c] + STAT_GAP;
+                }
+            }
+            y += titleRow;
+        }
+        // row stripes all in one draw (a stripe never overlaps another row's head or text); the clean style has none
+        boolean striped = style == 1 || (style == 0 && stripes.get());
+        if (striped) {
             R.batchBegin();
             for (int i = 0; i < n; i++) {
                 int col = i / rows, row = i % rows;
-                if (row % 2 != 0) continue;
+                if (row % 2 != (style == 1 ? 1 : 0)) continue;
                 float x = bodyX + col * (colW + COL_GAP);
-                R.batchRect(x - 2, y + row * ROW - 1, colW + 4, ROW, R.alpha(0x14FFFFFF, alpha));
+                R.batchRect(x - 2, y + row * ROW - 1, colW + 4, ROW,
+                        R.alpha(style == 1 ? 0x22000000 : 0x14FFFFFF, alpha));
             }
             R.batchEnd();
         }
@@ -332,6 +442,14 @@ public class TabList extends HudElement {
                 nx += ICON_W + ICON_GAP;
             }
             R.text(names.get(i), nx, ry, R.alpha(0xFFFFFFFF, alpha));
+            if (statsW > 0 && i < statCells.length) {
+                float sx = x + statX;
+                String[] cells = statCells[i];
+                for (int c = 0; c < statHeads.length && c < cells.length; c++) {
+                    if (!cells[c].isEmpty()) R.textCentered(cells[c], sx + statW[c] / 2f, ry, R.alpha(0xFFFFFFFF, alpha));
+                    sx += statW[c] + STAT_GAP;
+                }
+            }
             if (pingNumbers.get()) {
                 int ms = pingMs[i];
                 String ping = pingText[i];

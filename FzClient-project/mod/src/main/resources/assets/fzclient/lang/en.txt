@@ -824,3 +824,55 @@ Minecraft のウィンドウだけ	Only the Minecraft window
 ギャラリー	Gallery
 スクショ・クリップ	Screenshots & clips
 F2 でスクショ・Alt+X で録画	F2: screenshot · Alt+X: record
+タブに統計とタグを表示・/fzstats で詳しい統計（今日・今週・今月も）	Stats and tags in the tab list, detailed stats with /fzstats (today, this week, this month too)
+タブリスト	Tab list
+タブに統計を表示（Bed Wars・Duels・TNT Tag・Bow Spleef・Murder Mystery）	Show stats in the tab list (Bed Wars, Duels, TNT Tag, Bow Spleef, Murder Mystery)
+タブの見た目	Tab list style
+いつもの	Normal
+影つき（shaded）	Shaded
+すっきり（clean）	Clean
+ロビーでも統計を表示	Show stats in lobbies too
+試合中の名前をランクの色にする（チームの文字はそのまま）	Rank colours for names in games (the team letter stays)
+タブにタグを表示	Show tags in the tab list
+タグ（空のキーは Mellow の設定から自動で読み込み）	Tags (empty keys are taken from Mellow's settings)
+Watcher のタグを使う	Use Watcher tags
+Watcher API キー	Watcher API key
+Xadia のタグを使う	Use Xadia tags
+Xadia API キー	Xadia API key
+Xadia は確認済みのタグだけ	Xadia: verified tags only
+データ	Data
+Hypixel API キー（空なら Bordic：Bed Wars と Duels だけ）	Hypixel API key (empty: Bordic, Bed Wars and Duels only)
+今日・今週・今月の統計のために記録する（この PC だけ）	Record stats for today / this week / this month (on this PC only)
+●●●●●●●● 設定済み	●●●●●●●● set
+全期間	All time
+今日	Today
+今週	This week
+今月	This month
+星	Star
+勝ち	Wins
+負け	Losses
+ベッド破壊	Beds broken
+ベッドロスト	Beds lost
+キル	Kills
+デス	Deaths
+連勝	Winstreak
+最高連勝	Best winstreak
+タッチ	Tags
+爆発	Deaths
+撃った矢	Arrows shot
+試合	Games
+勝率	Win rate
+弓キル	Bow kills
+探偵で勝ち	Detective wins
+殺人鬼で勝ち	Murderer wins
+名前が正しくありません: 	Not a valid name: 
+{0} の統計を取得中…	Getting {0}'s stats…
+{0} というプレイヤーが見つかりません	No player called {0}
+統計を取得できませんでした: 	Could not get the stats: 
+Hypixel にこの名前のデータがありません（ニックネームの可能性が高い）	Hypixel has no data for this name (most likely a nick)
+このゲームの統計には Hypixel API キーが必要です（FzClient 設定 → Player Stats）	Stats for this game need a Hypixel API key (FzClient settings → Player Stats)
+このゲームの記録がありません	No stats for this game
+まだ記録がありません。今から記録するので、次からこの期間の数字が出ます。	Nothing recorded yet. Recording starts now, so this period's numbers show up from next time.
+（{0} からの記録）	(recorded since {0})
+Hypixel API キーが無効です（期限切れかも）	The Hypixel API key is not valid (it may have expired)
+Hypixel API の回数制限に達しました	Hit the Hypixel API rate limit

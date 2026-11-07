@@ -184,6 +184,13 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.gui.PauseButtons());     // FzClient Settings / Cosmetics in the game menu
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new PartyRelay.TestCommand());
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new DiscordVoice.CodeCommand());
+        // player stats: tab list columns, /fzstats, Watcher / Xadia tags
+        dev.fzkc.fzhud.stats.Stats.init();
+        dev.fzkc.fzhud.stats.Stats statsEvents = new dev.fzkc.fzhud.stats.Stats();
+        MinecraftForge.EVENT_BUS.register(statsEvents);
+        FMLCommonHandler.instance().bus().register(statsEvents);
+        net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.stats.StatsCommand());
+        Runtime.getRuntime().addShutdownHook(new Thread(dev.fzkc.fzhud.stats.Stats::saveHistory, "FzClient-StatsSave"));
         Extras extras = new Extras();
         MinecraftForge.EVENT_BUS.register(extras);
         FMLCommonHandler.instance().bus().register(extras);

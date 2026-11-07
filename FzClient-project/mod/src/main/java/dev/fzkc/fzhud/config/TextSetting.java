@@ -16,6 +16,14 @@ public class TextSetting extends Setting {
         this.value = def;
     }
 
+    /** An API key or similar: the settings screen shows dots instead of the text while not editing it. */
+    public boolean secret;
+
+    public TextSetting secret() {
+        secret = true;
+        return this;
+    }
+
     public String get() { return value; }
 
     /** Value with &-colour codes turned into real formatting codes. */
