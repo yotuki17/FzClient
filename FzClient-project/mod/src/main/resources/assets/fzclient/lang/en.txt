@@ -876,3 +876,24 @@ Hypixel にこの名前のデータがありません（ニックネームの可
 （{0} からの記録）	(recorded since {0})
 Hypixel API キーが無効です（期限切れかも）	The Hypixel API key is not valid (it may have expired)
 Hypixel API の回数制限に達しました	Hit the Hypixel API rate limit
+Bed Wars：名前の前に星を表示	Bed Wars: star in front of the name
+列 1	Column 1
+列 2	Column 2
+列 3	Column 3
+列 4	Column 4
+Bed Wars のタブの列（クリックで切り替え・右クリックで戻る）	Bed Wars tab columns (click to change, right-click to go back)
+Duels のタブの列（クリックで切り替え・右クリックで戻る）	Duels tab columns (click to change, right-click to go back)
+TNT Tag のタブの列（クリックで切り替え・右クリックで戻る）	TNT Tag tab columns (click to change, right-click to go back)
+Bow Spleef のタブの列（クリックで切り替え・右クリックで戻る）	Bow Spleef tab columns (click to change, right-click to go back)
+Murder Mystery のタブの列（クリックで切り替え・右クリックで戻る）	Murder Mystery tab columns (click to change, right-click to go back)
+FKDR（ファイナルキル÷ファイナルデス）	FKDR (final kills ÷ final deaths)
+WLR（勝ち÷負け）	WLR (wins ÷ losses)
+ファイナルキル	Final kills
+ファイナルデス	Final deaths
+BBLR（ベッド破壊÷ベッドロスト）	BBLR (beds broken ÷ beds lost)
+KDR（キル÷デス）	KDR (kills ÷ deaths)
+星（数字だけ）	Star (number only)
+Index（星×FKDR²）	Index (star × FKDR²)
+KDR（タッチ÷爆発）	KDR (tags ÷ deaths)
+Coral（Urchin）のタグを使う	Use Coral (Urchin) tags
+Coral（Urchin）API キー	Coral (Urchin) API key

@@ -173,12 +173,36 @@ public final class Modules {
     public static final BoolSetting statsTabLobby = stats.add(new BoolSetting("lobby", "ロビーでも統計を表示", false));
     public static final BoolSetting statsRankColors = stats.add(new BoolSetting("rankcolors", "試合中の名前をランクの色にする（チームの文字はそのまま）", true));
     public static final BoolSetting statsTagsInTab = stats.add(new BoolSetting("tabtags", "タブにタグを表示", true));
+    public static final BoolSetting statsStar = stats.add(new BoolSetting("star", "Bed Wars：名前の前に星を表示", true));
+    /** [game][column]: which stat each tab list column shows (0 = none, else index + 1 into Game.stats()). */
+    public static final ChoiceSetting[][] statsColumns = statsColumns();
+
+    private static ChoiceSetting[][] statsColumns() {
+        dev.fzkc.fzhud.stats.Game[] games = dev.fzkc.fzhud.stats.Game.values();
+        ChoiceSetting[][] out = new ChoiceSetting[games.length][];
+        for (dev.fzkc.fzhud.stats.Game g : games) {
+            dev.fzkc.fzhud.stats.Game.Stat[] all = g.stats();
+            String[] options = new String[all.length + 1];
+            options[0] = "なし";
+            for (int i = 0; i < all.length; i++) options[i + 1] = all[i].label;
+            stats.add(new HeaderSetting("h_cols_" + g.key, g.label + " のタブの列（クリックで切り替え・右クリックで戻る）"));
+            int[] def = g.defaultColumns();
+            out[g.ordinal()] = new ChoiceSetting[dev.fzkc.fzhud.stats.Game.TAB_COLUMNS];
+            for (int c = 0; c < dev.fzkc.fzhud.stats.Game.TAB_COLUMNS; c++) {
+                int d = c < def.length ? def[c] + 1 : 0;
+                out[g.ordinal()][c] = stats.add(new ChoiceSetting("col_" + g.key + "_" + c, "列 " + (c + 1), d, options));
+            }
+        }
+        return out;
+    }
     public static final HeaderSetting statsHeadTags = stats.add(new HeaderSetting("h_tags", "タグ（空のキーは Mellow の設定から自動で読み込み）"));
     public static final BoolSetting statsWatcher = stats.add(new BoolSetting("watcher", "Watcher のタグを使う", false));
     public static final TextSetting statsWatcherKey = stats.add(new TextSetting("watcherkey", "Watcher API キー", "", 128).secret());
     public static final BoolSetting statsXadia = stats.add(new BoolSetting("xadia", "Xadia のタグを使う", false));
     public static final TextSetting statsXadiaKey = stats.add(new TextSetting("xadiakey", "Xadia API キー", "", 128).secret());
     public static final BoolSetting statsXadiaVerified = stats.add(new BoolSetting("xadiaverified", "Xadia は確認済みのタグだけ", false));
+    public static final BoolSetting statsCoral = stats.add(new BoolSetting("coral", "Coral（Urchin）のタグを使う", false));
+    public static final TextSetting statsCoralKey = stats.add(new TextSetting("coralkey", "Coral（Urchin）API キー", "", 128).secret());
     public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "データ"));
     public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー（空なら Bordic：Bed Wars と Duels だけ）", "", 64).secret());
     public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "今日・今週・今月の統計のために記録する（この PC だけ）", true));

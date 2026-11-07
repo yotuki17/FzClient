@@ -136,7 +136,7 @@ public final class Stats {
      */
     private static void importMellowKeys() {
         boolean any = Modules.statsHypixelKey.get().isEmpty() || Modules.statsWatcherKey.get().isEmpty()
-                || Modules.statsXadiaKey.get().isEmpty();
+                || Modules.statsXadiaKey.get().isEmpty() || Modules.statsCoralKey.get().isEmpty();
         if (!any) return;
         File dir = new File(Minecraft.getMinecraft().mcDataDir, "OneConfig");
         File[] tries = {new File(dir, "profiles/Default Profile/mellow.json"), new File(dir, "config/mellow.json")};
@@ -152,6 +152,11 @@ public final class Stats {
                 }
                 if (take(Modules.statsXadiaKey, PlayerData.str(o, "xadiaKey"))) {
                     Modules.statsXadia.value = true;
+                    changed = true;
+                }
+                // Mellow calls the Coral key "urchinKey" (Coral is Urchin's tag list)
+                if (take(Modules.statsCoralKey, PlayerData.str(o, "urchinKey"))) {
+                    Modules.statsCoral.value = true;
                     changed = true;
                 }
             } catch (Exception ignored) {

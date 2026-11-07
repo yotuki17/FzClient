@@ -40,10 +40,10 @@ public final class Tags {
     private static final long FRESH_MS = 10 * 60_000L, RETRY_MS = 2 * 60_000L;
 
     private static final class Entry {
-        volatile List<Tag> watcher, xadia;
-        volatile long watcherAt, xadiaAt, watcherFail, xadiaFail;
-        volatile boolean watcherLoading, xadiaLoading;
-        volatile String watcherError, xadiaError;
+        volatile List<Tag> watcher, xadia, coral;
+        volatile long watcherAt, xadiaAt, watcherFail, xadiaFail, coralAt, coralFail;
+        volatile boolean watcherLoading, xadiaLoading, coralLoading;
+        volatile String watcherError, xadiaError, coralError;
     }
 
     private static final Map<UUID, Entry> CACHE = new ConcurrentHashMap<>();
@@ -60,6 +60,8 @@ public final class Tags {
 
     static boolean xadiaOn() { return Modules.statsXadia.get() && !Modules.statsXadiaKey.get().trim().isEmpty(); }
 
+    static boolean coralOn() { return Modules.statsCoral.get() && !Modules.statsCoralKey.get().trim().isEmpty(); }
+
     /** The tags known right now (empty while loading); asks for missing ones in the background. */
     public static List<Tag> get(UUID id) {
         Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
@@ -74,13 +76,19 @@ public final class Tags {
             one.add(id);
             POOL.execute(() -> loadXadia(one));
         }
+        if (coralOn() && !e.coralLoading && now - e.coralAt > FRESH_MS && now - e.coralFail > RETRY_MS) {
+            e.coralLoading = true;
+            List<UUID> one = new ArrayList<>();
+            one.add(id);
+            POOL.execute(() -> loadCoral(one));
+        }
         return known(e);
     }
 
     /** Many players at once: Xadia takes up to 100 in one request. */
     public static void prefetch(List<UUID> ids) {
         long now = System.currentTimeMillis();
-        List<UUID> xadia = new ArrayList<>();
+        List<UUID> xadia = new ArrayList<>(), coral = new ArrayList<>();
         for (UUID id : ids) {
             Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
             if (watcherOn() && !e.watcherLoading && now - e.watcherAt > FRESH_MS && now - e.watcherFail > RETRY_MS) {
@@ -91,6 +99,14 @@ public final class Tags {
                 e.xadiaLoading = true;
                 xadia.add(id);
             }
+            if (coralOn() && !e.coralLoading && now - e.coralAt > FRESH_MS && now - e.coralFail > RETRY_MS) {
+                e.coralLoading = true;
+                coral.add(id);
+            }
+        }
+        for (int from = 0; from < coral.size(); from += 100) {
+            List<UUID> part = new ArrayList<>(coral.subList(from, Math.min(coral.size(), from + 100)));
+            POOL.execute(() -> loadCoral(part));
         }
         for (int from = 0; from < xadia.size(); from += 100) {
             List<UUID> part = new ArrayList<>(xadia.subList(from, Math.min(xadia.size(), from + 100)));
@@ -105,20 +121,22 @@ public final class Tags {
         if (e == null) return out;
         if (watcherOn() && e.watcherError != null) out.add(e.watcherError);
         if (xadiaOn() && e.xadiaError != null) out.add(e.xadiaError);
+        if (coralOn() && e.coralError != null) out.add(e.coralError);
         return out;
     }
 
     public static boolean loading(UUID id) {
         Entry e = CACHE.get(id);
-        return e != null && (e.watcherLoading || e.xadiaLoading);
+        return e != null && (e.watcherLoading || e.xadiaLoading || e.coralLoading);
     }
 
     public static void clear() { CACHE.clear(); }
 
     private static List<Tag> known(Entry e) {
-        List<Tag> w = watcherOn() ? e.watcher : null, x = xadiaOn() ? e.xadia : null;
-        if ((w == null || w.isEmpty()) && (x == null || x.isEmpty())) return Collections.emptyList();
+        List<Tag> w = watcherOn() ? e.watcher : null, x = xadiaOn() ? e.xadia : null, c = coralOn() ? e.coral : null;
+        if ((w == null || w.isEmpty()) && (x == null || x.isEmpty()) && (c == null || c.isEmpty())) return Collections.emptyList();
         List<Tag> out = new ArrayList<>();
+        if (c != null) out.addAll(c);
         if (w != null) out.addAll(w);
         if (x != null) out.addAll(x);
         return out;
@@ -279,6 +297,71 @@ public final class Tags {
             }
         }
         return label.length() > 3 ? label.substring(0, 3) : label;
+    }
+
+    // ------------------------------------------------------------------ Coral (Urchin)
+
+    private static void loadCoral(List<UUID> ids) {
+        try {
+            JsonArray uuids = new JsonArray();
+            for (UUID id : ids) uuids.add(new com.google.gson.JsonPrimitive(id.toString().replace("-", "")));
+            JsonObject req = new JsonObject();
+            req.add("uuids", uuids);
+            String body = Http.post("Coral", "https://api.urchin.gg/v3/players", req.toString(), "X-API-Key",
+                    Modules.statsCoralKey.get().trim());
+            JsonObject players = new JsonParser().parse(body).getAsJsonObject().getAsJsonObject("players");
+            if (players == null) throw new java.io.IOException("Coral: bad answer");
+            long now = System.currentTimeMillis();
+            for (UUID id : ids) {
+                JsonElement arr = players.get(id.toString().replace("-", ""));
+                List<Tag> tags = new ArrayList<>();
+                if (arr != null && arr.isJsonArray()) {
+                    for (JsonElement te : arr.getAsJsonArray()) {
+                        JsonObject t = te.getAsJsonObject();
+                        String type = PlayerData.str(t, "tag_type");
+                        if (type == null) continue;
+                        String reason = clean(PlayerData.str(t, "reason"));
+                        String[] look = coralLook(type.toLowerCase(Locale.ROOT));
+                        tags.add(new Tag("Coral", look[0].isEmpty() ? "" : badge(look[0], look[1]),
+                                look[1] + "§l" + look[2] + "§r" + (reason.isEmpty() ? "" : " §7(" + reason + ")")));
+                    }
+                }
+                Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
+                e.coral = tags;
+                e.coralAt = now;
+                e.coralError = null;
+            }
+        } catch (Exception ex) {
+            String msg = ex instanceof Http.Status && (((Http.Status) ex).code == 401 || ((Http.Status) ex).code == 403)
+                    ? "Coral: API キーが違います" : ex.getMessage();
+            for (UUID id : ids) {
+                Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
+                e.coralFail = System.currentTimeMillis();
+                e.coralError = msg == null ? "Coral: error" : msg;
+            }
+        } finally {
+            for (UUID id : ids) {
+                Entry e = CACHE.get(id);
+                if (e != null) e.coralLoading = false;
+            }
+        }
+    }
+
+    /** {badge letters ("" = no badge, e.g. info), colour, name} for a Coral tag type. */
+    private static String[] coralLook(String type) {
+        switch (type) {
+            case "sniper": return new String[]{"S", "§4", "Sniper"};
+            case "blatant_cheater": return new String[]{"BC", "§4", "Blatant Cheater"};
+            case "closet_cheater": return new String[]{"CC", "§6", "Closet Cheater"};
+            case "confirmed_cheater": return new String[]{"CC", "§c", "Confirmed Cheater"};
+            case "replays_needed": return new String[]{"RN", "§7", "Replays Needed"};
+            case "possible_sniper": return new String[]{"PS", "§e", "Possible Sniper"};
+            case "legit_sniper": return new String[]{"LS", "§3", "Legit Sniper"};
+            case "caution": return new String[]{"C", "§e", "Caution"};
+            case "account": return new String[]{"", "§e", "Account"};
+            case "info": return new String[]{"", "§f", "Info"};
+            default: return new String[]{"", "§7", type};
+        }
     }
 
     // ------------------------------------------------------------------ helpers

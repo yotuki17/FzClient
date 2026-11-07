@@ -27,11 +27,25 @@ public enum Game {
             return s == null ? "" : starColor(s) + "[" + s + "✫]";
         }
 
-        @Override String[] tabHeads() { return new String[]{"FKDR", "WLR", "WS"}; }
-
-        @Override String[] tab(Map<String, Long> c) {
-            return new String[]{ratio(c, "fk", "fd", FKDR), ratio(c, "w", "l", WLR), plain(c, "ws")};
+        @Override Stat[] define() {
+            return new Stat[]{
+                    s("FKDR", "FKDR（ファイナルキル÷ファイナルデス）", c -> ratio(c, "fk", "fd", FKDR)),
+                    s("WLR", "WLR（勝ち÷負け）", c -> ratio(c, "w", "l", WLR)),
+                    s("WS", "連勝", c -> plain(c, "ws")),
+                    s("W", "勝ち", c -> n(c, "w")),
+                    s("L", "負け", c -> n(c, "l")),
+                    s("FK", "ファイナルキル", c -> n(c, "fk")),
+                    s("FD", "ファイナルデス", c -> n(c, "fd")),
+                    s("BB", "ベッド破壊", c -> n(c, "bb")),
+                    s("BBLR", "BBLR（ベッド破壊÷ベッドロスト）", c -> ratio(c, "bb", "bl", WLR)),
+                    s("K", "キル", c -> n(c, "k")),
+                    s("KDR", "KDR（キル÷デス）", c -> ratio(c, "k", "d", WLR)),
+                    s("★", "星（数字だけ）", c -> c.get("star") == null ? "§8?" : starColor(c.get("star")) + c.get("star")),
+                    s("Index", "Index（星×FKDR²）", Game::index),
+            };
         }
+
+        @Override int[] defaults() { return new int[]{0, 1, 2, -1}; }
 
         @Override List<String[]> chat(Map<String, Long> c, Map<String, Long> now, boolean period) {
             List<String[]> rows = new ArrayList<>();
@@ -49,11 +63,19 @@ public enum Game {
             new String[]{"w", "wins", "l", "losses", "k", "kills", "d", "deaths",
                     "ws", "current_winstreak", "bws", "best_overall_winstreak"},
             "ws", "bws") {
-        @Override String[] tabHeads() { return new String[]{"W", "WLR", "WS"}; }
-
-        @Override String[] tab(Map<String, Long> c) {
-            return new String[]{n(c, "w"), ratio(c, "w", "l", WLR), plain(c, "ws")};
+        @Override Stat[] define() {
+            return new Stat[]{
+                    s("W", "勝ち", c -> n(c, "w")),
+                    s("WLR", "WLR（勝ち÷負け）", c -> ratio(c, "w", "l", WLR)),
+                    s("WS", "連勝", c -> plain(c, "ws")),
+                    s("L", "負け", c -> n(c, "l")),
+                    s("K", "キル", c -> n(c, "k")),
+                    s("KDR", "KDR（キル÷デス）", c -> ratio(c, "k", "d", WLR)),
+                    s("BWS", "最高連勝", c -> plain(c, "bws")),
+            };
         }
+
+        @Override int[] defaults() { return new int[]{0, 1, 2, -1}; }
 
         @Override List<String[]> chat(Map<String, Long> c, Map<String, Long> now, boolean period) {
             List<String[]> rows = new ArrayList<>();
@@ -65,11 +87,16 @@ public enum Game {
     },
     TNT_TAG("tnttag", "TNT Tag", "TNTGames", new String[]{"tag", "tntag"},
             new String[]{"w", "wins_tntag", "k", "kills_tntag", "d", "deaths_tntag"}) {
-        @Override String[] tabHeads() { return new String[]{"W", "K", "KDR"}; }
-
-        @Override String[] tab(Map<String, Long> c) {
-            return new String[]{n(c, "w"), n(c, "k"), ratio(c, "k", "d", WLR)};
+        @Override Stat[] define() {
+            return new Stat[]{
+                    s("W", "勝ち", c -> n(c, "w")),
+                    s("K", "タッチ", c -> n(c, "k")),
+                    s("KDR", "KDR（タッチ÷爆発）", c -> ratio(c, "k", "d", WLR)),
+                    s("D", "爆発", c -> n(c, "d")),
+            };
         }
+
+        @Override int[] defaults() { return new int[]{0, 1, 2, -1}; }
 
         @Override List<String[]> chat(Map<String, Long> c, Map<String, Long> now, boolean period) {
             List<String[]> rows = new ArrayList<>();
@@ -80,11 +107,16 @@ public enum Game {
     },
     BOW_SPLEEF("bowspleef", "Bow Spleef", "TNTGames", new String[]{"spleef", "bs"},
             new String[]{"w", "wins_bowspleef", "l", "deaths_bowspleef", "t", "tags_bowspleef"}) {
-        @Override String[] tabHeads() { return new String[]{"W", "WLR"}; }
-
-        @Override String[] tab(Map<String, Long> c) {
-            return new String[]{n(c, "w"), ratio(c, "w", "l", WLR)};
+        @Override Stat[] define() {
+            return new Stat[]{
+                    s("W", "勝ち", c -> n(c, "w")),
+                    s("WLR", "WLR（勝ち÷負け）", c -> ratio(c, "w", "l", WLR)),
+                    s("L", "負け", c -> n(c, "l")),
+                    s("A", "撃った矢", c -> n(c, "t")),
+            };
         }
+
+        @Override int[] defaults() { return new int[]{0, 1, -1, -1}; }
 
         @Override List<String[]> chat(Map<String, Long> c, Map<String, Long> now, boolean period) {
             List<String[]> rows = new ArrayList<>();
@@ -96,11 +128,20 @@ public enum Game {
     MURDER("mm", "Murder Mystery", "MurderMystery", new String[]{"murder", "murdermystery"},
             new String[]{"w", "wins", "g", "games", "k", "kills", "d", "deaths",
                     "dw", "detective_wins", "mw", "murderer_wins", "bk", "bow_kills"}) {
-        @Override String[] tabHeads() { return new String[]{"W", "WR", "K"}; }
-
-        @Override String[] tab(Map<String, Long> c) {
-            return new String[]{n(c, "w"), percent(c, "w", "g"), n(c, "k")};
+        @Override Stat[] define() {
+            return new Stat[]{
+                    s("W", "勝ち", c -> n(c, "w")),
+                    s("WR", "勝率", c -> percent(c, "w", "g")),
+                    s("K", "キル", c -> n(c, "k")),
+                    s("G", "試合", c -> n(c, "g")),
+                    s("KDR", "KDR（キル÷デス）", c -> ratio(c, "k", "d", WLR)),
+                    s("BK", "弓キル", c -> n(c, "bk")),
+                    s("DW", "探偵で勝ち", c -> n(c, "dw")),
+                    s("MW", "殺人鬼で勝ち", c -> n(c, "mw")),
+            };
         }
+
+        @Override int[] defaults() { return new int[]{0, 1, 2, -1}; }
 
         @Override List<String[]> chat(Map<String, Long> c, Map<String, Long> now, boolean period) {
             List<String[]> rows = new ArrayList<>();
@@ -131,9 +172,74 @@ public enum Game {
     /** Text in front of the name (the Bed Wars star); empty for most games. */
     String prefix(Map<String, Long> c) { return ""; }
 
-    abstract String[] tabHeads();
+    /** One stat the tab list can show: a short column title, a name for the settings, and how to work it out. */
+    public static final class Stat {
+        public final String head, label;
+        final java.util.function.Function<Map<String, Long>, String> value;
 
-    abstract String[] tab(Map<String, Long> c);
+        Stat(String head, String label, java.util.function.Function<Map<String, Long>, String> value) {
+            this.head = head;
+            this.label = label;
+            this.value = value;
+        }
+    }
+
+    static Stat s(String head, String label, java.util.function.Function<Map<String, Long>, String> value) {
+        return new Stat(head, label, value);
+    }
+
+    /** Number of tab list columns that can be set per game. */
+    public static final int TAB_COLUMNS = 4;
+
+    /** Every stat this game can show in the tab list (the order the settings list them in; only add at the end). */
+    abstract Stat[] define();
+
+    /** The stats shown by default in columns 1..4 (index into define(), -1 = empty). */
+    abstract int[] defaults();
+
+    private Stat[] stats;
+
+    public Stat[] stats() {
+        if (stats == null) stats = define();
+        return stats;
+    }
+
+    public int[] defaultColumns() { return defaults(); }
+
+    /** The stats picked in the settings for the tab list, in column order (empty columns left out). */
+    private List<Stat> columns() {
+        List<Stat> out = new ArrayList<>();
+        dev.fzkc.fzhud.config.ChoiceSetting[] picks = dev.fzkc.fzhud.Modules.statsColumns[ordinal()];
+        for (dev.fzkc.fzhud.config.ChoiceSetting p : picks) {
+            int i = p.get() - 1;   // option 0 = none
+            if (i >= 0 && i < stats().length) out.add(stats()[i]);
+        }
+        return out;
+    }
+
+    String[] tabHeads() {
+        List<Stat> cols = columns();
+        String[] h = new String[cols.size()];
+        for (int i = 0; i < h.length; i++) h[i] = cols.get(i).head;
+        return h;
+    }
+
+    String[] tab(Map<String, Long> c) {
+        List<Stat> cols = columns();
+        String[] v = new String[cols.size()];
+        for (int i = 0; i < v.length; i++) v[i] = cols.get(i).value.apply(c);
+        return v;
+    }
+
+    /** Bed Wars index: star × FKDR², a common way to rank how strong someone is. */
+    static String index(Map<String, Long> c) {
+        Long star = c.get("star"), fk = c.get("fk"), fd = c.get("fd");
+        if (star == null || fk == null) return "§8?";
+        double r = fk / (double) Math.max(1, fd == null ? 0 : fd);
+        double v = star * r * r;
+        String col = v < 100 ? "§7" : v < 500 ? "§f" : v < 1000 ? "§e" : v < 3000 ? "§6" : v < 10000 ? "§c" : "§5";
+        return col + (v >= 10000 ? String.format(Locale.US, "%.1fk", v / 1000) : String.format(Locale.US, "%d", Math.round(v)));
+    }
 
     /** Rows of label/value pairs for the chat; {@code c} may be a difference, {@code now} is always the total. */
     abstract List<String[]> chat(Map<String, Long> c, Map<String, Long> now, boolean period);
@@ -181,7 +287,9 @@ public enum Game {
 
     public String[] tabPublic(Map<String, Long> c) { return tab(c); }
 
-    public String tabPrefix(Map<String, Long> c) { return prefix(c); }
+    public String tabPrefix(Map<String, Long> c) {
+        return this == BEDWARS && !dev.fzkc.fzhud.Modules.statsStar.get() ? "" : prefix(c);
+    }
 
     public static Game byName(String s) {
         if (s == null) return null;
