@@ -206,6 +206,15 @@ public final class Modules {
     public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "データ"));
     public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー（空なら Bordic：Bed Wars と Duels だけ）", "", 64).secret());
     public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "今日・今週・今月の統計のために記録する（この PC だけ）", true));
+    public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "チャット"));
+    public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "ロビーで発言した人の統計をメッセージの前に付ける（タブの列 1・2）", true));
+    public static final BoolSetting statsChatWarn = stats.add(new BoolSetting("chatwarn", "タグ付きの人が発言したら警告", true));
+    public static final BoolSetting statsChatWarnSound = stats.add(new BoolSetting("chatwarnsound", "警告の時に音を鳴らす", true));
+    public static final HeaderSetting denickHead = stats.add(new HeaderSetting("h_denick", "デニック（ニックの人の本名を探す）"));
+    public static final BoolSetting denickSkin = stats.add(new BoolSetting("denickskin", "スキンで調べる（キー不要・本人が今そのスキンなら確定）", true));
+    public static final BoolSetting denickNumbers = stats.add(new BoolSetting("denicknumbers", "Bed Wars のファイナル・ベッドの数字で調べる（Aurora キーが必要）", true));
+    public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（空なら Mellow の設定から）", "", 128).secret());
+    public static final SliderSetting denickMinFinals = stats.add(new SliderSetting("denickmin", "数字で調べるファイナル数の下限", 1000, 30000, 500, 15000, ""));
 
     // ---- Drop protection (only resources and blocks can be dropped)
     public static final Module dropLock = new Module("droplock", "Drop Protection", Category.PVP,

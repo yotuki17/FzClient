@@ -1,0 +1,223 @@
+package dev.fzkc.fzhud.stats;
+
+import dev.fzkc.fzhud.Modules;
+import dev.fzkc.fzhud.util.Lang;
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IChatComponent;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Chat in Hypixel lobbies: puts the speaker's stats in front of their message ("[223✫ FKDR 2.10]") and warns
+ * when someone with a Watcher / Xadia / Coral tag talks. A message whose speaker is not loaded yet waits up to
+ * 1.2 s (later messages wait behind it, so the order stays the same) and is then sent on through Forge as usual.
+ */
+public class ChatStats {
+    private static final long WAIT_MS = 1200, TAG_WAIT_MS = 8000;
+    /** "[MVP+] Name: hi", "[223✫] [VIP] Name: hi", "Party > [MVP++] Name: hi", "Guild > Name [Officer]: hi". */
+    private static final Pattern SPEAKER = Pattern.compile(
+            "^(?:(?:Party|Guild|Officer|From) > |From )?(?:\\[[^\\]]{1,24}\\] ){0,3}(\\w{1,16})(?: \\[[^\\]]{1,24}\\])?: ");
+
+    private static final class Held {
+        final byte type;
+        final IChatComponent message;
+        final String name;
+        final long until;
+
+        Held(byte type, IChatComponent message, String name, long until) {
+            this.type = type;
+            this.message = message;
+            this.name = name;
+            this.until = until;
+        }
+    }
+
+    private final Deque<Held> held = new ArrayDeque<>();
+    private boolean reposting;
+
+    /** Speakers whose tags are still being looked up (warn as soon as they arrive). */
+    private static final class TagWatch {
+        final UUID id;
+        final String name;
+        final long until;
+
+        TagWatch(UUID id, String name, long until) {
+            this.id = id;
+            this.name = name;
+            this.until = until;
+        }
+    }
+
+    private final List<TagWatch> tagWatch = new ArrayList<>();
+    private final Set<UUID> warned = new HashSet<>();
+
+    private static boolean statsOn() {
+        return Modules.stats.enabled && Modules.statsChat.get() && Stats.lobby && Stats.onHypixel();
+    }
+
+    private static boolean warnOn() {
+        return Modules.stats.enabled && Modules.statsChatWarn.get() && Stats.onHypixel()
+                && (Tags.watcherOn() || Tags.xadiaOn() || Tags.coralOn());
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public void onChat(ClientChatReceivedEvent event) {
+        if (reposting || event.type == 2 || event.isCanceled()) return;
+        String plain = net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
+        if (plain == null) return;
+        Denick.onChat(plain);
+        if (!held.isEmpty()) {
+            // keep the order: everything waits behind the message that is waiting
+            held.add(new Held(event.type, event.message, null, 0));
+            event.setCanceled(true);
+            return;
+        }
+        boolean stats = statsOn(), warn = warnOn();
+        if (!stats && !warn) return;
+        if (plain.startsWith("[NPC]")) return;   // lobby NPCs talk in the same format
+        Matcher m = SPEAKER.matcher(plain);
+        if (!m.find()) return;
+        String name = m.group(1);
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer != null && name.equalsIgnoreCase(mc.thePlayer.getName())) return;
+        UUID id = idOf(name);
+        if (warn && id != null) watchTags(id, name);
+        if (!stats) return;
+        String prefix = prefix(name, id);
+        if (prefix != null) {
+            if (!prefix.isEmpty()) event.message = withPrefix(prefix, event.message);
+            return;
+        }
+        held.add(new Held(event.type, event.message, name, System.currentTimeMillis() + WAIT_MS));
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        long now = System.currentTimeMillis();
+        while (!held.isEmpty()) {
+            Held h = held.peekFirst();
+            String prefix = "";
+            if (h.name != null) {
+                UUID id = idOf(h.name);
+                if (warnOn() && id != null) watchTags(id, h.name);
+                String p = prefix(h.name, id);
+                if (p == null && now < h.until) break;   // still loading
+                if (p != null) prefix = p;
+            }
+            held.pollFirst();
+            repost(h.type, prefix.isEmpty() ? h.message : withPrefix(prefix, h.message));
+        }
+        if (!tagWatch.isEmpty()) {
+            for (Iterator<TagWatch> it = tagWatch.iterator(); it.hasNext(); ) {
+                TagWatch w = it.next();
+                List<Tags.Tag> tags = Tags.get(w.id);
+                if (!tags.isEmpty()) {
+                    it.remove();
+                    warn(w.name, tags);
+                } else if (now > w.until || !Tags.loading(w.id) && now > w.until - TAG_WAIT_MS + 3000) {
+                    it.remove();
+                }
+            }
+        }
+    }
+
+    /** Sends a held message on, the way the game does with a chat packet. */
+    private void repost(byte type, IChatComponent msg) {
+        ClientChatReceivedEvent ev = new ClientChatReceivedEvent(type, msg);
+        reposting = true;
+        try {
+            if (MinecraftForge.EVENT_BUS.post(ev)) return;
+        } finally {
+            reposting = false;
+        }
+        Minecraft mc = Minecraft.getMinecraft();
+        if (ev.message != null && mc.ingameGUI != null) mc.ingameGUI.getChatGUI().printChatMessage(ev.message);
+    }
+
+    /** The UUID behind a name in chat; for a nick that has been denicked, the real player's. */
+    private static UUID idOf(String name) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer != null && mc.thePlayer.sendQueue != null) {
+            net.minecraft.client.network.NetworkPlayerInfo info = mc.thePlayer.sendQueue.getPlayerInfo(name);
+            if (Denick.isNick(info)) {
+                Denick.Real r = Denick.real(name);
+                return r == null ? null : r.id;
+            }
+        }
+        return StatsApi.uuidOf(name);
+    }
+
+    /**
+     * The text to put in front of a message: "" when there is nothing to show, null while still loading.
+     */
+    private static String prefix(String name, UUID id) {
+        Minecraft mc = Minecraft.getMinecraft();
+        net.minecraft.client.network.NetworkPlayerInfo info = mc.thePlayer == null || mc.thePlayer.sendQueue == null
+                ? null : mc.thePlayer.sendQueue.getPlayerInfo(name);
+        if (Denick.isNick(info) && Denick.real(name) == null) return "§8[§c§lNICK§8] ";
+        if (id == null) return StatsApi.nameUnknown(name) ? "§8[§c§lNICK§8] " : null;
+        PlayerData d = StatsApi.get(id, name);
+        if (d == null) return StatsApi.pending(id) ? null : "";   // loading, or the lookup failed
+        if (d.nicked) return "§8[§c§lNICK§8] ";
+        Game g = Stats.current != null ? Stats.current : Game.BEDWARS;
+        java.util.Map<String, Long> c = d.of(g);
+        if (c.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder("§8[");
+        String star = g.tabPrefix(c);
+        if (!star.isEmpty()) sb.append(star.replace("[", "").replace("]", ""));
+        String[] heads = g.tabHeadsPublic(), vals = g.tabPublic(c);
+        for (int i = 0; i < Math.min(2, heads.length); i++) {
+            if (sb.length() > 3) sb.append(' ');
+            sb.append("§7").append(heads[i]).append(' ').append(vals[i]);
+        }
+        Denick.Real r = info != null && Denick.isNick(info) ? Denick.real(name) : null;
+        if (r != null) sb.append(" §7= §a").append(r.name);
+        return sb.append("§8] ").toString();
+    }
+
+    private static IChatComponent withPrefix(String prefix, IChatComponent msg) {
+        ChatComponentText out = new ChatComponentText(prefix);
+        out.appendSibling(msg);
+        return out;
+    }
+
+    private void watchTags(UUID id, String name) {
+        if (warned.contains(id)) return;
+        for (TagWatch w : tagWatch) if (w.id.equals(id)) return;
+        List<Tags.Tag> tags = Tags.get(id);
+        if (!tags.isEmpty()) warn(name, tags);
+        else tagWatch.add(new TagWatch(id, name, System.currentTimeMillis() + TAG_WAIT_MS));
+    }
+
+    private void warn(String name, List<Tags.Tag> tags) {
+        UUID id = idOf(name);
+        if (id != null && !warned.add(id)) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.ingameGUI == null) return;
+        StringBuilder sb = new StringBuilder("§c§l⚠ §f" + name + " §7" + Lang.t("にタグがあります: "));
+        for (int i = 0; i < tags.size(); i++) {
+            if (i > 0) sb.append("§7, ");
+            sb.append(tags.get(i).text);
+        }
+        mc.ingameGUI.getChatGUI().printChatMessage(new ChatComponentText(sb.toString()));
+        if (Modules.statsChatWarnSound.get() && mc.thePlayer != null) mc.thePlayer.playSound("note.pling", 1f, 0.6f);
+    }
+}

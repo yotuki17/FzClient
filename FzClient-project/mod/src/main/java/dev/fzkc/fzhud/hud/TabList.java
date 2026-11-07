@@ -243,11 +243,26 @@ public class TabList extends HudElement {
             java.util.UUID id = info.getGameProfile().getId();
             String[] row = statCells[i];
             java.util.Arrays.fill(row, "");
-            if (id == null || id.version() != 4) continue;   // NPCs: nothing to look up
+            if (id == null) continue;
+            String realSuffix = "";
+            if (id.version() == 1) {
+                // a Hypixel nick: the real player's stats once denicked, "NICK" until then
+                dev.fzkc.fzhud.stats.Denick.Real real = dev.fzkc.fzhud.stats.Denick.real(info.getGameProfile().getName());
+                if (real == null || real.id == null) {
+                    names.set(i, names.get(i) + (real == null ? "" : " §8(§a" + real.name + "§8)"));
+                    if (cols > 0) row[0] = "§c§lNICK";
+                    for (int c = 0; c < cols; c++) statW[c] = Math.max(statW[c], R.width(row[c]));
+                    continue;
+                }
+                realSuffix = " §8(§a" + real.name + "§8)";
+                id = real.id;
+            } else if (id.version() != 4) {
+                continue;   // NPCs: nothing to look up
+            }
             dev.fzkc.fzhud.stats.PlayerData d = dev.fzkc.fzhud.stats.StatsApi.get(id, info.getGameProfile().getName());
             java.util.List<dev.fzkc.fzhud.stats.Tags.Tag> tags = tagsOn
                     ? dev.fzkc.fzhud.stats.Tags.get(id) : java.util.Collections.<dev.fzkc.fzhud.stats.Tags.Tag>emptyList();
-            names.set(i, statsName(info, names.get(i), d, tags, g));
+            names.set(i, statsName(info, names.get(i), d, tags, g) + realSuffix);
             if (d == null) {
                 if (cols > 0) row[0] = "§8…";
             } else if (d.nicked) {

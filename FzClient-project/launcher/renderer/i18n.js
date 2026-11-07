@@ -124,6 +124,8 @@ const EN = {
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
   'NEW：Alt+X のオーバーレイと録画をランチャーで（どのサーバーでも）': 'NEW: the Alt+X overlay and recording now run in the launcher (on any server)',
+  'NEW：ロビーで発言した人の統計をチャットに表示・タグ付きの人を警告': 'NEW: stats of people talking in lobbies shown in chat, warning for tagged players',
+  'NEW：デニック（スキンと Bed Wars の数字でニックの人の本名を探す）': 'NEW: denick (find who is behind a nick by skin and by Bed Wars numbers)',
   'NEW：タブに出す統計をゲームごとに選べるように（列1〜4）・Coral（Urchin）のタグに対応': 'NEW: pick the stats shown in the tab list per game (columns 1-4), Coral (Urchin) tags',
   'NEW：タブに統計とタグ（Watcher・Xadia）を表示・影つき／すっきりの見た目': 'NEW: stats and tags (Watcher, Xadia) in the tab list, with shaded and clean styles',
   'NEW：/fzstats で詳しい統計（今日・今週・今月も）。Bed Wars・Duels・TNT Tag・Bow Spleef・MM': 'NEW: detailed stats with /fzstats (today, this week, this month too). Bed Wars, Duels, TNT Tag, Bow Spleef, MM',

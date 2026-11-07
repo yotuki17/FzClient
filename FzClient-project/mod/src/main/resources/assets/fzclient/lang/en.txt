@@ -897,3 +897,21 @@ Index（星×FKDR²）	Index (star × FKDR²)
 KDR（タッチ÷爆発）	KDR (tags ÷ deaths)
 Coral（Urchin）のタグを使う	Use Coral (Urchin) tags
 Coral（Urchin）API キー	Coral (Urchin) API key
+はニックです	is nicked
+スキン	skin
+数字	numbers
+{0} を数字で調べています（{1} #{2}）	Looking up {0} by numbers ({1} #{2})
+Aurora の API キーが違います	The Aurora API key is wrong
+{0}：ファイナルとベッドの両方に合う人はいませんでした	{0}: nobody matches both the finals and the beds
+の候補: 	 could be: 
+（ベッドの数字でも合えば確定）	(confirmed if the beds number matches too)
+{0}：その数字の人は見つかりませんでした	{0}: nobody found with that number
+にタグがあります: 	has tags: 
+ロビーで発言した人の統計をメッセージの前に付ける（タブの列 1・2）	Put the stats of people talking in lobbies in front of their message (tab columns 1 and 2)
+タグ付きの人が発言したら警告	Warn when someone with a tag talks
+警告の時に音を鳴らす	Play a sound with the warning
+デニック（ニックの人の本名を探す）	Denick (find who is behind a nick)
+スキンで調べる（キー不要・本人が今そのスキンなら確定）	By skin (no key; confirmed when the owner wears that skin right now)
+Bed Wars のファイナル・ベッドの数字で調べる（Aurora キーが必要）	By Bed Wars final / bed numbers (needs an Aurora key)
+Aurora API キー（空なら Mellow の設定から）	Aurora API key (empty: taken from Mellow's settings)
+数字で調べるファイナル数の下限	Lowest final count to look up by numbers

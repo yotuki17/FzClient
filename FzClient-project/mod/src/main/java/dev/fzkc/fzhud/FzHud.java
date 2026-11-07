@@ -189,6 +189,9 @@ public class FzHud {
         dev.fzkc.fzhud.stats.Stats statsEvents = new dev.fzkc.fzhud.stats.Stats();
         MinecraftForge.EVENT_BUS.register(statsEvents);
         FMLCommonHandler.instance().bus().register(statsEvents);
+        dev.fzkc.fzhud.stats.ChatStats chatStats = new dev.fzkc.fzhud.stats.ChatStats();   // lobby chat stats, tag warnings, denick by numbers
+        MinecraftForge.EVENT_BUS.register(chatStats);
+        FMLCommonHandler.instance().bus().register(chatStats);
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.stats.StatsCommand());
         Runtime.getRuntime().addShutdownHook(new Thread(dev.fzkc.fzhud.stats.Stats::saveHistory, "FzClient-StatsSave"));
         Extras extras = new Extras();

@@ -206,15 +206,7 @@ public class StatsCommand extends CommandBase {
 
     /** Name -> UUID from Mojang. */
     private static UUID lookup(String name) {
-        try {
-            String body = Http.get("Mojang", "https://api.minecraftservices.com/minecraft/profile/lookup/name/" + name, null, null);
-            JsonObject o = new JsonParser().parse(body).getAsJsonObject();
-            String id = PlayerData.str(o, "id");
-            if (id == null || id.length() != 32) return null;
-            return UUID.fromString(id.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5"));
-        } catch (Exception e) {
-            return null;
-        }
+        return StatsApi.lookupName(name);
     }
 
     private static void say(String s) {

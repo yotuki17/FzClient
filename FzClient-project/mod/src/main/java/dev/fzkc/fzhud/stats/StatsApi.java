@@ -130,6 +130,66 @@ public final class StatsApi {
 
     public static void clear() { CACHE.clear(); }
 
+    /** Cached stats without asking for anything. */
+    public static PlayerData peek(UUID id) {
+        Entry e = CACHE.get(id);
+        return e == null ? null : e.data;
+    }
+
+    /** True while a lookup for this player is still running. */
+    public static boolean pending(UUID id) {
+        Entry e = CACHE.get(id);
+        return e != null && e.loading;
+    }
+
+    // ------------------------------------------------------------------ name -> UUID (Mojang), kept for the session
+
+    private static final UUID NONE = new UUID(0, 0);
+    private static final Map<String, UUID> NAMES = new ConcurrentHashMap<>();
+    private static final Map<String, Boolean> NAME_LOADING = new ConcurrentHashMap<>();
+
+    /**
+     * The UUID for a name: from the tab list, else from Mojang (in the background; null until it is known).
+     * {@link #nameUnknown} tells a name Mojang does not know apart from one still loading.
+     */
+    public static UUID uuidOf(String name) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getMinecraft();
+        if (mc.thePlayer != null && mc.thePlayer.sendQueue != null) {
+            net.minecraft.client.network.NetworkPlayerInfo i = mc.thePlayer.sendQueue.getPlayerInfo(name);
+            if (i != null && i.getGameProfile().getId() != null) return i.getGameProfile().getId();
+        }
+        String k = name.toLowerCase(java.util.Locale.ROOT);
+        UUID id = NAMES.get(k);
+        if (id != null) return id == NONE ? null : id;
+        if (NAME_LOADING.putIfAbsent(k, Boolean.TRUE) == null) {
+            POOL.execute(() -> {
+                try {
+                    UUID found = lookupName(name);
+                    NAMES.put(k, found == null ? NONE : found);
+                } finally {
+                    NAME_LOADING.remove(k);
+                }
+            });
+        }
+        return null;
+    }
+
+    public static boolean nameUnknown(String name) {
+        return NAMES.get(name.toLowerCase(java.util.Locale.ROOT)) == NONE;
+    }
+
+    /** Name -> UUID from Mojang right now (call off the game thread). */
+    static UUID lookupName(String name) {
+        try {
+            String body = Http.get("Mojang", "https://api.minecraftservices.com/minecraft/profile/lookup/name/" + name, null, null);
+            String id = PlayerData.str(new JsonParser().parse(body).getAsJsonObject(), "id");
+            if (id == null || id.length() != 32) return null;
+            return UUID.fromString(id.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5"));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /** Why the Hypixel key is not being used right now, or null. */
     public static String hypixelProblem() { return hypixelProblem; }
 

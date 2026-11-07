@@ -73,13 +73,16 @@ public final class Stats {
             lastWorld = mc.theWorld;
             current = null;
             lobby = true;
+            Denick.worldChanged();
             askIn = mc.theWorld != null && Modules.stats.enabled && onHypixel() ? 25 : -1;
         }
         if (askIn > 0 && --askIn == 0 && mc.thePlayer != null) {
             askedAt = System.currentTimeMillis();
             mc.thePlayer.sendChatMessage("/locraw");
         }
-        if (++ticks % 20 != 0 || mc.thePlayer == null || mc.thePlayer.sendQueue == null || !tabActive()) return;
+        if (++ticks % 20 != 0 || mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
+        Denick.tick();
+        if (!tabActive()) return;
         // keep everyone in the tab list loaded (once a second; cached results make this cheap)
         List<UUID> ids = new ArrayList<>();
         List<String> names = new ArrayList<>();
@@ -136,7 +139,7 @@ public final class Stats {
      */
     private static void importMellowKeys() {
         boolean any = Modules.statsHypixelKey.get().isEmpty() || Modules.statsWatcherKey.get().isEmpty()
-                || Modules.statsXadiaKey.get().isEmpty() || Modules.statsCoralKey.get().isEmpty();
+                || Modules.statsXadiaKey.get().isEmpty() || Modules.statsCoralKey.get().isEmpty() || Modules.denickAuroraKey.get().isEmpty();
         if (!any) return;
         File dir = new File(Minecraft.getMinecraft().mcDataDir, "OneConfig");
         File[] tries = {new File(dir, "profiles/Default Profile/mellow.json"), new File(dir, "config/mellow.json")};
@@ -154,6 +157,7 @@ public final class Stats {
                     Modules.statsXadia.value = true;
                     changed = true;
                 }
+                changed |= take(Modules.denickAuroraKey, PlayerData.str(o, "auroraApiKey"));
                 // Mellow calls the Coral key "urchinKey" (Coral is Urchin's tag list)
                 if (take(Modules.statsCoralKey, PlayerData.str(o, "urchinKey"))) {
                     Modules.statsCoral.value = true;
