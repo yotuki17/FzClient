@@ -942,3 +942,8 @@ Coral（Urchin）	Coral (Urchin)
 /pv の表示	Show /pv in
 画面	Window
 名前を入力して Enter	Type a name, then Enter
+モード別の統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）	Bordic has no per-mode stats (Overlay → Data & API: pick Hypixel API or Bedlify)
+このモードの記録がありません	No record for this mode
+今日・今週・今月の数字は Overall だけです	Today / this week / this month is only for Overall
+{0} 分前	{0} min ago
+タグを確認中…	Checking tags…

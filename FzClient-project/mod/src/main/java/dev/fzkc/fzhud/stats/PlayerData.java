@@ -38,6 +38,8 @@ public final class PlayerData {
 
     public Map<String, Long> of(Game g) { return g.slice(counters); }
 
+    public Map<String, Long> of(Game g, Game.Mode m) { return g.slice(counters, m); }
+
     /** Coloured "[MVP+] Name". */
     public String display() { return rankPrefix + rankColor + name; }
 
@@ -49,7 +51,10 @@ public final class PlayerData {
         String name = str(player, "displayname");
         if (name == null) name = fallbackName;
         Map<String, Long> counters = new HashMap<>();
-        for (Game g : Game.values()) g.read(player, counters);
+        for (Game g : Game.values()) {
+            g.read(player, counters);
+            g.readModes(player, counters);
+        }
         String[] rank = rank(player);
         return new PlayerData(id, name, rank[0], rank[1], false, source, counters);
     }

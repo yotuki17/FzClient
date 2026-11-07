@@ -78,6 +78,12 @@ public final class PlayerPreview {
             GameProfile p = mc.getSession() == null ? null : mc.getSession().getProfile();
             s = p != null && p.getId() != null ? DefaultPlayerSkin.getDefaultSkin(p.getId()) : DefaultPlayerSkin.getDefaultSkinLegacy();
         }
+        drawSkin(s, slim, x, footY, size, yaw, cape, age);
+    }
+
+    /** Same as {@link #draw}, with any skin (another player's). */
+    public static void drawSkin(ResourceLocation s, boolean slim, float x, float footY, float size, float yaw, ResourceLocation cape, float age) {
+        Minecraft mc = Minecraft.getMinecraft();
         ModelPlayer m = slim ? SLIM : WIDE;
         idle(m, age);
 

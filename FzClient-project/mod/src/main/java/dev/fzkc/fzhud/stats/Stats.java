@@ -74,10 +74,16 @@ public final class Stats {
                 }
             }
         }
-        // developer check of the /pv window: -Dfzclient.pvtest=<name> opens it and saves a screenshot
+        // developer check of the /pv window: -Dfzclient.pvtest=<name>[,<game>,<mode>] opens it twice (Bed Wars
+        // overall, then the given game and mode) and saves a screenshot of each
         String pvtest = System.getProperty("fzclient.pvtest");
-        if (pvtest != null && ticks == 200) mc.displayGuiScreen(new dev.fzkc.fzhud.gui.StatsScreen(pvtest, Game.BEDWARS, History.Period.TOTAL));
-        if (pvtest != null && (ticks == 320 || ticks == 420)) {
+        if (pvtest != null && (ticks == 200 || ticks == 330)) {
+            String[] a = pvtest.split(",");
+            Game g = ticks == 330 && a.length > 1 ? Game.byName(a[1]) : Game.BEDWARS;
+            Game.Mode m = ticks == 330 && a.length > 2 && g != null ? g.mode(a[2]) : null;
+            mc.displayGuiScreen(new dev.fzkc.fzhud.gui.StatsScreen(a[0], g == null ? Game.BEDWARS : g, m, History.Period.TOTAL));
+        }
+        if (pvtest != null && (ticks == 320 || ticks == 560)) {
             net.minecraft.util.ScreenShotHelper.saveScreenshot(mc.mcDataDir, "pvtest" + ticks + ".png", mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
         }
         if (mc.theWorld != lastWorld) {

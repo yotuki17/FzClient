@@ -44,6 +44,7 @@ public class StatsCommand extends CommandBase {
         List<String> words = new ArrayList<>();
         for (Game g : Game.values()) words.add(g.key);
         for (History.Period p : History.Period.values()) words.add(p.key);
+        for (Game g : Game.values()) for (Game.Mode m : g.modes()) if (!m.overall()) words.add(m.key);
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer != null && mc.thePlayer.sendQueue != null) {
             for (NetworkPlayerInfo i : mc.thePlayer.sendQueue.getPlayerInfoMap()) words.add(i.getGameProfile().getName());
@@ -55,7 +56,7 @@ public class StatsCommand extends CommandBase {
     public void processCommand(ICommandSender sender, String[] args) {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null) return;
-        String name = null;
+        String name = null, modeWord = null;
         Game game = null;
         History.Period period = null;
         for (String a : args) {
@@ -63,9 +64,19 @@ public class StatsCommand extends CommandBase {
             History.Period p = History.Period.byName(a);
             if (g != null && game == null) game = g;
             else if (p != null && period == null) period = p;
+            else if (modeWord == null && anyMode(a)) modeWord = a;
             else if (name == null) name = a;
         }
+        if (game == null && modeWord != null) {
+            // "/pv uhc": the game that has this mode
+            for (Game g : Game.values()) if (g.mode(modeWord) != null) { game = g; break; }
+        }
         if (game == null) game = Stats.current != null ? Stats.current : Game.BEDWARS;
+        Game.Mode mode = game.mode(modeWord);
+        if (mode == null) {
+            if (modeWord != null && name == null) name = modeWord;   // a player called "sumo"
+            mode = Game.Mode.OVERALL;
+        }
         if (period == null) period = History.Period.TOTAL;
         if (name == null) name = mc.thePlayer.getName();
         if (!name.matches("[A-Za-z0-9_]{1,16}")) {
@@ -74,21 +85,22 @@ public class StatsCommand extends CommandBase {
         }
         if (dev.fzkc.fzhud.Modules.statsPvMode.get() == 0) {
             // the window opens on the next tick (the chat closes right after a command)
-            pendingScreen = new dev.fzkc.fzhud.gui.StatsScreen(name, game, period);
+            pendingScreen = new dev.fzkc.fzhud.gui.StatsScreen(name, game, mode, period);
             return;
         }
         final Game g = game;
+        final Game.Mode md = mode;
         final History.Period per = period;
         final String nm = name;
         UUID known = uuidInTab(name);
         say("§7" + Lang.f("{0} の統計を取得中…", name));
-        if (known != null) show(known, nm, g, per);
+        if (known != null) show(known, nm, g, md, per);
         else {
             new Thread(() -> {
                 UUID id = lookup(nm);
                 mc.addScheduledTask(() -> {
                     if (id == null) say("§c" + Lang.f("{0} というプレイヤーが見つかりません", nm));
-                    else show(id, nm, g, per);
+                    else show(id, nm, g, md, per);
                 });
             }, "FzClient-NameLookup").start();
         }
@@ -100,12 +112,20 @@ public class StatsCommand extends CommandBase {
             UUID id = lookup(name);
             Minecraft.getMinecraft().addScheduledTask(() -> {
                 if (id == null) say("statstest: no uuid for " + name);
-                else show(id, name, game, period);
+                else show(id, name, game, Game.Mode.OVERALL, period);
             });
         }, "FzClient-StatsCheck").start();
     }
 
-    private static void show(UUID id, String name, Game game, History.Period period) {
+    private static boolean anyMode(String a) {
+        for (Game g : Game.values()) {
+            Game.Mode m = g.mode(a);
+            if (m != null && !m.overall()) return true;
+        }
+        return false;
+    }
+
+    private static void show(UUID id, String name, Game game, Game.Mode mode, History.Period period) {
         Tags.get(id);   // start the tag lookups at the same time
         StatsApi.fetch(id, name, d -> {
             // give the tags a moment (they are fetched in parallel), then print everything together
@@ -117,7 +137,7 @@ public class StatsCommand extends CommandBase {
                         return;
                     }
                 }
-                Minecraft.getMinecraft().addScheduledTask(() -> print(d, game, period));
+                Minecraft.getMinecraft().addScheduledTask(() -> print(d, game, mode, period));
             }, "FzClient-StatsWait").start();
         }, err -> say("§c" + Lang.t("統計を取得できませんでした: ") + err));
     }
@@ -142,8 +162,27 @@ public class StatsCommand extends CommandBase {
     }
 
     public static View view(PlayerData d, Game game, History.Period period) {
+        return view(d, game, Game.Mode.OVERALL, period);
+    }
+
+    public static View view(PlayerData d, Game game, Game.Mode mode, History.Period period) {
         List<String[]> none = new ArrayList<>();
         if (d.nicked) return new View(none, "§c" + Lang.t("Hypixel にこの名前のデータがありません（ニックネームの可能性が高い）"), null);
+        if (mode == null) mode = Game.Mode.OVERALL;
+        if (!mode.overall()) {
+            Map<String, Long> m = d.of(game, mode);
+            // Bordic keeps only a few per-mode numbers (no wins): a card full of "?" helps nobody
+            if (m.isEmpty() || "Bordic".equals(d.source) && !m.containsKey("w")) {
+                if ("Bordic".equals(d.source)) {
+                    return new View(none, "§e" + Lang.t("モード別の統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）"), null);
+                }
+                return new View(none, "§7" + Lang.t("このモードの記録がありません"), null);
+            }
+            if (period != History.Period.TOTAL) {
+                return new View(none, "§7" + Lang.t("今日・今週・今月の数字は Overall だけです"), null);
+            }
+            return new View(game.chat(m, m, false), null, null);
+        }
         Map<String, Long> now = d.of(game);
         if (now.isEmpty()) {
             if ("Bordic".equals(d.source) && game != Game.BEDWARS && game != Game.DUELS) {
@@ -166,10 +205,11 @@ public class StatsCommand extends CommandBase {
         return new View(game.chat(shown, now, period != History.Period.TOTAL), null, note);
     }
 
-    private static void print(PlayerData d, Game game, History.Period period) {
-        String title = HEAD + "§f" + d.display() + " §8· §b" + game.label + " §7(" + Lang.t(period.label) + ")";
+    private static void print(PlayerData d, Game game, Game.Mode mode, History.Period period) {
+        String title = HEAD + "§f" + d.display() + " §8· §b" + game.label + (mode.overall() ? "" : " " + mode.label)
+                + " §7(" + Lang.t(period.label) + ")";
         say(title);
-        View v = view(d, game, period);
+        View v = view(d, game, mode, period);
         if (v.message != null) {
             say("  " + v.message);
             tags(d.id);

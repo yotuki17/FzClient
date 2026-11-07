@@ -114,7 +114,9 @@ public final class History {
         }
         p.name = d.name;
         long now = System.currentTimeMillis();
-        Map<String, Long> c = new HashMap<>(d.counters);
+        Map<String, Long> c = new HashMap<>();
+        // only the overall counters (per-mode ones would make the file many times bigger)
+        for (Map.Entry<String, Long> e : d.counters.entrySet()) if (e.getKey().indexOf('@') < 0) c.put(e.getKey(), e.getValue());
         int n = p.snaps.size();
         Snap last = n == 0 ? null : p.snaps.get(n - 1);
         if (last != null && now - last.t < STEP_MS && sameDay(last.t, now)
