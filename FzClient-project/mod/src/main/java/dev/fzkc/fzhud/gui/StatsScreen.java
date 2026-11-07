@@ -275,6 +275,14 @@ public class StatsScreen extends FzScreen {
                 cx += tw + 4;
             }
             if (tags.isEmpty() && Tags.loading(id)) R.textCentered("§8" + Lang.t("タグを確認中…"), skinX(), y, R.alpha(Ui.text, o));
+            if (!tags.isEmpty()) y += 17;
+            // why a lookup failed (a wrong key, a limit), so a missing tag is not a mystery
+            for (String p : Tags.problems(id)) {
+                String line = "§c" + Lang.t(p);
+                float ps = Math.min(1f, (SB - 20) / Math.max(1f, R.width(line)));
+                R.textScaledCentered(line, skinX(), y, ps, R.alpha(Ui.text, o));
+                y += 11;
+            }
         }
 
         // search

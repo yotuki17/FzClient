@@ -47,6 +47,18 @@ public final class Tags {
     }
 
     private static final Map<UUID, Entry> CACHE = new ConcurrentHashMap<>();
+    private static final org.apache.logging.log4j.Logger LOG = org.apache.logging.log4j.LogManager.getLogger("FzClient-Tags");
+    private static final Map<String, Long> LOGGED = new ConcurrentHashMap<>();
+
+    /** Writes a lookup problem to the game log (the same message at most once every 5 minutes). */
+    private static void logProblem(String msg) {
+        if (msg == null) return;
+        long now = System.currentTimeMillis();
+        Long last = LOGGED.get(msg);
+        if (last != null && now - last < 5 * 60_000L) return;
+        LOGGED.put(msg, now);
+        LOG.warn("Tag lookup failed: " + msg);
+    }
     private static final ExecutorService POOL = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "FzClient-Tags");
         t.setDaemon(true);
@@ -155,17 +167,22 @@ public final class Tags {
                     + URLEncoder.encode(key, "UTF-8") + "&uuid=" + id.toString().replace("-", ""), null, null);
             JsonObject r = new JsonParser().parse(body).getAsJsonObject();
             JsonElement err = r.get("error");
-            if (err != null && !err.isJsonNull() && !"false".equals(err.getAsString())) {
-                throw new java.io.IOException("Watcher: error");
+            boolean failed = err != null && err.isJsonPrimitive()
+                    && (err.getAsJsonPrimitive().isBoolean() ? err.getAsBoolean() : !err.getAsString().isEmpty() && !"false".equals(err.getAsString()));
+            if (failed) {
+                String code = PlayerData.str(r, "code");
+                throw new java.io.IOException("Watcher: " + (code == null ? "error" : code));
             }
             List<Tag> tags = new ArrayList<>();
-            JsonArray arr = r.getAsJsonArray("tags");
+            JsonElement tagsEl = r.get("tags");
+            JsonArray arr = tagsEl != null && tagsEl.isJsonArray() ? tagsEl.getAsJsonArray() : null;
             if (arr != null) {
                 for (JsonElement te : arr) {
+                    if (!te.isJsonObject()) continue;
                     JsonObject t = te.getAsJsonObject();
                     String label = clean(PlayerData.str(t, "text"));
                     if (label.isEmpty()) continue;
-                    String color = t.has("color") && t.get("color").isJsonPrimitive() ? nearest(t.get("color").getAsInt()) : "§c";
+                    String color = colorOf(t.get("color"));
                     String tip = clean(PlayerData.str(t, "tooltip"));
                     tags.add(new Tag("Watcher", badge(watcherIcon(label), color),
                             color + "§l" + label + "§r" + (tip.isEmpty() ? "" : " §7(" + tip + ")")));
@@ -178,9 +195,12 @@ public final class Tags {
             if (s.code == 429) watcherPausedUntil = System.currentTimeMillis() + 60_000L;
             e.watcherFail = System.currentTimeMillis();
             e.watcherError = s.code == 401 || s.code == 403 ? "Watcher: API キーが違います" : s.getMessage();
+            logProblem("Watcher HTTP " + s.code);
         } catch (Exception ex) {
             e.watcherFail = System.currentTimeMillis();
-            e.watcherError = "Watcher: " + (ex.getMessage() == null ? "error" : ex.getMessage());
+            String m = ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
+            e.watcherError = m.startsWith("Watcher") ? m : "Watcher: " + m;
+            logProblem(e.watcherError);
         } finally {
             e.watcherLoading = false;
         }
@@ -255,6 +275,7 @@ public final class Tags {
                 e.xadiaFail = System.currentTimeMillis();
                 e.xadiaError = msg == null ? "Xadia: error" : msg;
             }
+            logProblem(msg == null ? "Xadia: error" : msg);
         } finally {
             for (UUID id : ids) {
                 Entry e = CACHE.get(id);
@@ -339,6 +360,7 @@ public final class Tags {
                 e.coralFail = System.currentTimeMillis();
                 e.coralError = msg == null ? "Coral: error" : msg;
             }
+            logProblem(msg == null ? "Coral: error" : msg);
         } finally {
             for (UUID id : ids) {
                 Entry e = CACHE.get(id);
@@ -365,6 +387,20 @@ public final class Tags {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    /** A tag colour given as a number (0xRRGGBB), "#RRGGBB" or a Minecraft colour code; red when unknown. */
+    private static String colorOf(JsonElement c) {
+        if (c == null || !c.isJsonPrimitive()) return "§c";
+        try {
+            if (c.getAsJsonPrimitive().isNumber()) return nearest(c.getAsInt());
+            String s = c.getAsString().trim();
+            if (s.startsWith("§") && s.length() >= 2) return s.substring(0, 2);
+            if (s.startsWith("#")) s = s.substring(1);
+            return nearest(Integer.parseInt(s, 16));
+        } catch (RuntimeException ex) {
+            return "§c";
+        }
+    }
 
     private static String badge(String icon, String color) { return "§8[" + color + icon + "§8]"; }
 

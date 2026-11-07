@@ -194,7 +194,7 @@ public class StatsCommand extends CommandBase {
         String note = null;
         if (period != History.Period.TOTAL) {
             History.Base base = History.base(d.id, period);
-            if (base == null || System.currentTimeMillis() - base.since < 120_000L) {
+            if (base == null) {
                 return new View(none, "§7" + Lang.t("まだ記録がありません。今から記録するので、次からこの期間の数字が出ます。"), null);
             }
             shown = game.minus(now, game.slice(base.counters));

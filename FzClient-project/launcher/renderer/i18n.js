@@ -124,6 +124,7 @@ const EN = {
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
   'NEW：Alt+X のオーバーレイと録画をランチャーで（どのサーバーでも）': 'NEW: the Alt+X overlay and recording now run in the launcher (on any server)',
+  '修正：/pv の今日・今週・今月がすぐ出るように・タグが取れない時に理由を表示': 'Fix: today / this week / this month show right away in /pv; the reason is shown when tags cannot be loaded',
   'NEW：/pv の画面を作り直し：スキンを 3D で表示・Solo／Doubles や UHC／Sumo などモード別の統計・数字の色を Mellow と同じに': 'NEW: redesigned /pv window: 3D skin, per-mode stats (Solo/Doubles, UHC/Sumo and more), number colours like Mellow',
   'NEW：/fzstats は /pv に。統計を画面で見られるように（ゲーム・期間をタブで切り替え・名前を打って Enter で別の人）': 'NEW: /fzstats is now /pv and shows stats in a window (games and periods as tabs, type a name and press Enter for someone else)',
   'NEW：Player Stats は「Overlay」に名前を変えて PvP へ・設定をページ（タブリスト／列／データ・API／チャット／タグ／デニック）に分けて見やすく': 'NEW: Player Stats is now "Overlay" under PvP, its settings split into pages (Tab list / Columns / Data & API / Chat / Tags / Denick)',
