@@ -162,18 +162,21 @@ public final class Modules {
     public static final SliderSetting partyDetectMin = partyDetect.add(new SliderSetting("min", "知らせる人数", 2, 4, 1, 2, "人以上"));
     public static final BoolSetting partyDetectSound = partyDetect.add(new BoolSetting("sound", "見つけた時に音を鳴らす", true));
 
-    // ---- Player stats (tab list columns, /fzstats, Watcher / Xadia tags)
-    public static final Module stats = new Module("playerstats", "Player Stats", Category.SERVER,
-            "タブに統計とタグを表示・/fzstats で詳しい統計（今日・今週・今月も）", true);
-    public static final HeaderSetting statsHeadTab = stats.add(new HeaderSetting("h_tab", "タブリスト"));
+    // ---- Overlay: player stats in the tab list and chat, /fzstats, tags, denick (id kept as "playerstats" for saved settings)
+    public static final Module stats = new Module("playerstats", "Overlay", Category.PVP,
+            "タブとチャットに統計とタグを表示・/fzstats で詳しい統計・デニック", true);
+    public static final dev.fzkc.fzhud.config.PageSetting statsPageTab = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_tab", "タブリスト"));
+    public static final HeaderSetting statsHeadTab = stats.add(new HeaderSetting("h_tab", "表示"));
     public static final BoolSetting statsTab = stats.add(new BoolSetting("tab", "タブに統計を表示（Bed Wars・Duels・TNT Tag・Bow Spleef・Murder Mystery）", true));
+    public static final BoolSetting statsTabLobby = stats.add(new BoolSetting("lobby", "ロビーでも統計を表示", false));
+    public static final HeaderSetting statsHeadLook = stats.add(new HeaderSetting("h_look", "見た目"));
     /** 0 = like the normal tab list, 1 = shaded (column titles, shaded rows), 2 = clean (column titles, no stripes). */
     public static final ChoiceSetting statsTabStyle = stats.add(new ChoiceSetting("tabstyle", "タブの見た目", 1,
             "いつもの", "影つき（shaded）", "すっきり（clean）"));
-    public static final BoolSetting statsTabLobby = stats.add(new BoolSetting("lobby", "ロビーでも統計を表示", false));
     public static final BoolSetting statsRankColors = stats.add(new BoolSetting("rankcolors", "試合中の名前をランクの色にする（チームの文字はそのまま）", true));
     public static final BoolSetting statsTagsInTab = stats.add(new BoolSetting("tabtags", "タブにタグを表示", true));
     public static final BoolSetting statsStar = stats.add(new BoolSetting("star", "Bed Wars：名前の前に星を表示", true));
+    public static final dev.fzkc.fzhud.config.PageSetting statsPageCols = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_cols", "タブの列"));
     /** [game][column]: which stat each tab list column shows (0 = none, else index + 1 into Game.stats()). */
     public static final ChoiceSetting[][] statsColumns = statsColumns();
 
@@ -195,23 +198,38 @@ public final class Modules {
         }
         return out;
     }
-    public static final HeaderSetting statsHeadTags = stats.add(new HeaderSetting("h_tags", "タグ（空のキーは Mellow の設定から自動で読み込み）"));
+    public static final dev.fzkc.fzhud.config.PageSetting statsPageData = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_data", "データ・API"));
+    public static final HeaderSetting statsHeadSource = stats.add(new HeaderSetting("h_source", "統計の取得元（使えない時は Bordic）"));
+    /** Index into StatsApi.Source: 0 Hypixel API, 1 Bordic, 2 Bedlify. */
+    public static final ChoiceSetting statsSource = stats.add(new ChoiceSetting("source", "試合中", 0,
+            "Hypixel API（キー必要）", "Bordic", "Bedlify"));
+    public static final ChoiceSetting statsLobbySource = stats.add(new ChoiceSetting("lobbysource", "ロビー（チャット・タブ）", 1,
+            "Hypixel API（キー必要）", "Bordic", "Bedlify"));
+    public static final HeaderSetting statsHeadKeys = stats.add(new HeaderSetting("h_keys", "キー（空なら Mellow の設定から自動で読み込み）"));
+    public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー", "", 64).secret());
+    public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "記録"));
+    public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "今日・今週・今月の統計のために記録する（この PC だけ）", true));
+    public static final dev.fzkc.fzhud.config.PageSetting statsPageChat = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_chat", "チャット"));
+    public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "ロビーのチャット"));
+    public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "ロビーで発言した人の統計をメッセージの前に付ける（タブの列 1・2）", true));
+    public static final HeaderSetting statsHeadWarn = stats.add(new HeaderSetting("h_warn", "警告"));
+    public static final BoolSetting statsChatWarn = stats.add(new BoolSetting("chatwarn", "タグ付きの人が発言したら警告", true));
+    public static final BoolSetting statsChatWarnSound = stats.add(new BoolSetting("chatwarnsound", "警告の時に音を鳴らす", true));
+    public static final dev.fzkc.fzhud.config.PageSetting statsPageTags = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_tags", "タグ"));
+    public static final HeaderSetting statsHeadWatcher = stats.add(new HeaderSetting("h_watcher", "Watcher"));
     public static final BoolSetting statsWatcher = stats.add(new BoolSetting("watcher", "Watcher のタグを使う", false));
     public static final TextSetting statsWatcherKey = stats.add(new TextSetting("watcherkey", "Watcher API キー", "", 128).secret());
+    public static final HeaderSetting statsHeadXadia = stats.add(new HeaderSetting("h_xadia", "Xadia"));
     public static final BoolSetting statsXadia = stats.add(new BoolSetting("xadia", "Xadia のタグを使う", false));
     public static final TextSetting statsXadiaKey = stats.add(new TextSetting("xadiakey", "Xadia API キー", "", 128).secret());
     public static final BoolSetting statsXadiaVerified = stats.add(new BoolSetting("xadiaverified", "Xadia は確認済みのタグだけ", false));
+    public static final HeaderSetting statsHeadCoral = stats.add(new HeaderSetting("h_coral", "Coral（Urchin）"));
     public static final BoolSetting statsCoral = stats.add(new BoolSetting("coral", "Coral（Urchin）のタグを使う", false));
     public static final TextSetting statsCoralKey = stats.add(new TextSetting("coralkey", "Coral（Urchin）API キー", "", 128).secret());
-    public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "データ"));
-    public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー（空なら Bordic：Bed Wars と Duels だけ）", "", 64).secret());
-    public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "今日・今週・今月の統計のために記録する（この PC だけ）", true));
-    public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "チャット"));
-    public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "ロビーで発言した人の統計をメッセージの前に付ける（タブの列 1・2）", true));
-    public static final BoolSetting statsChatWarn = stats.add(new BoolSetting("chatwarn", "タグ付きの人が発言したら警告", true));
-    public static final BoolSetting statsChatWarnSound = stats.add(new BoolSetting("chatwarnsound", "警告の時に音を鳴らす", true));
-    public static final HeaderSetting denickHead = stats.add(new HeaderSetting("h_denick", "デニック（ニックの人の本名を探す）"));
+    public static final dev.fzkc.fzhud.config.PageSetting statsPageDenick = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_denick", "デニック"));
+    public static final HeaderSetting denickHead = stats.add(new HeaderSetting("h_denick", "スキンで調べる"));
     public static final BoolSetting denickSkin = stats.add(new BoolSetting("denickskin", "スキンで調べる（キー不要・本人が今そのスキンなら確定）", true));
+    public static final HeaderSetting denickHeadNum = stats.add(new HeaderSetting("h_denicknum", "数字で調べる"));
     public static final BoolSetting denickNumbers = stats.add(new BoolSetting("denicknumbers", "Bed Wars のファイナル・ベッドの数字で調べる（Aurora キーが必要）", true));
     public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（空なら Mellow の設定から）", "", 128).secret());
     public static final SliderSetting denickMinFinals = stats.add(new SliderSetting("denickmin", "数字で調べるファイナル数の下限", 1000, 30000, 500, 15000, ""));

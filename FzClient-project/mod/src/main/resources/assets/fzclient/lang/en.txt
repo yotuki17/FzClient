@@ -915,3 +915,25 @@ Aurora の API キーが違います	The Aurora API key is wrong
 Bed Wars のファイナル・ベッドの数字で調べる（Aurora キーが必要）	By Bed Wars final / bed numbers (needs an Aurora key)
 Aurora API キー（空なら Mellow の設定から）	Aurora API key (empty: taken from Mellow's settings)
 数字で調べるファイナル数の下限	Lowest final count to look up by numbers
+見た目	Look
+タブの列	Tab columns
+データ・API	Data & API
+統計の取得元（使えない時は Bordic）	Where stats come from (Bordic when it cannot answer)
+試合中	In games
+ロビー（チャット・タブ）	Lobbies (chat & tab)
+Hypixel API（キー必要）	Hypixel API (key needed)
+キー（空なら Mellow の設定から自動で読み込み）	Keys (empty ones are taken from Mellow's settings)
+Hypixel API キー	Hypixel API key
+記録	History
+チャット	Chat
+ロビーのチャット	Lobby chat
+警告	Warnings
+タグ	Tags
+Watcher	Watcher
+Xadia	Xadia
+Coral（Urchin）	Coral (Urchin)
+デニック	Denick
+スキンで調べる	By skin
+数字で調べる	By numbers
+タブとチャットに統計とタグを表示・/fzstats で詳しい統計・デニック	Stats and tags in the tab list and chat, detailed stats with /fzstats, denick
+このゲームの統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）	Bordic has no stats for this game (Overlay → Data & API: pick Hypixel API or Bedlify)

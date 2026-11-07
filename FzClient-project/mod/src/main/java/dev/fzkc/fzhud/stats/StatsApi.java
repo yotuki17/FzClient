@@ -17,8 +17,9 @@ import java.util.function.Consumer;
 
 /**
  * Fetches player stats in the background and keeps them for a while.
- * Sources: the official Hypixel API when a key is set (every game), otherwise Bordic's public cache
- * (no key, Bed Wars and Duels only). Many players at once (a lobby's tab list) go to Bordic in one request.
+ * Sources (chosen in the Overlay settings, one for games and one for lobbies): the official Hypixel API (key,
+ * every game), Bedlify's cache of it (no key) or Bordic's public cache (no key, Bed Wars / Duels / SkyWars).
+ * When the chosen one cannot answer, Bordic does. Many players at once go to Bordic in one request.
  */
 public final class StatsApi {
     private StatsApi() {}
@@ -44,18 +45,56 @@ public final class StatsApi {
     private static volatile long hypixelPausedUntil;
     private static volatile String hypixelProblem;
 
+    /** Where stats come from (the order of the choices in the settings). */
+    enum Source {
+        HYPIXEL("Hypixel"), BORDIC("Bordic"), BEDLIFY("Bedlify");
+        final String label;
+
+        Source(String label) { this.label = label; }
+
+        /** How complete the data is: Hypixel and Bedlify know every game, Bordic only a few. */
+        int rank() { return this == BORDIC ? 0 : 1; }
+
+        static int rankOf(String label) { return "Bordic".equals(label) ? 0 : 1; }
+    }
+
+    /** Bedlify did not answer: use Bordic until this time. */
+    private static volatile long bedlifyPausedUntil;
+
+    /** The source chosen for where you are now (lobby or game). */
+    static Source chosen(boolean forCommand) {
+        int i = !forCommand && Stats.lobby ? Modules.statsLobbySource.get() : Modules.statsSource.get();
+        Source[] all = Source.values();
+        return all[Math.max(0, Math.min(all.length - 1, i))];
+    }
+
+    /** The source that will really be asked (the chosen one, unless it has no key or is paused). */
+    static Source effective(boolean forCommand) {
+        Source s = chosen(forCommand);
+        long now = System.currentTimeMillis();
+        if (s == Source.HYPIXEL && !useHypixel()) return Source.BORDIC;
+        if (s == Source.BEDLIFY && now < bedlifyPausedUntil) return Source.BORDIC;
+        return s;
+    }
+
+    /** True when the cached copy should be replaced: too old, or from a weaker source than the one in use now. */
+    private static boolean stale(PlayerData d, long now) {
+        if (d == null || now - d.fetchedAt > FRESH_MS) return true;
+        return Source.rankOf(d.source) < effective(false).rank() && now - d.fetchedAt > 60_000L;
+    }
+
     /** Cached stats (can be a few minutes old) or null; asks for them in the background when missing or old. */
     public static PlayerData get(UUID id, String name) {
         Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
         long now = System.currentTimeMillis();
         PlayerData d = e.data;
-        boolean old = d == null || now - d.fetchedAt > FRESH_MS;
+        boolean old = stale(d, now);
         if (old && !e.loading && now - e.failedAt > RETRY_MS && queued.get() < MAX_QUEUED) {
             e.loading = true;
             queued.incrementAndGet();
             POOL.execute(() -> {
                 try {
-                    load(id, name, e);
+                    load(id, name, e, effective(false));
                 } finally {
                     e.loading = false;
                     queued.decrementAndGet();
@@ -69,12 +108,13 @@ public final class StatsApi {
     public static void fetch(UUID id, String name, Consumer<PlayerData> done, Consumer<String> failed) {
         Entry e = CACHE.computeIfAbsent(id, k -> new Entry());
         PlayerData d = e.data;
-        if (d != null && System.currentTimeMillis() - d.fetchedAt < 60_000L) {
+        Source src = effective(true);
+        if (d != null && System.currentTimeMillis() - d.fetchedAt < 60_000L && Source.rankOf(d.source) >= src.rank()) {
             done.accept(d);
             return;
         }
         POOL.execute(() -> {
-            load(id, name, e);
+            load(id, name, e, src);
             PlayerData r = e.data;   // a failed refresh keeps the older copy, which is still worth showing
             String err = e.error;
             net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(() -> {
@@ -92,14 +132,15 @@ public final class StatsApi {
         for (int i = 0; i < ids.size(); i++) {
             Entry e = CACHE.computeIfAbsent(ids.get(i), k -> new Entry());
             PlayerData d = e.data;
-            if ((d == null || now - d.fetchedAt > FRESH_MS) && !e.loading && now - e.failedAt > RETRY_MS) {
+            if (stale(d, now) && !e.loading && now - e.failedAt > RETRY_MS) {
                 e.loading = true;
                 need.add(ids.get(i));
                 needNames.add(names.get(i));
             }
         }
         if (need.isEmpty()) return;
-        if (useHypixel()) {
+        Source src = effective(false);
+        if (src != Source.BORDIC) {
             // one request per player; the pool keeps it to two at a time
             for (int i = 0; i < need.size(); i++) {
                 UUID id = need.get(i);
@@ -112,7 +153,7 @@ public final class StatsApi {
                 queued.incrementAndGet();
                 POOL.execute(() -> {
                     try {
-                        load(id, nm, e);
+                        load(id, nm, e, src);
                     } finally {
                         e.loading = false;
                         queued.decrementAndGet();
@@ -201,9 +242,9 @@ public final class StatsApi {
 
     // ------------------------------------------------------------------ loading
 
-    private static void load(UUID id, String name, Entry e) {
+    private static void load(UUID id, String name, Entry e, Source src) {
         String hex = id.toString().replace("-", "");
-        if (useHypixel()) {
+        if (src == Source.HYPIXEL && useHypixel()) {
             try {
                 String body = Http.get("Hypixel", "https://api.hypixel.net/v2/player?uuid=" + hex, "API-Key", hypixelKey());
                 accept(id, name, e, new JsonParser().parse(body).getAsJsonObject(), "Hypixel");
@@ -219,6 +260,23 @@ public final class StatsApi {
                 }
             } catch (Exception ignored) {
                 // fall through to Bordic
+            }
+        }
+        if (src == Source.BEDLIFY && System.currentTimeMillis() > bedlifyPausedUntil) {
+            try {
+                String body = Http.get("Bedlify", "https://api.bedlify.xyz/v1/player/cache?uuid=" + hex, null, null);
+                JsonObject o = new JsonParser().parse(body).getAsJsonObject();
+                if (!o.has("player") && o.has("stats")) {
+                    // answered with the player object itself
+                    JsonObject wrap = new JsonObject();
+                    wrap.add("player", o);
+                    o = wrap;
+                }
+                accept(id, name, e, o, "Bedlify");
+                return;
+            } catch (Exception ignored) {
+                // Bedlify is down or slow: Bordic for a while
+                bedlifyPausedUntil = System.currentTimeMillis() + 5 * 60_000L;
             }
         }
         try {

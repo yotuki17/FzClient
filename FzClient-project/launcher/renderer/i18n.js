@@ -124,6 +124,8 @@ const EN = {
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
   'NEW：Alt+X のオーバーレイと録画をランチャーで（どのサーバーでも）': 'NEW: the Alt+X overlay and recording now run in the launcher (on any server)',
+  'NEW：Player Stats は「Overlay」に名前を変えて PvP へ・設定をページ（タブリスト／列／データ・API／チャット／タグ／デニック）に分けて見やすく': 'NEW: Player Stats is now "Overlay" under PvP, its settings split into pages (Tab list / Columns / Data & API / Chat / Tags / Denick)',
+  'NEW：統計の取得元を Hypixel API・Bordic・Bedlify から選べるように（ロビーは Bordic）': 'NEW: choose where stats come from: Hypixel API, Bordic or Bedlify (Bordic in lobbies)',
   'NEW：ロビーで発言した人の統計をチャットに表示・タグ付きの人を警告': 'NEW: stats of people talking in lobbies shown in chat, warning for tagged players',
   'NEW：デニック（スキンと Bed Wars の数字でニックの人の本名を探す）': 'NEW: denick (find who is behind a nick by skin and by Bed Wars numbers)',
   'NEW：タブに出す統計をゲームごとに選べるように（列1〜4）・Coral（Urchin）のタグに対応': 'NEW: pick the stats shown in the tab list per game (columns 1-4), Coral (Urchin) tags',

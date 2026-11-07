@@ -128,7 +128,7 @@ public class StatsCommand extends CommandBase {
         Map<String, Long> now = d.of(game);
         if (now.isEmpty()) {
             if ("Bordic".equals(d.source) && game != Game.BEDWARS && game != Game.DUELS) {
-                say("  §e" + Lang.t("このゲームの統計には Hypixel API キーが必要です（FzClient 設定 → Player Stats）"));
+                say("  §e" + Lang.t("このゲームの統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）"));
             } else {
                 say("  §7" + Lang.t("このゲームの記録がありません"));
             }

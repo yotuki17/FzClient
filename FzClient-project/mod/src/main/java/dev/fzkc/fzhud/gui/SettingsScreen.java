@@ -76,8 +76,64 @@ public class SettingsScreen extends FzScreen {
     private float hx() { return top() ? x0() + backW() + 10 : x0(); }
     private float x0() { return top() || Ui.sidebarRight() ? px() + 14 : px() + SW + 14; }
     private float cw() { return top() ? W() - 28 : W() - SW - 28; }
-    private float y0() { return py() + 62; }
-    private float ch() { return H() - 70; }
+    private float y0() { return py() + 62 + (pages().isEmpty() ? 0 : PAGE_BAR); }
+    private float ch() { return H() - 70 - (pages().isEmpty() ? 0 : PAGE_BAR); }
+
+    // ---------------------------------------------------------------- pages (modules with many settings)
+
+    private static final float PAGE_BAR = 24;
+    private int page;
+
+    /** The page tabs of this module (empty for a module without pages). */
+    private java.util.List<dev.fzkc.fzhud.config.PageSetting> pages() {
+        java.util.List<dev.fzkc.fzhud.config.PageSetting> out = new java.util.ArrayList<>();
+        for (Setting s : module.settings) if (s instanceof dev.fzkc.fzhud.config.PageSetting) out.add((dev.fzkc.fzhud.config.PageSetting) s);
+        return out;
+    }
+
+    /** The settings shown right now: all of them, or only the current page's. */
+    private java.util.List<Setting> visible() {
+        if (pages().isEmpty()) return module.settings;
+        java.util.List<Setting> out = new java.util.ArrayList<>();
+        int p = -1;
+        for (Setting s : module.settings) {
+            if (s instanceof dev.fzkc.fzhud.config.PageSetting) {
+                p++;
+                continue;
+            }
+            if (p == page) out.add(s);
+        }
+        return out;
+    }
+
+    /** x, width of each page tab. */
+    private float[][] pageTabs() {
+        java.util.List<dev.fzkc.fzhud.config.PageSetting> ps = pages();
+        float[][] r = new float[ps.size()][2];
+        float x = x0();
+        for (int i = 0; i < ps.size(); i++) {
+            float w = R.width(Lang.t(ps.get(i).label)) + 18;
+            r[i][0] = x;
+            r[i][1] = w;
+            x += w + 4;
+        }
+        return r;
+    }
+
+    private void drawPages(int mx, int my, float o) {
+        java.util.List<dev.fzkc.fzhud.config.PageSetting> ps = pages();
+        if (ps.isEmpty()) return;
+        if (page >= ps.size()) page = 0;
+        float[][] tabs = pageTabs();
+        float y = py() + 56;
+        for (int i = 0; i < ps.size(); i++) {
+            boolean sel = i == page;
+            float hv = anim("page" + i, 0).update(Ui.inside(mx, my, tabs[i][0], y, tabs[i][1], 18) ? 1 : 0);
+            R.rounded(tabs[i][0], y, tabs[i][1], 18, 4f, R.alpha(sel ? Ui.accentA(0x40) : (hv > 0.01f ? 0x22FFFFFF : 0x10FFFFFF), o));
+            if (sel) R.rect(tabs[i][0] + 4, y + 17, tabs[i][1] - 8, 1, R.alpha(Ui.accent, o));
+            R.textCentered(Lang.t(ps.get(i).label), tabs[i][0] + tabs[i][1] / 2f, y + 5, R.alpha(sel ? Ui.text : Ui.textA(0xB0), o));
+        }
+    }
     private float right() { return x0() + cw() - 10; }
 
     private Anim switchAnim(Setting s, float init) {
@@ -171,6 +227,7 @@ public class SettingsScreen extends FzScreen {
         Ui.panel(px(), py(), W(), H(), o);
         drawSidebar(mx, my, o);
         drawHeader(mx, my, o);
+        drawPages(mx, my, o);
         drawRows(mx, my, o);
 
         Decoration.corner(vw, vh, o);
@@ -256,19 +313,19 @@ public class SettingsScreen extends FzScreen {
 
     private void drawRows(int mx, int my, float o) {
         float total = 0;
-        for (Setting s : module.settings) total += rowH(s) + 4;
+        for (Setting s : visible()) total += rowH(s) + 4;
         float maxScroll = Math.max(0, total - ch());
         scrollTarget = Math.max(0, Math.min(maxScroll, scrollTarget));
         float sc = scroll.update(scrollTarget);
 
         Ui.scissor(x0() - 2, y0() - 4, cw() + 4, ch() + 4);
         float y = y0() - sc;
-        for (Setting s : module.settings) {
+        for (Setting s : visible()) {
             float h = rowH(s);
             if (y + h >= y0() - 4 && y <= y0() + ch()) drawRow(s, y, h, mx, my, o);
             y += h + 4;
         }
-        if (module.settings.isEmpty()) {
+        if (visible().isEmpty()) {
             R.textCentered("この機能に設定はありません", x0() + cw() / 2f, y0() + 30, R.alpha(Ui.MUTED, o));
         }
         Ui.endScissor();
@@ -420,6 +477,7 @@ public class SettingsScreen extends FzScreen {
             if (i >= 0 && i < list.size()) {
                 UiSound.hit();
                 module = list.get(i);
+                page = 0;
                 scrollTarget = 0;
                 expanded = null;
             }
@@ -446,10 +504,23 @@ public class SettingsScreen extends FzScreen {
             if (mc.theWorld != null) mc.displayGuiScreen(new EditScreen(this));
             return;
         }
+        if (!pages().isEmpty() && my >= py() + 56 && my < py() + 74) {
+            float[][] tabs = pageTabs();
+            for (int i = 0; i < tabs.length; i++) {
+                if (mx >= tabs[i][0] && mx < tabs[i][0] + tabs[i][1] && i != page) {
+                    UiSound.hit();
+                    page = i;
+                    scrollTarget = 0;
+                    expanded = null;
+                    editing = null;
+                }
+            }
+            return;
+        }
         if (my < y0() || my >= y0() + ch()) return;
 
         float y = y0() - scroll.value;
-        for (Setting s : module.settings) {
+        for (Setting s : visible()) {
             float rh = rowH(s);
             if (my >= y && my < y + rh && mx >= x0() && mx < x0() + cw()) {
                 clickRow(s, y, mx, my, button, wasEditing);
@@ -551,7 +622,7 @@ public class SettingsScreen extends FzScreen {
 
     private float rowY(Setting target) {
         float y = y0() - scroll.value;
-        for (Setting s : module.settings) {
+        for (Setting s : visible()) {
             if (s == target) return y;
             y += rowH(s) + 4;
         }
