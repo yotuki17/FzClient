@@ -23,17 +23,17 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * /fzstats [name] [game] [period] - a player's stats in the chat. Game: bw, duels, tnttag, bowspleef, mm
+ * /pv [name] [game] [period] - a player's stats in a window (or in the chat, see the Overlay settings). Game: bw, duels, tnttag, bowspleef, mm
  * (default: the game you are in). Period: total, daily, weekly, monthly.
  */
 public class StatsCommand extends CommandBase {
     private static final String HEAD = "§b[FzClient] ";
 
-    @Override public String getCommandName() { return "fzstats"; }
+    @Override public String getCommandName() { return "pv"; }
 
-    @Override public List<String> getCommandAliases() { return Arrays.asList("fzs"); }
+    @Override public List<String> getCommandAliases() { return Arrays.asList("fzstats", "fzs"); }
 
-    @Override public String getCommandUsage(ICommandSender sender) { return "/fzstats [name] [bw|duels|tnttag|bowspleef|mm] [total|daily|weekly|monthly]"; }
+    @Override public String getCommandUsage(ICommandSender sender) { return "/pv [name] [bw|duels|tnttag|bowspleef|mm] [total|daily|weekly|monthly]"; }
 
     @Override public int getRequiredPermissionLevel() { return 0; }
 
@@ -70,6 +70,11 @@ public class StatsCommand extends CommandBase {
         if (name == null) name = mc.thePlayer.getName();
         if (!name.matches("[A-Za-z0-9_]{1,16}")) {
             say("§c" + Lang.t("名前が正しくありません: ") + name);
+            return;
+        }
+        if (dev.fzkc.fzhud.Modules.statsPvMode.get() == 0) {
+            // the window opens on the next tick (the chat closes right after a command)
+            pendingScreen = new dev.fzkc.fzhud.gui.StatsScreen(name, game, period);
             return;
         }
         final Game g = game;
@@ -117,41 +122,62 @@ public class StatsCommand extends CommandBase {
         }, err -> say("§c" + Lang.t("統計を取得できませんでした: ") + err));
     }
 
-    private static void print(PlayerData d, Game game, History.Period period) {
-        String title = HEAD + "§f" + d.display() + " §8· §b" + game.label + " §7(" + Lang.t(period.label) + ")";
-        say(title);
-        if (d.nicked) {
-            say("  §c" + Lang.t("Hypixel にこの名前のデータがありません（ニックネームの可能性が高い）"));
-            tags(d.id);
-            return;
+    /** The window /pv opens on the next tick (see Stats.onTick). */
+    public static volatile net.minecraft.client.gui.GuiScreen pendingScreen;
+
+    /** What to show for one player, game and period: rows of label/value pairs, or a message instead. */
+    public static final class View {
+        /** Rows of label, value, label, value, ... (labels are Japanese, translate with Lang.t). */
+        public final List<String[]> rows;
+        /** Shown instead of the rows ("§e..." / "§7..."), or null. */
+        public final String message;
+        /** "(recorded since ...)", or null. */
+        public final String note;
+
+        View(List<String[]> rows, String message, String note) {
+            this.rows = rows;
+            this.message = message;
+            this.note = note;
         }
+    }
+
+    public static View view(PlayerData d, Game game, History.Period period) {
+        List<String[]> none = new ArrayList<>();
+        if (d.nicked) return new View(none, "§c" + Lang.t("Hypixel にこの名前のデータがありません（ニックネームの可能性が高い）"), null);
         Map<String, Long> now = d.of(game);
         if (now.isEmpty()) {
             if ("Bordic".equals(d.source) && game != Game.BEDWARS && game != Game.DUELS) {
-                say("  §e" + Lang.t("このゲームの統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）"));
-            } else {
-                say("  §7" + Lang.t("このゲームの記録がありません"));
+                return new View(none, "§e" + Lang.t("このゲームの統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）"), null);
             }
-            tags(d.id);
-            buttons(d, game, period);
-            return;
+            return new View(none, "§7" + Lang.t("このゲームの記録がありません"), null);
         }
         Map<String, Long> shown = now;
         String note = null;
         if (period != History.Period.TOTAL) {
             History.Base base = History.base(d.id, period);
             if (base == null || System.currentTimeMillis() - base.since < 120_000L) {
-                say("  §7" + Lang.t("まだ記録がありません。今から記録するので、次からこの期間の数字が出ます。"));
-                tags(d.id);
-                buttons(d, game, period);
-                return;
+                return new View(none, "§7" + Lang.t("まだ記録がありません。今から記録するので、次からこの期間の数字が出ます。"), null);
             }
             shown = game.minus(now, game.slice(base.counters));
             if (base.partial) {
                 note = Lang.f("（{0} からの記録）", new SimpleDateFormat("M/d HH:mm").format(new Date(base.since)));
             }
         }
-        for (String[] row : game.chat(shown, now, period != History.Period.TOTAL)) {
+        return new View(game.chat(shown, now, period != History.Period.TOTAL), null, note);
+    }
+
+    private static void print(PlayerData d, Game game, History.Period period) {
+        String title = HEAD + "§f" + d.display() + " §8· §b" + game.label + " §7(" + Lang.t(period.label) + ")";
+        say(title);
+        View v = view(d, game, period);
+        if (v.message != null) {
+            say("  " + v.message);
+            tags(d.id);
+            if (!d.nicked) buttons(d, game, period);
+            return;
+        }
+        String note = v.note;
+        for (String[] row : v.rows) {
             StringBuilder sb = new StringBuilder("  ");
             for (int i = 0; i + 1 < row.length; i += 2) {
                 if (i > 0) sb.append("  ");
@@ -175,12 +201,12 @@ public class StatsCommand extends CommandBase {
     private static void buttons(PlayerData d, Game game, History.Period period) {
         ChatComponentText line = new ChatComponentText("  ");
         for (History.Period p : History.Period.values()) {
-            line.appendSibling(button(Lang.t(p.label), p == period, "/fzstats " + d.name + " " + game.key + " " + p.key));
+            line.appendSibling(button(Lang.t(p.label), p == period, "/pv " + d.name + " " + game.key + " " + p.key));
             line.appendSibling(new ChatComponentText(" "));
         }
         line.appendSibling(new ChatComponentText("§8|  "));
         for (Game g : Game.values()) {
-            line.appendSibling(button(g.label, g == game, "/fzstats " + d.name + " " + g.key + " " + period.key));
+            line.appendSibling(button(g.label, g == game, "/pv " + d.name + " " + g.key + " " + period.key));
             line.appendSibling(new ChatComponentText(" "));
         }
         Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(line);
@@ -194,8 +220,10 @@ public class StatsCommand extends CommandBase {
         return b;
     }
 
-    private static UUID uuidInTab(String name) {
+    /** The UUID of a name in the tab list (or yours), else null. */
+    public static UUID uuidInTab(String name) {
         Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null) return null;
         if (mc.thePlayer.getName().equalsIgnoreCase(name)) return mc.thePlayer.getUniqueID();
         if (mc.thePlayer.sendQueue == null) return null;
         for (NetworkPlayerInfo i : mc.thePlayer.sendQueue.getPlayerInfoMap()) {
@@ -205,7 +233,7 @@ public class StatsCommand extends CommandBase {
     }
 
     /** Name -> UUID from Mojang. */
-    private static UUID lookup(String name) {
+    public static UUID lookup(String name) {
         return StatsApi.lookupName(name);
     }
 

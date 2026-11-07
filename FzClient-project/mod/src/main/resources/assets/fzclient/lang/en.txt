@@ -937,3 +937,8 @@ Coral（Urchin）	Coral (Urchin)
 数字で調べる	By numbers
 タブとチャットに統計とタグを表示・/fzstats で詳しい統計・デニック	Stats and tags in the tab list and chat, detailed stats with /fzstats, denick
 このゲームの統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）	Bordic has no stats for this game (Overlay → Data & API: pick Hypixel API or Bedlify)
+タブとチャットに統計とタグを表示・/pv で詳しい統計・デニック	Stats and tags in the tab list and chat, detailed stats with /pv, denick
+/pv コマンド	/pv command
+/pv の表示	Show /pv in
+画面	Window
+名前を入力して Enter	Type a name, then Enter

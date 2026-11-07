@@ -61,6 +61,11 @@ public final class Stats {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
         History.tick();
+        net.minecraft.client.gui.GuiScreen pv = StatsCommand.pendingScreen;
+        if (pv != null && mc.currentScreen == null) {
+            StatsCommand.pendingScreen = null;
+            mc.displayGuiScreen(pv);
+        }
         // developer check without a window: -Dfzclient.statstest=<name> prints that player's stats (they land in the log)
         if (ticks == 300 && System.getProperty("fzclient.statstest") != null) {
             for (String period : new String[]{"total", "daily"}) {
@@ -68,6 +73,12 @@ public final class Stats {
                     StatsCommand.check(System.getProperty("fzclient.statstest"), g, History.Period.byName(period));
                 }
             }
+        }
+        // developer check of the /pv window: -Dfzclient.pvtest=<name> opens it and saves a screenshot
+        String pvtest = System.getProperty("fzclient.pvtest");
+        if (pvtest != null && ticks == 200) mc.displayGuiScreen(new dev.fzkc.fzhud.gui.StatsScreen(pvtest, Game.BEDWARS, History.Period.TOTAL));
+        if (pvtest != null && (ticks == 320 || ticks == 420)) {
+            net.minecraft.util.ScreenShotHelper.saveScreenshot(mc.mcDataDir, "pvtest" + ticks + ".png", mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
         }
         if (mc.theWorld != lastWorld) {
             lastWorld = mc.theWorld;

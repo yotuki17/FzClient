@@ -164,7 +164,7 @@ public final class Modules {
 
     // ---- Overlay: player stats in the tab list and chat, /fzstats, tags, denick (id kept as "playerstats" for saved settings)
     public static final Module stats = new Module("playerstats", "Overlay", Category.PVP,
-            "タブとチャットに統計とタグを表示・/fzstats で詳しい統計・デニック", true);
+            "タブとチャットに統計とタグを表示・/pv で詳しい統計・デニック", true);
     public static final dev.fzkc.fzhud.config.PageSetting statsPageTab = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_tab", "タブリスト"));
     public static final HeaderSetting statsHeadTab = stats.add(new HeaderSetting("h_tab", "表示"));
     public static final BoolSetting statsTab = stats.add(new BoolSetting("tab", "タブに統計を表示（Bed Wars・Duels・TNT Tag・Bow Spleef・Murder Mystery）", true));
@@ -207,6 +207,9 @@ public final class Modules {
             "Hypixel API（キー必要）", "Bordic", "Bedlify"));
     public static final HeaderSetting statsHeadKeys = stats.add(new HeaderSetting("h_keys", "キー（空なら Mellow の設定から自動で読み込み）"));
     public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー", "", 64).secret());
+    public static final HeaderSetting statsHeadPv = stats.add(new HeaderSetting("h_pv", "/pv コマンド"));
+    /** 0 = window, 1 = chat. */
+    public static final ChoiceSetting statsPvMode = stats.add(new ChoiceSetting("pvmode", "/pv の表示", 0, "画面", "チャット"));
     public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "記録"));
     public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "今日・今週・今月の統計のために記録する（この PC だけ）", true));
     public static final dev.fzkc.fzhud.config.PageSetting statsPageChat = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_chat", "チャット"));
