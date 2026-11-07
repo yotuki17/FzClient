@@ -226,16 +226,16 @@ public class FzMainMenu extends FzScreen {
         }
         favTries = new int[favs.size()];
         favAt = new long[favs.size()];
-        // right after the game starts another mod (Mellow: its replay recorder sees every connection) is not ready
-        // yet and the first pings failed in it (NullPointerException: every favourite "Offline" until the
-        // multiplayer screen had been opened). So the first ping of a game waits a moment, and a server that could
-        // not be reached is asked again (3 times in all).
-        long first = System.currentTimeMillis() + (pingedOnce ? 0 : 2500);
-        pingedOnce = true;
-        java.util.Arrays.fill(favAt, first);
+        // Forge keeps extra data from every ping (a server's mod list) in two maps that only the multiplayer screen
+        // creates (setupServerList, in its initGui). Before that screen had been opened once, every ping here ran
+        // into them as null (NullPointerException: every favourite "Offline", Hypixel included).
+        try {
+            net.minecraftforge.fml.client.FMLClientHandler.instance().setupServerList();
+        } catch (Throwable ignored) {
+        }
+        // a server that could not be reached is asked again (3 times in all)
+        java.util.Arrays.fill(favAt, System.currentTimeMillis());
     }
-
-    private static boolean pingedOnce;
     private int[] favTries = new int[0];
     private long[] favAt = new long[0];
 

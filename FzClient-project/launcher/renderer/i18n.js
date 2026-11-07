@@ -124,6 +124,7 @@ const EN = {
   'Minecraft 1.8.9 用の OptiFine の jar を選んでください': 'Pick the OptiFine jar for Minecraft 1.8.9',
   'OptiFine の jar ではないようです': 'This does not look like an OptiFine jar',
   'NEW：Alt+X のオーバーレイと録画をランチャーで（どのサーバーでも）': 'NEW: the Alt+X overlay and recording now run in the launcher (on any server)',
+  '修正：タイトル画面のお気に入りサーバーが全部「オフライン」になる': 'Fix: favourite servers on the title screen all showing Offline',
   'FzClient はこのランチャーから起動したときだけ動くように': 'FzClient now only runs when started from this launcher',
   '起動のたびに要らないキャッシュを自動で削除・タイトルの版表示を修正': 'Unneeded caches are cleaned on every start; fixed the version shown on the title screen',
   'NEW：チャットをゲーム中ずっと上にさかのぼれるように（最大2万行）': 'NEW: scroll back through the chat of the whole session (up to 20,000 lines)',
