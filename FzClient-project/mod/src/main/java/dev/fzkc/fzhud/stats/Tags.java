@@ -147,6 +147,17 @@ public final class Tags {
 
     public static void clear() { CACHE.clear(); }
 
+    /** /refresh: forget errors and pauses and ask again for everyone (known tags stay until the answers arrive). */
+    public static void refresh() {
+        watcherPausedUntil = 0;
+        LOGGED.clear();
+        for (Entry e : CACHE.values()) {
+            e.watcherAt = e.xadiaAt = e.coralAt = 0;
+            e.watcherFail = e.xadiaFail = e.coralFail = 0;
+            e.watcherError = e.xadiaError = e.coralError = null;
+        }
+    }
+
     private static List<Tag> known(Entry e) {
         List<Tag> w = watcherOn() ? e.watcher : null, x = xadiaOn() ? e.xadia : null, c = coralOn() ? e.coral : null;
         if ((w == null || w.isEmpty()) && (x == null || x.isEmpty()) && (c == null || c.isEmpty())) return Collections.emptyList();

@@ -193,6 +193,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(chatStats);
         FMLCommonHandler.instance().bus().register(chatStats);
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.stats.StatsCommand());
+        net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.stats.StatsCommand.RefreshCommand());
         Runtime.getRuntime().addShutdownHook(new Thread(dev.fzkc.fzhud.stats.Stats::saveHistory, "FzClient-StatsSave"));
         Extras extras = new Extras();
         MinecraftForge.EVENT_BUS.register(extras);

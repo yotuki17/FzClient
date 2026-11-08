@@ -32,9 +32,24 @@ public final class Stats {
     /** True in a lobby (the stats shown there are for the lobby's game). */
     public static volatile boolean lobby = true;
 
-    private Object lastWorld;
-    private int askIn = -1, ticks;
+    private Object lastWorld, lastHandler;
+    private int askIn = -1, ticks, retries;
     private long askedAt;
+    private boolean answered;
+    /** Set by /refresh: ask /locraw again on the next tick. */
+    private static volatile boolean askAgain;
+
+    /**
+     * Fixes an overlay that shows nothing or errors: forgets errors, pauses and old answers, fetches everyone in
+     * the tab list again and asks the server again which game this is. Used by /refresh and after a reconnect.
+     */
+    public static void refresh() {
+        StatsApi.refresh();
+        Tags.refresh();
+        Sessions.refresh();
+        PingHistory.refresh();
+        askAgain = true;
+    }
 
     public static void init() {
         importMellowKeys();
@@ -86,16 +101,38 @@ public final class Stats {
         if (pvtest != null && (ticks == 320 || ticks == 560)) {
             net.minecraft.util.ScreenShotHelper.saveScreenshot(mc.mcDataDir, "pvtest" + ticks + ".png", mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
         }
+        // a new connection (reconnect, or joining again after being kicked): start from fresh answers
+        Object handler = mc.getNetHandler();
+        if (handler != null && handler != lastHandler) {
+            if (lastHandler != null) refresh();
+            lastHandler = handler;
+        }
         if (mc.theWorld != lastWorld) {
             lastWorld = mc.theWorld;
             current = null;
             lobby = true;
             Denick.worldChanged();
+            retries = 0;
             askIn = mc.theWorld != null && Modules.stats.enabled && onHypixel() ? 25 : -1;
+        }
+        if (askAgain) {
+            askAgain = false;
+            if (mc.theWorld != null && Modules.stats.enabled && onHypixel()) {
+                retries = 0;
+                if (askIn <= 0) askIn = 5;   // a world that just loaded asks by itself
+            }
         }
         if (askIn > 0 && --askIn == 0 && mc.thePlayer != null) {
             askedAt = System.currentTimeMillis();
+            answered = false;
             mc.thePlayer.sendChatMessage("/locraw");
+        }
+        // no answer (the server was busy or said "too fast"): ask again, twice at most
+        if (askIn <= 0 && !answered && askedAt > 0 && retries < 2 && mc.thePlayer != null && Modules.stats.enabled && onHypixel()
+                && System.currentTimeMillis() - askedAt > 5000) {
+            retries++;
+            askIn = 1;
+            askedAt = 0;
         }
         if (++ticks % 20 != 0 || mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
         Denick.tick();
@@ -122,6 +159,7 @@ public final class Stats {
         if (s == null || !s.startsWith("{\"server\":")) return;
         if (System.currentTimeMillis() - askedAt > 15_000L) return;   // someone typed /locraw themselves: show it
         event.setCanceled(true);
+        answered = true;
         try {
             JsonObject o = new JsonParser().parse(s).getAsJsonObject();
             String type = PlayerData.str(o, "gametype"), mode = PlayerData.str(o, "mode");

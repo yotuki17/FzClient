@@ -79,7 +79,7 @@ public final class StatsApi {
 
     /** True when the cached copy should be replaced: too old, or from a weaker source than the one in use now. */
     private static boolean stale(PlayerData d, long now) {
-        if (d == null || now - d.fetchedAt > FRESH_MS) return true;
+        if (d == null || now - d.fetchedAt > FRESH_MS || d.fetchedAt < refreshedAt) return true;
         return Source.rankOf(d.source) < effective(false).rank() && now - d.fetchedAt > 60_000L;
     }
 
@@ -170,6 +170,22 @@ public final class StatsApi {
     }
 
     public static void clear() { CACHE.clear(); }
+
+    /** Everything fetched before this time is old (/refresh). */
+    private static volatile long refreshedAt;
+
+    /** /refresh: forget errors and pauses and fetch everyone again (the old numbers stay shown until then). */
+    public static void refresh() {
+        refreshedAt = System.currentTimeMillis();
+        hypixelPausedUntil = 0;
+        hypixelProblem = null;
+        bedlifyPausedUntil = 0;
+        for (Entry e : CACHE.values()) {
+            e.failedAt = 0;
+            e.error = null;
+        }
+        NAMES.values().removeIf(v -> v == NONE);
+    }
 
     /** Cached stats without asking for anything. */
     public static PlayerData peek(UUID id) {

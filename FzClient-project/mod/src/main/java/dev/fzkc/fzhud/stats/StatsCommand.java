@@ -303,6 +303,25 @@ public class StatsCommand extends CommandBase {
         return StatsApi.lookupName(name);
     }
 
+    /** /refresh - when the overlay shows errors or nothing: fetch everything again. */
+    public static class RefreshCommand extends CommandBase {
+        @Override public String getCommandName() { return "refresh"; }
+
+        @Override public List<String> getCommandAliases() { return Arrays.asList("fzrefresh"); }
+
+        @Override public String getCommandUsage(ICommandSender sender) { return "/refresh"; }
+
+        @Override public int getRequiredPermissionLevel() { return 0; }
+
+        @Override public boolean canCommandSenderUseCommand(ICommandSender sender) { return true; }
+
+        @Override
+        public void processCommand(ICommandSender sender, String[] args) {
+            Stats.refresh();
+            say(HEAD + "§7" + Lang.t("オーバーレイを読み込み直しています（統計・タグ・ping・ゲームの確認）"));
+        }
+    }
+
     private static void say(String s) {
         Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new ChatComponentText(s));
     }

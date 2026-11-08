@@ -38,6 +38,11 @@ public final class PingHistory {
         return c == null || c[0] < 0 ? -1 : (int) c[0];
     }
 
+    /** /refresh: ask again for players whose ping was missing or failed. */
+    public static void refresh() {
+        CACHE.values().removeIf(c -> c[0] < 0);
+    }
+
     private static synchronized void start() {
         if (thread != null && thread.isAlive()) return;
         thread = new Thread(PingHistory::loop, "FzClient-Ping");

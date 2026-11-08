@@ -92,12 +92,112 @@ public class ChatStats {
                 && (Tags.watcherOn() || Tags.xadiaOn() || Tags.coralOn());
     }
 
+    // ------------------------------------------------------------------ game start: everyone's stats
+
+    /** "The game starts in 1 second!" (most games), "The match starts in 1 second!" */
+    private static final Pattern COUNTDOWN = Pattern.compile("^The (?:game|match) starts in 1 seconds?!?$");
+    private Object startWorld;
+    private long startAt, startUntil;
+    private boolean startDone;
+
+    private void gameStarting(String plain) {
+        if (!Modules.stats.enabled || !Modules.statsChatStart.get() || !Stats.onHypixel() || Stats.lobby) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.theWorld != startWorld) {
+            startWorld = mc.theWorld;
+            startDone = false;
+            startAt = 0;
+        }
+        if (startDone) return;
+        long now = System.currentTimeMillis();
+        long at = 0;
+        // teams are filled in the tab list right when the game starts: look a moment later
+        if (COUNTDOWN.matcher(plain).matches()) at = now + 2000;
+        else if (plain.trim().equals("Protect your bed and destroy the enemy beds.")) at = now + 1000;
+        if (at > 0 && (startAt == 0 || at < startAt)) {
+            startAt = at;
+            startUntil = at + 6000;
+        }
+    }
+
+    /** One player in the start list. */
+    private static final class Starter {
+        final String name, team;
+        final UUID id;
+
+        Starter(String name, String team, UUID id) {
+            this.name = name;
+            this.team = team;
+            this.id = id;
+        }
+    }
+
+    private List<Starter> starters;
+
+    private void startTick(long now) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (startAt == 0 || now < startAt || mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
+        if (mc.theWorld != startWorld) {
+            startAt = 0;
+            starters = null;
+            return;
+        }
+        if (starters == null) {
+            starters = new ArrayList<>();
+            List<UUID> ids = new ArrayList<>();
+            List<String> names = new ArrayList<>();
+            String myTeam = mc.thePlayer.getTeam() == null ? "" : mc.thePlayer.getTeam().getRegisteredName();
+            for (net.minecraft.client.network.NetworkPlayerInfo info : mc.thePlayer.sendQueue.getPlayerInfoMap()) {
+                UUID pid = info.getGameProfile().getId();
+                String nm = info.getGameProfile().getName();
+                if (pid == null || nm == null || !nm.matches("[A-Za-z0-9_]{1,16}") || nm.equalsIgnoreCase(mc.thePlayer.getName())) continue;
+                if (pid.version() != 4 && !Denick.isNick(info)) continue;   // NPCs and server-made entries
+                String team = info.getPlayerTeam() == null ? "~" : info.getPlayerTeam().getRegisteredName();
+                // your own team first, then the others by name
+                starters.add(new Starter(nm, team.equals(myTeam) ? "" : team, pid));
+                if (pid.version() == 4) {
+                    ids.add(pid);
+                    names.add(nm);
+                }
+                if (starters.size() >= 24) break;
+            }
+            starters.sort((a, b) -> a.team.equals(b.team) ? a.name.compareToIgnoreCase(b.name) : a.team.compareTo(b.team));
+            StatsApi.prefetch(ids, names);
+            if (Tags.watcherOn() || Tags.xadiaOn() || Tags.coralOn()) Tags.prefetch(ids);
+            if (starters.isEmpty()) {
+                startAt = 0;
+                starters = null;
+                return;
+            }
+        }
+        // wait until everyone is loaded (or a few seconds), then print the whole list at once
+        List<String> lines = new ArrayList<>();
+        boolean waiting = false;
+        for (Starter s : starters) {
+            UUID id = idOf(s.name);
+            String l = line(s.name, id, 2, "§8▪ ");
+            if (l == null) waiting = true;
+            lines.add(l);
+        }
+        if (waiting && now < startUntil) return;
+        mc.thePlayer.addChatMessage(new ChatComponentText("§8[§bFzClient§8]§r §7" + Lang.t("試合開始 — 参加者の統計")));
+        for (int i = 0; i < starters.size(); i++) {
+            String l = lines.get(i);
+            if (l == null || l.isEmpty()) l = "§8▪ §7" + starters.get(i).name + " §7|§r §8?";
+            mc.thePlayer.addChatMessage(new ChatComponentText(l));
+        }
+        startDone = true;
+        startAt = 0;
+        starters = null;
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onChat(ClientChatReceivedEvent event) {
         if (reposting || event.type == 2 || event.isCanceled()) return;
         String plain = net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
         if (plain == null) return;
         Denick.onChat(plain);
+        gameStarting(plain);
         if (!held.isEmpty()) {
             // keep the order: everything waits behind the message that is waiting
             held.add(new Held(event.type, event.message, null, 0));
@@ -152,6 +252,7 @@ public class ChatStats {
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         long now = System.currentTimeMillis();
+        startTick(now);
         while (!held.isEmpty()) {
             Held h = held.peekFirst();
             String prefix = "";
@@ -252,7 +353,11 @@ public class ChatStats {
      * "" when there is nothing to show, null while loading.
      */
     private static String line(String name, UUID id) {
-        final String head = "§8[§bFzClient§8]§r ";
+        return line(name, id, 1, "§8[§bFzClient§8]§r ");
+    }
+
+    /** The same with more tab columns and another start ("▪ " in the game start list). */
+    private static String line(String name, UUID id, int cols, String head) {
         Minecraft mc = Minecraft.getMinecraft();
         net.minecraft.client.network.NetworkPlayerInfo info = mc.thePlayer == null || mc.thePlayer.sendQueue == null
                 ? null : mc.thePlayer.sendQueue.getPlayerInfo(name);
@@ -273,7 +378,13 @@ public class ChatStats {
         Denick.Real r = info != null && Denick.isNick(info) ? Denick.real(name) : null;
         if (r != null) sb.append(" §7(§a").append(name).append("§7)");
         String[] heads = g.tabHeadsPublic(), vals = g.tabPublic(c);
-        if (heads.length > 0) sb.append(" §7|§r ").append(heads[0]).append(": ").append(vals[0]);
+        for (int i = 0; i < Math.min(cols, Math.min(heads.length, vals.length)); i++) {
+            sb.append(" §7|§r ").append(heads[i]).append(": ").append(vals[i]);
+        }
+        if (cols > 1) {
+            List<Tags.Tag> tags = Tags.get(id);
+            if (!tags.isEmpty()) sb.append(" §c⚠ ").append(tags.get(0).text);
+        }
         return sb.toString();
     }
 

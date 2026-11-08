@@ -57,6 +57,12 @@ public final class Sessions {
     /** Goes up whenever an answer arrives (screens use it to redraw their numbers). */
     public static volatile int version;
 
+    /** /refresh: ask again. */
+    public static void refresh() {
+        CACHE.values().removeIf(e -> !e.loading);
+        version++;
+    }
+
     static String auroraKey() { return Modules.denickAuroraKey.get().trim(); }
 
     static String urchinKey() { return Modules.statsCoralKey.get().trim(); }

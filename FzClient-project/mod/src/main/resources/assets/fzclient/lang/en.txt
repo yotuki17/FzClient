@@ -978,3 +978,6 @@ Urchin: 回数制限	Urchin: rate limited
 名前と統計の間（統計がある時）	Gap between name and stats (when stats are shown)
 統計どうしの間	Gap between stats
 試合中の名前をランクの色にする（オフ＝チームの色）	Name in rank colour during games (off = team colour)
+試合が始まったら全員の統計をチャットに出す	Show everyone's stats in chat when a game starts
+試合開始 — 参加者の統計	Game started - player stats
+オーバーレイを読み込み直しています（統計・タグ・ping・ゲームの確認）	Reloading the overlay (stats, tags, ping, game check)

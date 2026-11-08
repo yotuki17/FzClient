@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  'NEW：/refresh でオーバーレイを読み込み直し（再接続した時は自動）・試合が始まったら全員の統計をチャットに表示': 'New: /refresh reloads the overlay (automatic after a reconnect); everyone’s stats are shown in chat when a game starts',
   '修正：試合中のタブの名前はチームの色に（ランクの色にする設定は最初オフ）': 'Fix: tab list names use the team colour during games (the rank colour option is off by default)',
   'NEW：/pv の画面を作り直し：スキンを 3D で表示・Solo／Doubles や UHC／Sumo などモード別の統計・数字の色を Mellow と同じに': 'NEW: redesigned /pv window: 3D skin, per-mode stats (Solo/Doubles, UHC/Sumo and more), number colours like Mellow',
   'NEW：/fzstats は /pv に。統計を画面で見られるように（ゲーム・期間をタブで切り替え・名前を打って Enter で別の人）': 'NEW: /fzstats is now /pv and shows stats in a window (games and periods as tabs, type a name and press Enter for someone else)',
