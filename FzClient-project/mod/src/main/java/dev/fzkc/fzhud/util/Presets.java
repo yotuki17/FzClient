@@ -374,6 +374,53 @@ public final class Presets {
         return out.toByteArray();
     }
 
+    // ------------------------------------------------------------------ short codes (6 characters)
+
+    // A long code is kept on the FzClient server and shared as 6 characters like "K7QF3M". The characters
+    // leave out 0/O and 1/I/L so a code read out loud or typed by hand still works.
+
+    private static final java.util.regex.Pattern SHORT = java.util.regex.Pattern.compile("[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}");
+    private static final java.util.Map<String, String> idByCode = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.Map<String, String> codeById = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** The 6 character id inside the text (spaces and case ignored), or null. */
+    public static String shortId(String text) {
+        if (text == null) return null;
+        String s = text.trim().replaceAll("[\\s-]+", "").toUpperCase(java.util.Locale.ROOT);
+        if (s.startsWith("FZ") && s.length() == 8) s = s.substring(2);   // "FZ-K7QF3M" also works
+        return SHORT.matcher(s).matches() ? s : null;
+    }
+
+    /** Stores a long code on the server and returns its 6 character id. Network: call off the game thread. */
+    public static String shorten(String code) throws Exception {
+        String id = idByCode.get(code);
+        if (id != null) return id;
+        JsonObject body = new JsonObject();
+        body.addProperty("code", code);
+        JsonObject r = dev.fzkc.fzhud.integration.FzUsers.post("/preset/put", body);
+        if (r == null || !r.has("id")) throw new IOException("no id");
+        id = shortId(r.get("id").getAsString());
+        if (id == null) throw new IOException("bad id");
+        idByCode.put(code, id);
+        codeById.put(id, code);
+        return id;
+    }
+
+    /** The long code for a 6 character id, or null when there is none. Network: call off the game thread. */
+    public static String expand(String id) throws Exception {
+        String code = codeById.get(id);
+        if (code != null) return code;
+        JsonObject body = new JsonObject();
+        body.addProperty("id", id);
+        JsonObject r = dev.fzkc.fzhud.integration.FzUsers.post("/preset/get", body);
+        if (r == null) throw new IOException("no answer");
+        if (!r.has("code")) return null;
+        code = r.get("code").getAsString();
+        codeById.put(id, code);
+        idByCode.put(code, id);
+        return code;
+    }
+
     // ------------------------------------------------------------------ saved presets
 
     public static final class Saved {

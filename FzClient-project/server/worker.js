@@ -10,6 +10,8 @@
 //   POST /cos/get  {"uuids":[...]}              -> {"cosmetics":{uuid: data}}
 //   GET  /cos/cape/<sha1>                       -> a custom cape PNG
 //   POST /cos/admin/remove {uuid} + header x-admin-key: ADMIN_KEY secret -> takes a player's custom cape down
+//   POST /preset/put {code}                    -> {id} a 6 character id for a long FzClient preset code
+//   POST /preset/get {id}                      -> {code}
 //   GET  /cf/v1/...                             -> CurseForge API for the launcher (Minecraft mods only).
 //        The CurseForge API key stays here as the secret CF_API_KEY, so it is never inside the launcher.
 
@@ -181,6 +183,57 @@ async function cosmetics(req, env, url) {
   return json({ error: 'not found' }, 404);
 }
 
+// ---------------------------------------------------------------- short preset codes
+
+// 6 characters from 31 that are hard to mix up (no 0/O, 1/I/L): about 887 million codes.
+const SHORT_CHARS = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const SHORT = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/;
+const LONG = /^FZ[12]-[A-Za-z0-9_-]{1,6000}$/;
+
+let presetsReady = false;
+async function presetTable(env) {
+  if (presetsReady) return;
+  await env.DB.batch([
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS presets (id TEXT PRIMARY KEY, hash TEXT NOT NULL UNIQUE, code TEXT NOT NULL, created INTEGER NOT NULL)'),
+  ]);
+  presetsReady = true;
+}
+
+function shortId() {
+  const b = crypto.getRandomValues(new Uint8Array(6));
+  let s = '';
+  for (const x of b) s += SHORT_CHARS[x % SHORT_CHARS.length];
+  return s;
+}
+
+/** POST /preset/put {code} -> {id}. The same code always gets the same id. */
+async function presetPut(env, body) {
+  const code = String(body.code || '').trim();
+  if (!LONG.test(code)) return json({ error: 'bad code' }, 400);
+  await presetTable(env);
+  const hash = await sha1(new TextEncoder().encode(code));
+  const old = await env.DB.prepare('SELECT id FROM presets WHERE hash = ?1').bind(hash).first();
+  if (old) return json({ id: old.id });
+  for (let i = 0; i < 6; i++) {
+    const id = shortId();
+    const r = await env.DB.prepare('INSERT OR IGNORE INTO presets (id, hash, code, created) VALUES (?1, ?2, ?3, ?4)')
+      .bind(id, hash, code, Date.now()).run();
+    if (r.meta && r.meta.changes > 0) return json({ id });
+    const again = await env.DB.prepare('SELECT id FROM presets WHERE hash = ?1').bind(hash).first();
+    if (again) return json({ id: again.id });   // saved by someone else at the same moment
+  }
+  return json({ error: 'busy' }, 503);
+}
+
+/** POST /preset/get {id} -> {code} */
+async function presetGet(env, body) {
+  const id = String(body.id || '').trim().toUpperCase();
+  if (!SHORT.test(id)) return json({ error: 'bad id' }, 400);
+  await presetTable(env);
+  const row = await env.DB.prepare('SELECT code FROM presets WHERE id = ?1').bind(id).first();
+  return row ? json({ code: row.code }) : json({ error: 'not found' }, 404);
+}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
@@ -194,6 +247,9 @@ export default {
       return json({ error: 'bad json' }, 400);
     }
     const now = Date.now();
+
+    if (url.pathname === '/preset/put') return presetPut(env, body);
+    if (url.pathname === '/preset/get') return presetGet(env, body);
 
     if (url.pathname === '/hello') {
       const id = clean(body.uuid);

@@ -202,16 +202,20 @@ public class PresetScreen extends FzScreen {
             commitName(); // clicking anywhere else finishes the rename
         }
         if (Ui.inside(mx, my, bx(0), btnY(), bw(), 22)) {
-            String code = Presets.export();
-            GuiScreen.setClipboardString(code);
-            say(dev.fzkc.fzhud.util.Lang.f("コピーしました（{0} 文字）。Discord などに貼り付けて共有できます", code.length()), false);
+            copyShort(Presets.export(), null);
             return;
         }
         if (Ui.inside(mx, my, bx(1), btnY(), bw(), 22)) {
-            JsonObject data = Presets.parse(GuiScreen.getClipboardString());
+            String clip = GuiScreen.getClipboardString();
+            String id = Presets.shortId(clip);
+            if (id != null) {
+                pasteShort(id);
+                return;
+            }
+            JsonObject data = Presets.parse(clip);
             if (data == null) {
                 pending = null;
-                say("クリップボードに FzClient のコード（FZ で始まる文字）がありません", true);
+                say("クリップボードに FzClient のコード（6文字か、FZ で始まる文字）がありません", true);
                 return;
             }
             load(data, "paste", "コードを読み込みました");
@@ -245,8 +249,7 @@ public class PresetScreen extends FzScreen {
                 return;
             }
             if (Ui.inside(mx, my, b2, y + 4, 46, 18)) {
-                GuiScreen.setClipboardString(s.code);
-                say(dev.fzkc.fzhud.util.Lang.f("「{0}」のコードをコピーしました", s.name), false);
+                copyShort(s.code, s.name);
                 return;
             }
             if (Ui.inside(mx, my, b3, y + 4, 40, 18)) {
@@ -263,6 +266,72 @@ public class PresetScreen extends FzScreen {
                 return;
             }
         }
+    }
+
+    // ---------------------------------------------------------------- short codes
+
+    private volatile boolean busy;
+
+    /** Copies a code as its 6 character id (made on the FzClient server); the long code when that fails. */
+    private void copyShort(final String code, final String name) {
+        if (busy) return;
+        busy = true;
+        say("短いコードを作っています…", false);
+        Thread t = new Thread(() -> {
+            String id = null;
+            try {
+                id = Presets.shorten(code);
+            } catch (Exception ignored) {
+            }
+            final String got = id;
+            mc.addScheduledTask(() -> {
+                busy = false;
+                if (got != null) {
+                    GuiScreen.setClipboardString(got);
+                    say(name == null ? dev.fzkc.fzhud.util.Lang.f("コピーしました: {0}（Discord などに貼れば共有できます）", got)
+                            : dev.fzkc.fzhud.util.Lang.f("「{0}」のコードをコピーしました: {1}", name, got), false);
+                } else {
+                    GuiScreen.setClipboardString(code);
+                    say(dev.fzkc.fzhud.util.Lang.f("サーバーにつながらないので長いコードをコピーしました（{0} 文字）", code.length()), true);
+                }
+            });
+        }, "FzClient-Preset");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    /** Fetches the long code for a 6 character id, then loads it like a pasted code. */
+    private void pasteShort(final String id) {
+        if (busy) return;
+        busy = true;
+        say("コードを取りに行っています…", false);
+        Thread t = new Thread(() -> {
+            String code = null;
+            boolean failed = false;
+            try {
+                code = Presets.expand(id);
+            } catch (Exception e) {
+                failed = true;
+            }
+            final String got = code;
+            final boolean err = failed;
+            mc.addScheduledTask(() -> {
+                busy = false;
+                if (err) {
+                    say("サーバーにつながりませんでした", true);
+                    return;
+                }
+                JsonObject data = got == null ? null : Presets.parse(got);
+                if (data == null) {
+                    pending = null;
+                    say(dev.fzkc.fzhud.util.Lang.f("コード {0} は見つかりませんでした", id), true);
+                    return;
+                }
+                load(data, "paste", dev.fzkc.fzhud.util.Lang.f("コード {0} を読み込みました", id));
+            });
+        }, "FzClient-Preset");
+        t.setDaemon(true);
+        t.start();
     }
 
     private void typeText(String t) {

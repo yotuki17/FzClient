@@ -1041,3 +1041,12 @@ Cosmetics と /pv のプレビューも3Dにする	3D in the Cosmetics and /pv p
 パーティ・消去法	party, elimination
 {0} 時間前	{0} h ago
 {0} 日前	{0} days ago
+短いコードを作っています…	Making a short code...
+コピーしました: {0}（Discord などに貼れば共有できます）	Copied: {0} (paste it in Discord or anywhere to share)
+「{0}」のコードをコピーしました: {1}	Copied the code of "{0}": {1}
+サーバーにつながらないので長いコードをコピーしました（{0} 文字）	Could not reach the server, so the long code was copied ({0} characters)
+コードを取りに行っています…	Getting the code...
+サーバーにつながりませんでした	Could not reach the server
+コード {0} は見つかりませんでした	Code {0} was not found
+コード {0} を読み込みました	Loaded code {0}
+クリップボードに FzClient のコード（6文字か、FZ で始まる文字）がありません	No FzClient code (6 characters, or starting with FZ) in the clipboard
