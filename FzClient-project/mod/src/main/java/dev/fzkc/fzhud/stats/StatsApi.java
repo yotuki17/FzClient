@@ -356,8 +356,12 @@ public final class StatsApi {
             }
         }
         try {
-            String body = Http.get("Bordic", "https://api.bordic.xyz/v3/cache/hypixel?uuid=" + hex, null, null);
-            accept(id, name, e, Slim.parse(body), "Bordic");
+            // the batch form (POST) even for one player: the GET answer is kept by Cloudflare for up to a day on top
+            // of Bordic's own copy, so it could show stats days old
+            String body = Http.post("Bordic", "https://api.bordic.xyz/v3/cache/hypixel", "{\"uuids\":[\"" + hex + "\"]}", null, null);
+            JsonElement one = Slim.parse(body).get(hex);
+            if (one == null || !one.isJsonObject()) throw new java.io.IOException("Bordic: no data");
+            accept(id, name, e, one.getAsJsonObject(), "Bordic");
         } catch (Exception ex) {
             e.failedAt = System.currentTimeMillis();
             e.error = ex.getMessage();
@@ -406,6 +410,14 @@ public final class StatsApi {
         PlayerData d = p == null || !p.isJsonObject()
                 ? PlayerData.nick(id, name, source)
                 : PlayerData.parse(id, name, p.getAsJsonObject(), source);
+        JsonElement at = response.get("lastUpdated");
+        if (at != null && at.isJsonPrimitive()) {
+            try {
+                long t = at.getAsLong();
+                if (t > 0 && t <= System.currentTimeMillis()) d.dataAt = t;   // how old the service's copy is
+            } catch (Exception ignored) {
+            }
+        }
         e.data = d;
         e.error = null;
         if (!d.nicked) History.record(d);

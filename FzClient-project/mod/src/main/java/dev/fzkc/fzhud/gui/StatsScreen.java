@@ -257,8 +257,9 @@ public class StatsScreen extends FzScreen {
 
         float y = py() + 184 + 9 * sc + 6;
         if (data != null) {
-            long mins = (System.currentTimeMillis() - data.fetchedAt) / 60_000L;
-            String age2 = mins < 1 ? Lang.t("たった今") : Lang.f("{0} 分前", mins);
+            long mins = (System.currentTimeMillis() - data.dataAt) / 60_000L;
+            String age2 = mins < 1 ? Lang.t("たった今") : mins < 120 ? Lang.f("{0} 分前", mins)
+                    : mins < 48 * 60 ? Lang.f("{0} 時間前", mins / 60) : Lang.f("{0} 日前", mins / 1440);
             R.textCentered("§8" + data.source + " · " + age2, skinX(), y, R.alpha(Ui.text, o));
             y += 14;
         }

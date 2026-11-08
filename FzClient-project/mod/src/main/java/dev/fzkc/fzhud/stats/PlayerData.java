@@ -23,6 +23,8 @@ public final class PlayerData {
     public final String source;
     public final Map<String, Long> counters;
     public final long fetchedAt;
+    /** When the service took this copy from Hypixel (Bordic keeps copies), else when we fetched it. */
+    public volatile long dataAt;
 
     PlayerData(UUID id, String name, String rankPrefix, String rankColor, boolean nicked, String source,
                Map<String, Long> counters) {
@@ -34,6 +36,7 @@ public final class PlayerData {
         this.source = source;
         this.counters = Collections.unmodifiableMap(counters);
         this.fetchedAt = System.currentTimeMillis();
+        this.dataAt = fetchedAt;
     }
 
     /** One game's (or mode's) counters, worked out once: the tab list asks for them many times a second. */
