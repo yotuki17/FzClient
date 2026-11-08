@@ -37,7 +37,7 @@ public class TabList extends HudElement {
     private final BoolSetting heads, fzIcon, pingNumbers, stripes, showHeader, showFooter, blockAds;
     public final BoolSetting toggleMode;
     private final TextSetting customHeader, customFooter, blockWords;
-    private final SliderSetting rowsPerColumn;
+    private final SliderSetting rowsPerColumn, nameGapSetting, statGapSetting;
 
     public TabList(float defX, float defY) {
         super("tab", "Tab List", "Tabキーのプレイヤー一覧", defX, defY, LEFT);
@@ -47,6 +47,8 @@ public class TabList extends HudElement {
         pingNumbers = add(new BoolSetting("ping", "Pingを数字で表示", true));
         stripes = add(new BoolSetting("stripes", "行を縞模様にする", true));
         rowsPerColumn = add(new SliderSetting("rows", "1列の行数", 10, 40, 1, 20, ""));
+        nameGapSetting = add(new SliderSetting("namegap", "名前と統計の間（統計がある時）", 0, 20, 1, 3, ""));
+        statGapSetting = add(new SliderSetting("statgap", "統計どうしの間", 0, 20, 1, 4, ""));
         toggleMode = add(new BoolSetting("toggle", "Tabキーで開閉（押しっぱなし不要・アニメなし）", false));
         showHeader = add(new BoolSetting("header", "サーバーのヘッダーを表示", true));
         showFooter = add(new BoolSetting("footer", "サーバーのフッターを表示", true));
@@ -196,7 +198,8 @@ public class TabList extends HudElement {
     private boolean builtIcon, builtPing, builtEnglish;
 
     // ---- stats columns (Player Stats): column titles, one cell per player and column, column widths
-    private static final float STAT_GAP = 4f, NAME_GAP = 3f;
+    private float statGap() { return (float) statGapSetting.get(); }
+    private float nameGap() { return (float) nameGapSetting.get(); }
     private boolean statsOn;
     private String[] statHeads = new String[0];
     private String[][] statCells = new String[0][];
@@ -288,7 +291,7 @@ public class TabList extends HudElement {
             for (int c = 0; c < cols; c++) statW[c] = Math.max(statW[c], R.width(row[c]));
         }
         float w = 0;
-        for (float x : statW) w += x + STAT_GAP;
+        for (float x : statW) w += x + statGap();
         statsW = w;
     }
 
@@ -422,8 +425,8 @@ public class TabList extends HudElement {
         float titleRow = style != 0 && n > 0 ? ROW + 2 : 0;   // column titles above the players
         float tagW = statsW > 0 ? this.tagW : 0, hpW = this.hpW;
         boolean pingOn = pingNumbers.get() && pingW > 0;
-        float colW = headW + nameW + (statsW > 0 ? NAME_GAP + statsW - STAT_GAP : 0) + (tagW > 0 ? NAME_GAP + tagW : 0)
-                + (hpW > 0 ? NAME_GAP + hpW : 0) + (pingOn ? 4 + pingW : 0);
+        float colW = headW + nameW + (statsW > 0 ? nameGap() + statsW - statGap() : 0) + (tagW > 0 ? nameGap() + tagW : 0)
+                + (hpW > 0 ? nameGap() + hpW : 0) + (pingOn ? 4 + pingW : 0);
         float bodyW = cols * colW + (cols - 1) * COL_GAP;
         float w = bodyW;
         for (String s : header) w = Math.max(w, R.width(s));
@@ -444,7 +447,7 @@ public class TabList extends HudElement {
 
         float bodyX = (w - bodyW) / 2f;
         // where the stats columns start inside a column of players
-        float statX = headW + nameW + NAME_GAP;
+        float statX = headW + nameW + nameGap();
         // health: right aligned, just before the ping
         float hpRight = colW - (pingOn ? 4 + pingW : 0);
         if (titleRow > 0) {
@@ -462,7 +465,7 @@ public class TabList extends HudElement {
                 float sx = x + statX;
                 for (int c = 0; c < statHeads.length; c++) {
                     R.textCentered("§7" + statHeads[c], sx + statW[c] / 2f, y, R.alpha(0xFFFFFFFF, alpha));
-                    sx += statW[c] + STAT_GAP;
+                    sx += statW[c] + statGap();
                 }
                 if (hpW > 0) R.textCentered("§7HP", x + hpRight - hpW / 2f, y, R.alpha(0xFFFFFFFF, alpha));
             }
@@ -518,10 +521,10 @@ public class TabList extends HudElement {
                 String[] cells = statCells[i];
                 for (int c = 0; c < statHeads.length && c < cells.length; c++) {
                     if (!cells[c].isEmpty()) R.textCentered(cells[c], sx + statW[c] / 2f, ry, R.alpha(0xFFFFFFFF, alpha));
-                    sx += statW[c] + STAT_GAP;
+                    sx += statW[c] + statGap();
                 }
                 if (tagW > 0 && i < tagText.length && !tagText[i].isEmpty()) {
-                    R.text(tagText[i], sx - STAT_GAP + NAME_GAP, ry, R.alpha(0xFFFFFFFF, alpha));
+                    R.text(tagText[i], sx - statGap() + nameGap(), ry, R.alpha(0xFFFFFFFF, alpha));
                 }
             }
             if (hpW > 0 && !hpText[i].isEmpty()) {
