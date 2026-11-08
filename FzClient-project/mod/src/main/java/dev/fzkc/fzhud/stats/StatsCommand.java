@@ -127,10 +127,11 @@ public class StatsCommand extends CommandBase {
 
     private static void show(UUID id, String name, Game game, Game.Mode mode, History.Period period) {
         Tags.get(id);   // start the tag lookups at the same time
+        if (game == Game.BEDWARS) Sessions.get(id, period);
         StatsApi.fetch(id, name, d -> {
             // give the tags a moment (they are fetched in parallel), then print everything together
             new Thread(() -> {
-                for (int i = 0; i < 30 && Tags.loading(id); i++) {
+                for (int i = 0; i < 40 && (Tags.loading(id) || Sessions.loading(id, period)); i++) {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
@@ -179,7 +180,9 @@ public class StatsCommand extends CommandBase {
                 return new View(none, "§7" + Lang.t("このモードの記録がありません"), null);
             }
             if (period != History.Period.TOTAL) {
-                return new View(none, "§7" + Lang.t("今日・今週・今月の数字は Overall だけです"), null);
+                View a = aurora(d, game, mode, period, m);
+                if (a != null) return a;
+                return new View(none, "§7" + Lang.t("モード別の今日・今週・今月は Bed Wars で Aurora キーがある時だけです"), null);
             }
             return new View(game.chat(m, m, false), null, null);
         }
@@ -193,6 +196,8 @@ public class StatsCommand extends CommandBase {
         Map<String, Long> shown = now;
         String note = null;
         if (period != History.Period.TOTAL) {
+            View a = aurora(d, game, Game.Mode.OVERALL, period, now);
+            if (a != null) return a;
             History.Base base = History.base(d.id, period);
             if (base == null) {
                 return new View(none, "§7" + Lang.t("まだ記録がありません。今から記録するので、次からこの期間の数字が出ます。"), null);
@@ -201,8 +206,29 @@ public class StatsCommand extends CommandBase {
             if (base.partial) {
                 note = Lang.f("（{0} からの記録）", new SimpleDateFormat("M/d HH:mm").format(new Date(base.since)));
             }
+            String why = game == Game.BEDWARS ? Sessions.error(d.id, period) : null;
+            if (why != null) note = (note == null ? "" : note + "  ") + Lang.t(why);
         }
         return new View(game.chat(shown, now, period != History.Period.TOTAL), null, note);
+    }
+
+    /**
+     * Bed Wars changes from Aurora (null when there is no Aurora key, it is not Bed Wars, or Aurora has no
+     * answer, so the history on this PC is used instead). A "loading" view while the answer is on its way.
+     */
+    private static View aurora(PlayerData d, Game game, Game.Mode mode, History.Period period, Map<String, Long> now) {
+        if (game != Game.BEDWARS || !Sessions.available()) return null;
+        Sessions.Result r = Sessions.get(d.id, period);
+        if (r == null) {
+            if (Sessions.loading(d.id, period)) return new View(new ArrayList<String[]>(), "§7" + Lang.t("Aurora から取得中…"), null);
+            return null;
+        }
+        Map<String, Long> diff = game.fromDelta(r.delta, mode, now);
+        String range = r.start > 0
+                ? new SimpleDateFormat("M/d HH:mm").format(new Date(r.start)) + " 〜 " + new SimpleDateFormat("M/d HH:mm").format(new Date(r.end > 0 ? r.end : System.currentTimeMillis()))
+                : "";
+        String note = "Aurora" + (range.isEmpty() ? "" : " · " + range) + " · " + Lang.t("1時間ごとに更新");
+        return new View(game.chat(diff, now, true), null, note);
     }
 
     private static void print(PlayerData d, Game game, Game.Mode mode, History.Period period) {

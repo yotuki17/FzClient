@@ -49,6 +49,8 @@ public final class Tags {
     private static final Map<UUID, Entry> CACHE = new ConcurrentHashMap<>();
     private static final org.apache.logging.log4j.Logger LOG = org.apache.logging.log4j.LogManager.getLogger("FzClient-Tags");
     private static final Map<String, Long> LOGGED = new ConcurrentHashMap<>();
+    /** Single lookups (/pv, chat) whose Watcher answer goes to the log. */
+    private static final java.util.Set<UUID> verbose = java.util.Collections.newSetFromMap(new ConcurrentHashMap<UUID, Boolean>());
 
     /** Writes a lookup problem to the game log (the same message at most once every 5 minutes). */
     private static void logProblem(String msg) {
@@ -80,6 +82,7 @@ public final class Tags {
         long now = System.currentTimeMillis();
         if (watcherOn() && !e.watcherLoading && now - e.watcherAt > FRESH_MS && now - e.watcherFail > RETRY_MS) {
             e.watcherLoading = true;
+            verbose.add(id);
             POOL.execute(() -> loadWatcher(id, e));
         }
         if (xadiaOn() && !e.xadiaLoading && now - e.xadiaAt > FRESH_MS && now - e.xadiaFail > RETRY_MS) {
@@ -187,6 +190,11 @@ public final class Tags {
                     tags.add(new Tag("Watcher", badge(watcherIcon(label), color),
                             color + "§l" + label + "§r" + (tip.isEmpty() ? "" : " §7(" + tip + ")")));
                 }
+            }
+            if (verbose.remove(id)) {
+                // the answer has no key in it; keep the log line short
+                String shortBody = body.length() > 400 ? body.substring(0, 400) + "…" : body;
+                LOG.info("Watcher answered for " + id + ": " + tags.size() + " tag(s) " + shortBody.replaceAll("[\r\n]+", " "));
             }
             e.watcher = tags;
             e.watcherAt = System.currentTimeMillis();

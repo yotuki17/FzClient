@@ -390,6 +390,29 @@ public enum Game {
         }
     }
 
+    /**
+     * Turns a change list of raw Hypixel fields (Aurora sessions) into our short counters for one mode. Fields
+     * that are missing did not change (0). States (the star, the streak) keep their current value from {@code now}.
+     */
+    Map<String, Long> fromDelta(Map<String, Long> delta, Mode m, Map<String, Long> now) {
+        Map<String, Long> out = new java.util.HashMap<>();
+        String prefix = m == null || m.overall() || m.prefixes.length == 0 ? "" : m.prefixes[0];
+        for (int i = 0; i < fields.length; i += 2) {
+            String shortName = fields[i], f = fields[i + 1];
+            if (states.contains(shortName)) {
+                Long cur = now.get(shortName);
+                if (cur != null) out.put(shortName, cur);
+                continue;
+            }
+            if (f.startsWith("a:")) continue;
+            Long v = delta.get(prefix + f);
+            out.put(shortName, v == null ? 0L : Math.max(0, v));
+        }
+        Long lv = delta.get("bedwars_level");
+        if (lv != null && this == BEDWARS) out.put("star+", lv);
+        return out;
+    }
+
     /** Key prefix of a mode's counters in PlayerData ("bw@solo."); never saved in the history. */
     String modeKey(Mode m) { return key + "@" + m.key + "."; }
 

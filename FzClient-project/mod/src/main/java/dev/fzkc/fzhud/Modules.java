@@ -207,6 +207,7 @@ public final class Modules {
             "Hypixel API（キー必要）", "Bordic", "Bedlify"));
     public static final HeaderSetting statsHeadKeys = stats.add(new HeaderSetting("h_keys", "キー（空なら Mellow の設定から自動で読み込み）"));
     public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー", "", 64).secret());
+    public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（Bed Wars の今日・今週・今月とデニック）", "", 128).secret());
     public static final HeaderSetting statsHeadPv = stats.add(new HeaderSetting("h_pv", "/pv コマンド"));
     /** 0 = window, 1 = chat. */
     public static final ChoiceSetting statsPvMode = stats.add(new ChoiceSetting("pvmode", "/pv の表示", 0, "画面", "チャット"));
@@ -234,7 +235,6 @@ public final class Modules {
     public static final BoolSetting denickSkin = stats.add(new BoolSetting("denickskin", "スキンで調べる（キー不要・本人が今そのスキンなら確定）", true));
     public static final HeaderSetting denickHeadNum = stats.add(new HeaderSetting("h_denicknum", "数字で調べる"));
     public static final BoolSetting denickNumbers = stats.add(new BoolSetting("denicknumbers", "Bed Wars のファイナル・ベッドの数字で調べる（Aurora キーが必要）", true));
-    public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（空なら Mellow の設定から）", "", 128).secret());
     public static final SliderSetting denickMinFinals = stats.add(new SliderSetting("denickmin", "数字で調べるファイナル数の下限", 1000, 30000, 500, 15000, ""));
 
     // ---- Drop protection (only resources and blocks can be dropped)

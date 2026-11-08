@@ -47,6 +47,7 @@ public class StatsScreen extends FzScreen {
     private Game.Mode viewMode;
     private History.Period viewPeriod;
     private PlayerData viewData;
+    private int viewVersion;
 
     private String search = "";
 
@@ -115,7 +116,9 @@ public class StatsScreen extends FzScreen {
 
     private StatsCommand.View view() {
         if (data == null) return null;
-        if (view == null || viewData != data || viewGame != game || viewMode != mode || viewPeriod != period) {
+        if (view == null || viewData != data || viewGame != game || viewMode != mode || viewPeriod != period
+                || viewVersion != dev.fzkc.fzhud.stats.Sessions.version) {
+            viewVersion = dev.fzkc.fzhud.stats.Sessions.version;
             view = StatsCommand.view(data, game, mode, period);
             viewData = data;
             viewGame = game;

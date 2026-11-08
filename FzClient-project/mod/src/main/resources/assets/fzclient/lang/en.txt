@@ -947,3 +947,10 @@ Coral（Urchin）	Coral (Urchin)
 今日・今週・今月の数字は Overall だけです	Today / this week / this month is only for Overall
 {0} 分前	{0} min ago
 タグを確認中…	Checking tags…
+モード別の今日・今週・今月は Bed Wars で Aurora キーがある時だけです	Per-mode today / week / month needs Bed Wars and an Aurora key
+Aurora から取得中…	Loading from Aurora…
+1時間ごとに更新	updated hourly
+Aurora にこの期間の記録がありません	Aurora has no record for this period
+Aurora: API キーが違います	Aurora: wrong API key
+Aurora: 回数制限	Aurora: rate limited
+Aurora API キー（Bed Wars の今日・今週・今月とデニック）	Aurora API key (Bed Wars today / week / month, and denick)
