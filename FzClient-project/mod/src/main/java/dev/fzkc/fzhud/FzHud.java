@@ -163,6 +163,9 @@ public class FzHud {
         ClientRegistry.registerKeyBinding(Spotify.keyPrev);
         MinecraftForge.EVENT_BUS.register(new Translator());
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatAlerts());
+        dev.fzkc.fzhud.chat.BedwarsAlerts bwAlerts = new dev.fzkc.fzhud.chat.BedwarsAlerts();   // void sound / party message, invite sound
+        MinecraftForge.EVENT_BUS.register(bwAlerts);
+        FMLCommonHandler.instance().bus().register(bwAlerts);
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatExtras());
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.PartyDetector());   // groups joining a waiting lobby together   // FzClient chat box, tabs, shortcuts
         ChatHistory chatHistory = new ChatHistory();

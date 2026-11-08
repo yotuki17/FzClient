@@ -981,3 +981,19 @@ Urchin: 回数制限	Urchin: rate limited
 試合が始まったら全員の統計をチャットに出す	Show everyone's stats in chat when a game starts
 試合開始 — 参加者の統計	Game started - player stats
 オーバーレイを読み込み直しています（統計・タグ・ping・ゲームの確認）	Reloading the overlay (stats, tags, ping, game check)
+略語	Shortcuts
+通知	Alerts
+転送	Relay
+翻訳	Translate
+入力	Input
+オフ	Off
+全員	Everyone
+味方だけ	Teammates
+敵だけ	Enemies
+パーティに招待されたら音を鳴らす	Play a sound on party invites
+void（奈落）に落ちた時	When someone falls into the void
+落ちた時に音を鳴らす	Sound when someone falls
+味方が落ちたらパーティチャットに送る	Send to party chat when a teammate falls
+送る文（{name} = 落ちた人の名前）	Message ({name} = who fell)
+自分が落ちた時も送る	Also when you fall
+パーティに招待してきた人の統計をチャットに出す（Mellow と同じ）	Show the stats of who invites you to a party (like Mellow)

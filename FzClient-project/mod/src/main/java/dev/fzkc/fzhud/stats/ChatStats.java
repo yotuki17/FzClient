@@ -79,6 +79,13 @@ public class ChatStats {
     }
 
     private final List<LineWatch> lineWatch = new ArrayList<>();
+    /** Names whose stats line was asked for from elsewhere (a party invite). */
+    private static final java.util.concurrent.ConcurrentLinkedQueue<String> REQUESTS = new java.util.concurrent.ConcurrentLinkedQueue<>();
+
+    /** Puts the player's stats line in the chat as soon as it is loaded (like in a waiting lobby). */
+    public static void requestLine(String name) {
+        REQUESTS.add(name);
+    }
     private final Set<String> lineShown = new HashSet<>();
     private Object lineWorld;
     private final Set<UUID> warned = new HashSet<>();
@@ -253,6 +260,10 @@ public class ChatStats {
         if (event.phase != TickEvent.Phase.END) return;
         long now = System.currentTimeMillis();
         startTick(now);
+        for (String r; (r = REQUESTS.poll()) != null; ) {
+            idOf(r);   // starts the name lookup
+            lineWatch.add(new LineWatch(r, now + TAG_WAIT_MS));
+        }
         while (!held.isEmpty()) {
             Held h = held.peekFirst();
             String prefix = "";

@@ -94,7 +94,7 @@ public final class ChatAlerts {
         return c == '_' || (c < 128 && Character.isLetterOrDigit(c));
     }
 
-    private static void play(float pitch) {
+    public static void play(float pitch) {
         long now = System.currentTimeMillis();
         if (now - lastSound < 150L) return; // a burst of lines makes one ping
         lastSound = now;

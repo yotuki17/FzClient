@@ -216,6 +216,7 @@ public final class Modules {
     public static final dev.fzkc.fzhud.config.PageSetting statsPageChat = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_chat", "チャット"));
     public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "チャット"));
     public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "発言した人の統計をメッセージの前に付ける（待機ロビー・試合中は全員、ロビーは自分の名前を出した人だけ）", true));
+    public static final BoolSetting statsChatInvite = stats.add(new BoolSetting("chatinvite", "パーティに招待してきた人の統計をチャットに出す（Mellow と同じ）", true));
     public static final BoolSetting statsChatStart = stats.add(new BoolSetting("chatstart", "試合が始まったら全員の統計をチャットに出す", true));
     public static final HeaderSetting statsHeadWarn = stats.add(new HeaderSetting("h_warn", "警告"));
     public static final BoolSetting statsChatWarn = stats.add(new BoolSetting("chatwarn", "タグ付きの人が発言したら警告", true));
@@ -423,6 +424,7 @@ public final class Modules {
     public static final Module chat = new Module("chat", "Chat", Category.VISUAL,
             "チャットの便利機能", true);
 
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_look = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_look", "表示"));
     public static final HeaderSetting chatHead1 = chat.add(new HeaderSetting("h_smooth", "なめらか表示"));
     public static final BoolSetting smoothChatOn = chat.add(new BoolSetting("smooth", "新しいチャットを下からスッと出す", true));
     public static final SliderSetting chatSpeed = chat.add(new SliderSetting("smoothspeed", "その速さ", 2, 40, 1, 14, ""));
@@ -445,6 +447,7 @@ public final class Modules {
     public static final SliderSetting chatLineHeight = chat.add(new SliderSetting("lineheight", "行の高さ", 9, 14, 1, 9, ""));
     public static final BoolSetting chatShadow = chat.add(new BoolSetting("shadow", "文字に影を付ける", true));
 
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_short = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_short", "略語"));
     public static final HeaderSetting chatHeadShort = chat.add(new HeaderSetting("h_short", "ショートカット（「略語=送る文」で書く。略語だけ打って Enter で置き換え）"));
     public static final BoolSetting chatShortcutsOn = chat.add(new BoolSetting("shortcuts", "ショートカットを使う", true));
     public static final TextSetting[] chatShortcuts = {
@@ -456,6 +459,7 @@ public final class Modules {
             chat.add(new TextSetting("short6", "ショートカット 6", "", 120)),
     };
 
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_sound = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_sound", "通知"));
     public static final HeaderSetting chatHeadSound = chat.add(new HeaderSetting("h_sound", "通知音"));
     public static final BoolSetting chatPartySound = chat.add(new BoolSetting("partysound", "パーティチャットで音を鳴らす", true));
     public static final BoolSetting chatMentionSound = chat.add(new BoolSetting("mentionsound", "自分の名前が呼ばれたら音を鳴らす", true));
@@ -463,12 +467,22 @@ public final class Modules {
     public static final BoolSetting chatMentionMark = chat.add(new BoolSetting("mentionmark", "呼ばれたメッセージの頭に @ を付ける", true));
     public static final ChoiceSetting chatSoundType = chat.add(new ChoiceSetting("soundtype", "音の種類", 0, "ピコン", "ポロン（経験値）", "ハープ"));
     public static final SliderSetting chatSoundVolume = chat.add(new SliderSetting("soundvolume", "音量", 0.1, 1.0, 0.05, 0.7, ""));
+    public static final BoolSetting chatInviteSound = chat.add(new BoolSetting("invitesound", "パーティに招待されたら音を鳴らす", true));
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_bw = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_bw", "Bed Wars"));
+    public static final HeaderSetting bwHeadVoid = chat.add(new HeaderSetting("h_void", "void（奈落）に落ちた時"));
+    /** 0 = off, 1 = everyone, 2 = teammates, 3 = enemies. */
+    public static final ChoiceSetting bwVoidSound = chat.add(new ChoiceSetting("voidsound", "落ちた時に音を鳴らす", 1, "オフ", "全員", "味方だけ", "敵だけ"));
+    public static final BoolSetting bwVoidParty = chat.add(new BoolSetting("voidparty", "味方が落ちたらパーティチャットに送る", false));
+    public static final TextSetting bwVoidText = chat.add(new TextSetting("voidtext", "送る文（{name} = 落ちた人の名前）", "{name} fell into the void!", 80));
+    public static final BoolSetting bwVoidPartySelf = chat.add(new BoolSetting("voidpartyself", "自分が落ちた時も送る", false));
 
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_relay = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_relay", "転送"));
     public static final HeaderSetting chatHeadRelay = chat.add(new HeaderSetting("h_relay", "Discordへ転送（/fzrelay test でテスト）"));
     public static final BoolSetting relayOn = chat.add(new BoolSetting("relay", "パーティチャットを送る", false));
     public static final TextSetting relayUrl = chat.add(new TextSetting("relayurl", "Webhook URL（人に見せない）", "", 200));
     public static final BoolSetting relaySelf = chat.add(new BoolSetting("relayself", "自分の発言も送る", true));
 
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_tr = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_tr", "翻訳"));
     public static final HeaderSetting chatHead3 = chat.add(new HeaderSetting("h_translate", "翻訳（/tr en こんにちは で翻訳して送信）"));
     public static final BoolSetting translatorOn = chat.add(new BoolSetting("translate", "外国語のチャットを翻訳する", false));
     public static final ChoiceSetting trMode = chat.add(new ChoiceSetting("trmode", "翻訳のしかた", 0, "[訳] ボタンを押した時だけ", "自動で翻訳して下に表示"));
@@ -478,6 +492,7 @@ public final class Modules {
     public static final ChoiceSetting trProvider = chat.add(new ChoiceSetting("trprovider", "翻訳サービス", 0, "Google（キー不要）", "DeepL（APIキーが必要）"));
     public static final TextSetting trDeeplKey = chat.add(new TextSetting("deeplkey", "DeepLのAPIキー", "", 80));
 
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_history = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_history", "履歴"));
     public static final HeaderSetting chatHead4 = chat.add(new HeaderSetting("h_history", "履歴（/fzhistory でコマンド履歴、/chatlog でログ）"));
     public static final BoolSetting historyOn = chat.add(new BoolSetting("history", "チャットとコマンドの履歴を残す", true));
     public static final BoolSetting historyKeep = chat.add(new BoolSetting("keep", "メニューやサーバー移動でチャットを消さない", true));
@@ -485,6 +500,7 @@ public final class Modules {
     public static final SliderSetting historyScroll = chat.add(new SliderSetting("scrollback", "さかのぼれるチャットの行数（ゲーム中ずっと）", 500, 20000, 500, 10000, "行"));
     public static final BoolSetting historyLog = chat.add(new BoolSetting("log", "チャットを日付別ファイルに保存", true));
 
+    public static final dev.fzkc.fzhud.config.PageSetting chatPage_input = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_input", "入力"));
     public static final HeaderSetting chatHead5 = chat.add(new HeaderSetting("h_ime", "日本語入力"));
     public static final BoolSetting imeOn = chat.add(new BoolSetting("ime", "チャットで日本語（IME）を打てるようにする", true));
     public static final ChoiceSetting imeMode = chat.add(new ChoiceSetting("imemode", "入力のしかた", 0, "チャットに直接打つ", "別ウィンドウの入力欄"));
