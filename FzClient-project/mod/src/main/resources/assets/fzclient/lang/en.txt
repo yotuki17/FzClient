@@ -1050,3 +1050,4 @@ Cosmetics と /pv のプレビューも3Dにする	3D in the Cosmetics and /pv p
 コード {0} は見つかりませんでした	Code {0} was not found
 コード {0} を読み込みました	Loaded code {0}
 クリップボードに FzClient のコード（6文字か、FZ で始まる文字）がありません	No FzClient code (6 characters, or starting with FZ) in the clipboard
+パーティチャットで話した人の統計も付ける（ロビーでも）	Also add stats for people talking in party chat (in lobbies too)

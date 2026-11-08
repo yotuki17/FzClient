@@ -224,7 +224,9 @@ public class ChatStats {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer != null && name.equalsIgnoreCase(mc.thePlayer.getName())) return;
         // a main lobby (Bed Wars lobby and so on): only people who mention you
-        if (Stats.lobby && (mc.thePlayer == null || !mentions(plain.substring(m.end()), mc.thePlayer.getName()))) return;
+        // (party chat counts too, with its setting on)
+        boolean party = plain.startsWith("Party > ") && Modules.statsChatParty.get();
+        if (Stats.lobby && !party && (mc.thePlayer == null || !mentions(plain.substring(m.end()), mc.thePlayer.getName()))) return;
         UUID id = idOf(name);
         if (warn && id != null) watchTags(id, name);
         if (!stats) return;

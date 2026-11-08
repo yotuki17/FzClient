@@ -227,6 +227,7 @@ public final class Modules {
     public static final dev.fzkc.fzhud.config.PageSetting statsPageChat = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_chat", "チャット"));
     public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "チャット"));
     public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "発言した人の統計をメッセージの前に付ける（待機ロビー・試合中は全員、ロビーは自分の名前を出した人だけ）", true));
+    public static final BoolSetting statsChatParty = stats.add(new BoolSetting("chatparty", "パーティチャットで話した人の統計も付ける（ロビーでも）", true));
     public static final BoolSetting statsChatInvite = stats.add(new BoolSetting("chatinvite", "パーティに招待してきた人の統計をチャットに出す（Mellow と同じ）", true));
     public static final BoolSetting statsChatStart = stats.add(new BoolSetting("chatstart", "試合が始まったら全員の統計をチャットに出す", true));
     public static final HeaderSetting statsHeadWarn = stats.add(new HeaderSetting("h_warn", "警告"));
