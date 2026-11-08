@@ -133,6 +133,14 @@ public final class Modules {
     public static final BoolSetting zoomCinematic = zoom.add(new BoolSetting("cinematic", "ズーム中はシネマティックカメラ", false));
     public static final BoolSetting zoomToggle = zoom.add(new BoolSetting("toggle", "押すたびにON/OFF（トグル）", false));
 
+    // ---- 3D skin layers (the outer layer of skins as little cubes)
+    public static final Module skinLayers = new Module("skinlayers", "3D Skin Layers", Category.VISUAL,
+            "スキンの上のレイヤー（帽子・上着・袖・ズボン）を立体にする", true);
+    public static final BoolSetting skinLayersFlatSemi = skinLayers.add(new BoolSetting("flatsemi", "半透明のところは3Dにしない", true));
+    public static final BoolSetting skinLayersOthers = skinLayers.add(new BoolSetting("others", "ほかのプレイヤーも3Dにする", true));
+    public static final SliderSetting skinLayersRange = skinLayers.add(new SliderSetting("range", "3Dにする距離", 4, 64, 4, 24, "m"));
+    public static final BoolSetting skinLayersPreview = skinLayers.add(new BoolSetting("preview", "Cosmetics と /pv のプレビューも3Dにする", true));
+
     // ---- Hitbox
     public static final Module hitbox = new Module("hitbox", "Hitbox", Category.PVP,
             "当たり判定の枠を表示", false);
@@ -588,6 +596,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, stats, cosmetics, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

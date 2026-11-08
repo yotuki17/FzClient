@@ -29,6 +29,7 @@
     "MixinRendererLivingEntity",
     "MixinGuiNewChat",
     "MixinBlockNewLeaf",
-    "MixinBlockNewLog"
+    "MixinBlockNewLog",
+    "MixinModelPlayer"
   ]
 }

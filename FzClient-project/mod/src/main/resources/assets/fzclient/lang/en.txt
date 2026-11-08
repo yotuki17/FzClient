@@ -1025,3 +1025,8 @@ Urchin: このキーでは統計を取れません（Bordic を使います）	U
 パーティ招待をポップアップで出す	Show party invites as a popup
 フレンド申請をポップアップで出す	Show friend requests as a popup
 フレンドの申請が来ました	Friend request
+スキンの上のレイヤー（帽子・上着・袖・ズボン）を立体にする	Makes the outer skin layer (hat, jacket, sleeves, pants) 3D
+半透明のところは3Dにしない	Keep semi-transparent pixels flat
+ほかのプレイヤーも3Dにする	Make other players 3D too
+3Dにする距離	3D distance
+Cosmetics と /pv のプレビューも3Dにする	3D in the Cosmetics and /pv previews too

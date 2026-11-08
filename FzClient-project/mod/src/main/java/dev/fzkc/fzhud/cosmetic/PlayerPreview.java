@@ -3,6 +3,7 @@ package dev.fzkc.fzhud.cosmetic;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -115,8 +116,19 @@ public final class PlayerPreview {
             mc.getTextureManager().bindTexture(s);
             ModelRenderer[] parts = {m.bipedHead, m.bipedBody, m.bipedRightArm, m.bipedLeftArm, m.bipedRightLeg, m.bipedLeftLeg};
             for (ModelRenderer r : parts) r.render(sc);
-            ModelRenderer[] wear = {m.bipedHeadwear, m.bipedBodyWear, m.bipedRightArmwear, m.bipedLeftArmwear, m.bipedRightLegwear, m.bipedLeftLegwear};
-            for (ModelRenderer r : wear) r.render(sc);
+            ModelRenderer[] wear = SkinLayers3D.wear(m);
+            boolean voxels = dev.fzkc.fzhud.Modules.skinLayers.enabled && dev.fzkc.fzhud.Modules.skinLayersPreview.get();
+            for (int i = 0; i < wear.length; i++) {
+                ModelRenderer r = wear[i];
+                if (voxels) {
+                    GlStateManager.pushMatrix();
+                    r.postRender(sc);
+                    boolean ok = SkinLayers3D.draw(s, slim, i, sc);
+                    GlStateManager.popMatrix();
+                    if (ok) continue;
+                }
+                r.render(sc);
+            }
             if (cape != null) {
                 mc.getTextureManager().bindTexture(cape);
                 GlStateManager.pushMatrix();
@@ -156,9 +168,13 @@ public final class PlayerPreview {
         m.bipedLeftArm.rotateAngleZ = -(MathHelper.cos(age * 0.09f) * 0.05f + 0.05f);
         m.bipedRightArm.rotateAngleX = sway;
         m.bipedLeftArm.rotateAngleX = -sway;
-        m.bipedRightArmwear.rotateAngleZ = m.bipedRightArm.rotateAngleZ;
-        m.bipedLeftArmwear.rotateAngleZ = m.bipedLeftArm.rotateAngleZ;
-        m.bipedRightArmwear.rotateAngleX = m.bipedRightArm.rotateAngleX;
-        m.bipedLeftArmwear.rotateAngleX = m.bipedLeftArm.rotateAngleX;
+        // the outer layer follows its part, position included: Minecraft creates the slim model's right sleeve 10
+        // pixels behind the arm and only fixes it while a real player is drawn (the sleeve looked shifted back here)
+        ModelBase.copyModelAngles(m.bipedHead, m.bipedHeadwear);
+        ModelBase.copyModelAngles(m.bipedBody, m.bipedBodyWear);
+        ModelBase.copyModelAngles(m.bipedRightArm, m.bipedRightArmwear);
+        ModelBase.copyModelAngles(m.bipedLeftArm, m.bipedLeftArmwear);
+        ModelBase.copyModelAngles(m.bipedRightLeg, m.bipedRightLegwear);
+        ModelBase.copyModelAngles(m.bipedLeftLeg, m.bipedLeftLegwear);
     }
 }
