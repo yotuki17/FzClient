@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 /**
  * Fetches player stats in the background and keeps them for a while.
  * Sources (chosen in the Overlay settings, one for games and one for lobbies): the official Hypixel API (key,
- * every game), Bedlify's cache of it (no key) or Bordic's public cache (no key, Bed Wars / Duels / SkyWars).
+ * every game), Urchin's copy of it (Coral key with the Hypixel or Player Data permission), Bedlify's cache of it (no key) or Bordic's public cache (no key, Bed Wars / Duels / SkyWars).
  * When the chosen one cannot answer, Bordic does. Many players at once go to Bordic in one request.
  */
 public final class StatsApi {
@@ -47,12 +47,12 @@ public final class StatsApi {
 
     /** Where stats come from (the order of the choices in the settings). */
     enum Source {
-        HYPIXEL("Hypixel"), BORDIC("Bordic"), BEDLIFY("Bedlify");
+        HYPIXEL("Hypixel"), BORDIC("Bordic"), BEDLIFY("Bedlify"), URCHIN("Urchin");
         final String label;
 
         Source(String label) { this.label = label; }
 
-        /** How complete the data is: Hypixel and Bedlify know every game, Bordic only a few. */
+        /** How complete the data is: Hypixel, Bedlify and Urchin know every game, Bordic only a few. */
         int rank() { return this == BORDIC ? 0 : 1; }
 
         static int rankOf(String label) { return "Bordic".equals(label) ? 0 : 1; }
@@ -74,6 +74,7 @@ public final class StatsApi {
         long now = System.currentTimeMillis();
         if (s == Source.HYPIXEL && !useHypixel()) return Source.BORDIC;
         if (s == Source.BEDLIFY && now < bedlifyPausedUntil) return Source.BORDIC;
+        if (s == Source.URCHIN && !useUrchin()) return Source.BORDIC;
         return s;
     }
 
@@ -180,6 +181,8 @@ public final class StatsApi {
         hypixelPausedUntil = 0;
         hypixelProblem = null;
         bedlifyPausedUntil = 0;
+        urchinPausedUntil = 0;
+        urchinProblem = null;
         for (Entry e : CACHE.values()) {
             e.failedAt = 0;
             e.error = null;
@@ -248,7 +251,50 @@ public final class StatsApi {
     }
 
     /** Why the Hypixel key is not being used right now, or null. */
-    public static String hypixelProblem() { return hypixelProblem; }
+    public static String hypixelProblem() { return hypixelProblem != null ? hypixelProblem : urchinProblem; }
+
+    /** Urchin (Coral key) said no or is rate limited: Bordic until this time. */
+    private static volatile long urchinPausedUntil;
+    private static volatile String urchinProblem;
+
+    static boolean useUrchin() {
+        return !Sessions.urchinKey().isEmpty() && System.currentTimeMillis() > urchinPausedUntil;
+    }
+
+    /**
+     * The Hypixel player data through Urchin: /v3/hypixel/player (needs the key's "Hypixel" permission), else
+     * /v3/player/profile (needs "Player Data"). A normal personal key may have neither; then Bordic for 30 minutes.
+     * max_cache_age lets Urchin answer from its own copy, which saves Hypixel requests and works when Hypixel is down.
+     */
+    private static JsonObject urchinPlayer(String hex) throws Exception {
+        String key = Sessions.urchinKey();
+        boolean denied = false;
+        try {
+            String body = Http.get("Urchin", "https://api.urchin.gg/v3/hypixel/player?player=" + hex + "&max_cache_age=10m", "X-API-Key", key);
+            return new JsonParser().parse(body).getAsJsonObject();   // {"player": {...}} unchanged
+        } catch (Http.Status st) {
+            if (st.code == 401 || st.code == 403) denied = true;
+            else if (st.code != 404) throw st;
+        }
+        try {
+            String body = Http.get("Urchin", "https://api.urchin.gg/v3/player/profile?player=" + hex + "&max_cache_age=10m", "X-API-Key", key);
+            JsonObject o = new JsonParser().parse(body).getAsJsonObject();
+            JsonObject wrap = new JsonObject();
+            JsonElement h = o.get("hypixel");
+            if (h != null && h.isJsonObject()) {
+                JsonObject hy = h.getAsJsonObject();
+                JsonElement inner = hy.get("player");   // in case it is the whole Hypixel answer
+                wrap.add("player", inner != null && inner.isJsonObject() ? inner : hy);
+            }
+            return wrap;   // no "player": not on Hypixel / nicked
+        } catch (Http.Status st) {
+            if (denied && (st.code == 401 || st.code == 403)) {
+                urchinProblem = st.code == 401 ? "Urchin: API キーが違います" : "Urchin: このキーでは統計を取れません（Bordic を使います）";
+                urchinPausedUntil = System.currentTimeMillis() + 30 * 60_000L;
+            }
+            throw st;
+        }
+    }
 
     static String hypixelKey() { return Modules.statsHypixelKey.get().trim(); }
 
@@ -273,6 +319,20 @@ public final class StatsApi {
                 } else if (s.code == 429) {
                     hypixelProblem = "Hypixel API の回数制限に達しました";
                     hypixelPausedUntil = System.currentTimeMillis() + 60_000L;
+                }
+            } catch (Exception ignored) {
+                // fall through to Bordic
+            }
+        }
+        if (src == Source.URCHIN && useUrchin()) {
+            try {
+                accept(id, name, e, urchinPlayer(hex), "Urchin");
+                urchinProblem = null;
+                return;
+            } catch (Http.Status s) {
+                if (s.code == 429) {
+                    urchinProblem = "Urchin: 回数制限";
+                    urchinPausedUntil = System.currentTimeMillis() + 60_000L;
                 }
             } catch (Exception ignored) {
                 // fall through to Bordic

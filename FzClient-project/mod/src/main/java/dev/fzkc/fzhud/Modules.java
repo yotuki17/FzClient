@@ -200,11 +200,11 @@ public final class Modules {
     }
     public static final dev.fzkc.fzhud.config.PageSetting statsPageData = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_data", "データ・API"));
     public static final HeaderSetting statsHeadSource = stats.add(new HeaderSetting("h_source", "統計の取得元（使えない時は Bordic）"));
-    /** Index into StatsApi.Source: 0 Hypixel API, 1 Bordic, 2 Bedlify. */
+    /** Index into StatsApi.Source: 0 Hypixel API, 1 Bordic, 2 Bedlify, 3 Urchin. */
     public static final ChoiceSetting statsSource = stats.add(new ChoiceSetting("source", "試合中", 0,
-            "Hypixel API（キー必要）", "Bordic", "Bedlify"));
+            "Hypixel API（キー必要）", "Bordic", "Bedlify", "Urchin（Coral キー）"));
     public static final ChoiceSetting statsLobbySource = stats.add(new ChoiceSetting("lobbysource", "ロビー（チャット・タブ）", 1,
-            "Hypixel API（キー必要）", "Bordic", "Bedlify"));
+            "Hypixel API（キー必要）", "Bordic", "Bedlify", "Urchin（Coral キー）"));
     public static final HeaderSetting statsHeadKeys = stats.add(new HeaderSetting("h_keys", "キー（空なら Mellow の設定から自動で読み込み）"));
     public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー", "", 64).secret());
     public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（Bed Wars の 過去24時間・7日・30日とデニック）", "", 128).secret());

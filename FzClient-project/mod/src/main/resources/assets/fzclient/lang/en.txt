@@ -997,3 +997,5 @@ void（奈落）に落ちた時	When someone falls into the void
 送る文（{name} = 落ちた人の名前）	Message ({name} = who fell)
 自分が落ちた時も送る	Also when you fall
 パーティに招待してきた人の統計をチャットに出す（Mellow と同じ）	Show the stats of who invites you to a party (like Mellow)
+Urchin（Coral キー）	Urchin (Coral key)
+Urchin: このキーでは統計を取れません（Bordic を使います）	Urchin: this key cannot get stats (using Bordic)
