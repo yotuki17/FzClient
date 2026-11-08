@@ -12,14 +12,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Menu icons (Lucide, ISC license) packed into one small texture: textures/icons.png, 48px cells, 16 per row (768x240).
+ * Menu icons (Lucide, ISC license) packed into one small texture: textures/icons.png, 48px cells, 16 per row (768x288).
  * One texture bind per icon, tinted with any colour (chroma works too).
  */
 public final class Icons {
     private Icons() {}
 
     private static final ResourceLocation ATLAS = new ResourceLocation("fzclient", "textures/icons.png");
-    private static final int CELL = 48, COLS = 16, W = 768, H = 240;
+    private static final int CELL = 48, COLS = 16, W = 768, H = 288;
     private static final String[] KEYS = {
             "cat_all",
             "cat_hud",
@@ -88,24 +88,30 @@ public final class Icons {
             "menu_mods",
             "menu_quit",
             "menu_account",
-            "fallback"
+            "fallback",
+            "hitbox",
+            "hitdelayfix",
+            "rawinput",
+            "glassui",
+            "targethud",
+            "performance",
+            "optimize",
+            "fixes",
+            "discordvc",
+            "cosmetics",
+            "skinlayers",
+            "partydetect",
+            "playerstats",
+            "droplock",
+            "launcherkeys",
+            "language",
+            "menusound",
+            "clientsettings"
     };
     private static final Map<String, Integer> INDEX = new HashMap<String, Integer>();
 
     static {
         for (int i = 0; i < KEYS.length; i++) INDEX.put(KEYS[i], i);
-        // modules that reuse another module's picture until they get their own cell in icons.png
-        INDEX.put("hitbox", INDEX.get("blockoutline"));
-        INDEX.put("hitdelayfix", INDEX.get("cps"));
-        INDEX.put("rawinput", INDEX.get("cps"));
-        INDEX.put("glassui", INDEX.get("theme"));
-        INDEX.put("targethud", INDEX.get("combo"));
-        INDEX.put("performance", INDEX.get("bgfps"));
-        INDEX.put("optimize", INDEX.get("bgfps"));
-        INDEX.put("fixes", INDEX.get("status"));
-        INDEX.put("partyrelay", INDEX.get("discord"));
-        INDEX.put("discordvc", INDEX.get("discord"));
-        INDEX.put("cosmetics", INDEX.get("menu_account"));
     }
 
     private static boolean filtered;

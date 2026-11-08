@@ -82,7 +82,7 @@ public class FzMainMenu extends FzScreen {
     private static final String[][] QUICK = {
             // id, icon, title, subtitle
             {"quick_fz", "menu_fz", "設定・MOD", "FzClient の機能"},
-            {"quick_cos", "menu_account", "コスメティック", "マント・オーラ"},
+            {"quick_cos", "cosmetics", "コスメティック", "マント・オーラ"},
             // (the account switcher is the face + name in the bottom left: the third row is the gallery)
     };
     private static final int[] QUICK_TINT = {CYAN, MAGENTA};

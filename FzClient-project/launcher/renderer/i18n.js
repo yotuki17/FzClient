@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '改善：Mod のアイコンを18個追加して、ほかの機能のアイコンの使い回しをやめました（Hitbox・Overlay・3D Skin Layers・Cosmetics など）・合っていなかったアイコンも差し替え': 'Better: 18 new Mod icons, so features no longer borrow another feature icon (Hitbox, Overlay, 3D Skin Layers, Cosmetics and more); icons that did not fit were replaced',
   '改善：Overlay の統計を取る時のメモリの使い方を大きく減らしました（たまに一瞬カクッと止まるのを減らすため）・カクついた時に原因をログに残すように': 'Better: the Overlay uses much less memory when it loads stats (to cut the short freezes now and then); a freeze now leaves its cause in the log',
   '修正：Block Outline のプレビューに枠が出ていなかったのを修正・プレビューの背景をタイトル画面のパノラマ（止めたもの）に': 'Fix: the Block Outline preview did not show the outline; the preview background is now the title screen panorama (standing still)',
   '修正：設定画面の右のプレビューが出ていなかったのを修正（普通の画面の大きさでも出るように、設定の欄を少し詰めました）': 'Fix: the preview on the right of the settings page did not show (the settings column is a little narrower now so it fits)',
