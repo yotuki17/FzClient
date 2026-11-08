@@ -60,7 +60,12 @@ public class SettingsScreen extends FzScreen {
         Keyboard.enableRepeatEvents(true);
     }
 
-    private float W() { return Ui.menuW(vw, 640); }
+    /** Width of the preview on the right (0 when the panel is too narrow for it). */
+    private static final float PV = 180;
+    private float W() { return Ui.menuW(vw, 640 + PV); }
+    private float pvW() { return (top() ? W() - 28 : W() - SW - 28) >= 620 ? PV : 0; }
+    /** Right edge of the header (the whole width, over the preview too). */
+    private float hRight() { return x0() + cw() + (pvW() > 0 ? pvW() + 14 : 0) - 10; }
     private float H() { return Ui.menuH(vh, 340); }
     private float px() { return Ui.menuX(vw, W()); }
     private float py() { return (vh - H()) / 2f; }
@@ -75,7 +80,7 @@ public class SettingsScreen extends FzScreen {
     /** Left edge of the header title (after the back button in the top layout). */
     private float hx() { return top() ? x0() + backW() + 10 : x0(); }
     private float x0() { return top() || Ui.sidebarRight() ? px() + 14 : px() + SW + 14; }
-    private float cw() { return top() ? W() - 28 : W() - SW - 28; }
+    private float cw() { return (top() ? W() - 28 : W() - SW - 28) - (pvW() > 0 ? pvW() + 14 : 0); }
     private float y0() { return py() + 62 + (pages().isEmpty() ? 0 : PAGE_BAR); }
     private float ch() { return H() - 70 - (pages().isEmpty() ? 0 : PAGE_BAR); }
 
@@ -229,6 +234,7 @@ public class SettingsScreen extends FzScreen {
         drawHeader(mx, my, o);
         drawPages(mx, my, o);
         drawRows(mx, my, o);
+        if (pvW() > 0) ModulePreview.draw(module, x0() + cw() + 14, py() + 58, pvW(), H() - 66, o);
 
         Decoration.corner(vw, vh, o);
     }
@@ -282,7 +288,7 @@ public class SettingsScreen extends FzScreen {
 
     private float resetW() { return Math.max(50f, R.width(Lang.t("リセット")) + 18f); }
 
-    private float resetX() { return right() - toggleAreaW() - resetW(); }
+    private float resetX() { return hRight() - toggleAreaW() - resetW(); }
 
     private float moveW() {
         return Math.max(56f, Math.max(R.width(Lang.t("位置を動かす")), R.width(Lang.t("ワールド内で"))) + 18f);
@@ -297,9 +303,9 @@ public class SettingsScreen extends FzScreen {
                 : Lang.t(ModsScreen.categoryLabel(module)) + "  ·  " + Lang.t(module.description), hx(), py() + 34, R.alpha(Ui.MUTED, o));
 
         if (module.toggleable) {
-            Ui.toggle(right() - 24, py() + 16, anim("enabled", module.enabled ? 1 : 0).update(module.enabled ? 1 : 0), o);
+            Ui.toggle(hRight() - 24, py() + 16, anim("enabled", module.enabled ? 1 : 0).update(module.enabled ? 1 : 0), o);
             String state = Lang.t(module.enabled ? "有効" : "無効");
-            R.text(module.enabled ? "有効" : "無効", right() - 24 - 4 - R.width(state), py() + 18,
+            R.text(module.enabled ? "有効" : "無効", hRight() - 24 - 4 - R.width(state), py() + 18,
                     R.alpha(module.enabled ? Ui.accent : Ui.MUTED, o));
         }
         Ui.button(resetX(), py() + 13, resetW(), 18, combined() && resetArmed() ? "本当?" : "リセット", anim("reset", 0).update(Ui.inside(mx, my, resetX(), py() + 13, resetW(), 18) ? 1 : 0), o);
@@ -308,7 +314,7 @@ public class SettingsScreen extends FzScreen {
             Ui.button(moveX(), py() + 13, moveW(), 18, inWorld ? "位置を動かす" : "ワールド内で",
                     inWorld ? anim("move", 0).update(Ui.inside(mx, my, moveX(), py() + 13, moveW(), 18) ? 1 : 0) : 0f, inWorld ? o : o * 0.5f);
         }
-        R.rect(x0(), py() + 50, cw(), 1, R.alpha(Ui.LINE, o));
+        R.rect(x0(), py() + 50, hRight() + 10 - x0(), 1, R.alpha(Ui.LINE, o));
     }
 
     private void drawRows(int mx, int my, float o) {
@@ -484,7 +490,7 @@ public class SettingsScreen extends FzScreen {
             return;
         }
         // header
-        if (module.toggleable && Ui.inside(mx, my, right() - 26, py() + 12, 28, 18)) {
+        if (module.toggleable && Ui.inside(mx, my, hRight() - 26, py() + 12, 28, 18)) {
             module.enabled = !module.enabled;
             if (!module.enabled) UiSound.cancel();
             return;

@@ -52,7 +52,8 @@ public final class SkinLayers3D {
 
     private static final int MAX = 48;
     private static final Map<String, Mesh> CACHE = new LinkedHashMap<String, Mesh>(16, .75f, true);
-    private static boolean lastFlat;
+    /** The settings the cached meshes were built with (flat semi-transparent pixels, head and body size). */
+    private static String lastShape = "";
 
     /** True when 3D layers should be drawn for this distance (squared, in blocks) from the camera. */
     public static boolean active(boolean self, double distSq) {
@@ -80,15 +81,17 @@ public final class SkinLayers3D {
     private static Mesh mesh(ResourceLocation skin, boolean slim) {
         if (skin == null) return null;
         boolean flat = Modules.skinLayersFlatSemi.get();
-        if (flat != lastFlat) {   // the setting changed: build everything again
+        float th = Modules.skinLayersHead.get(), tb = Modules.skinLayersBody.get();
+        String shape = flat + "/" + th + "/" + tb;
+        if (!shape.equals(lastShape)) {   // a setting changed: build everything again
             clear();
-            lastFlat = flat;
+            lastShape = shape;
         }
         String key = skin.toString() + (slim ? "#slim" : "#wide");
         Mesh m = CACHE.get(key);
         if (m != null) return m;
         try {
-            m = build(skin, slim, flat);
+            m = build(skin, slim, flat, th, tb);
         } catch (Throwable t) {
             m = null;
         }
@@ -122,7 +125,7 @@ public final class SkinLayers3D {
         }
     }
 
-    private static Mesh build(ResourceLocation skin, boolean slim, boolean flatSemi) {
+    private static Mesh build(ResourceLocation skin, boolean slim, boolean flatSemi, float th, float tb) {
         Minecraft mc = Minecraft.getMinecraft();
         mc.getTextureManager().bindTexture(skin);
         int w = GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D, 0, GL11.GL_TEXTURE_WIDTH);
@@ -142,7 +145,7 @@ public final class SkinLayers3D {
             if (!legacy || part == HEAD) {
                 WorldRenderer wr = Tessellator.getInstance().getWorldRenderer();
                 wr.begin(GL11.GL_QUADS, DefaultVertexFormats.OLDMODEL_POSITION_TEX_NORMAL);
-                part(wr, s, box(part, slim), flatSemi, part == HEAD ? .5f : .25f);
+                part(wr, s, box(part, slim), flatSemi, part == HEAD ? th : tb);
                 Tessellator.getInstance().draw();
             }
             GL11.glEndList();
@@ -177,7 +180,8 @@ public final class SkinLayers3D {
      * The six faces of one part. Each face is a grid of skin pixels; an opaque pixel becomes a cube 1 pixel thick
      * on the outside of the body, a semi-transparent one (when kept flat) a flat square half way out.
      */
-    private static void part(WorldRenderer wr, Skin s, int[] b, boolean flatSemi, float flatOut) {
+    private static void part(WorldRenderer wr, Skin s, int[] b, boolean flatSemi, float t) {
+        float flatOut = t / 2f;   // t = how far the cubes stand out, in pixels (setting)
         int x1 = b[0], y1 = b[1], z1 = b[2], W = b[3], H = b[4], D = b[5], u = b[6], v = b[7];
         int x2 = x1 + W, y2 = y1 + H, z2 = z1 + D;
         // face: 0 +X, 1 -X, 2 -Y (top), 3 +Y (bottom), 4 -Z (front), 5 +Z (back)
@@ -208,18 +212,18 @@ public final class SkinLayers3D {
                                 az + nz * flatOut, bz + nz * flatOut, nx, ny, nz, tu, tv);
                         continue;
                     }
-                    // push the cell out into a 1-pixel cube
-                    if (nx != 0) { if (nx > 0) bx += 1; else ax -= 1; }
-                    if (ny != 0) { if (ny > 0) by += 1; else ay -= 1; }
-                    if (nz != 0) { if (nz > 0) bz += 1; else az -= 1; }
+                    // push the cell out into a cube t pixels thick
+                    if (nx != 0) { if (nx > 0) bx += t; else ax -= t; }
+                    if (ny != 0) { if (ny > 0) by += t; else ay -= t; }
+                    if (nz != 0) { if (nz > 0) bz += t; else az -= t; }
                     // close the corners: cubes on the edge of the face reach over the edge of the body
                     if (extX) {
-                        if (ax <= x1) ax = x1 - 1;
-                        if (bx >= x2) bx = x2 + 1;
+                        if (ax <= x1) ax = x1 - t;
+                        if (bx >= x2) bx = x2 + t;
                     }
                     if (extZ) {
-                        if (az <= z1) az = z1 - 1;
-                        if (bz >= z2) bz = z2 + 1;
+                        if (az <= z1) az = z1 - t;
+                        if (bz >= z2) bz = z2 + t;
                     }
                     cube(wr, ax, bx, ay, by, az, bz, -nx, -ny, -nz, tu, tv);
                 }

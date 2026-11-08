@@ -1030,3 +1030,7 @@ Urchin: このキーでは統計を取れません（Bordic を使います）	U
 ほかのプレイヤーも3Dにする	Make other players 3D too
 3Dにする距離	3D distance
 Cosmetics と /pv のプレビューも3Dにする	3D in the Cosmetics and /pv previews too
+（いまは無効）	(off right now)
+平ら（無効）	Flat (off)
+頭の立体の大きさ（出っぱり）	Head layer size (how far it stands out)
+体・腕・足の立体の大きさ（出っぱり）	Body / arm / leg layer size (how far it stands out)

@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  'NEW：設定画面の右に、その機能がどう見えるかのプレビュー・3D Skin Layers の立体の大きさ（出っぱり）を頭と体で調整できるように': 'New: a preview on the right of each settings page showing how the feature looks; 3D Skin Layers size (how far it stands out) for the head and the body',
   '修正：3D Skin Layers のレイヤーが体の動きについてこない・腕や足の位置がずれるのを修正': 'Fix: 3D Skin Layers did not follow the body when moving and arms / legs were in the wrong place',
   'NEW：3D Skin Layers（スキンの上のレイヤーを立体に・半透明のところは平らのままにできる）・修正：Cosmetics と /pv のプレビューで右腕の上のレイヤーが後ろにずれていたのを修正': 'New: 3D Skin Layers (the outer skin layer in 3D, semi-transparent pixels can stay flat). Fix: the right sleeve was shifted back in the Cosmetics and /pv previews',
   'NEW：パーティ招待とフレンド申請のポップアップ（Y で受ける・N で断る）・マント5種類・オーラ4種類・ヘイロー（頭の上の輪）を追加': 'New: popup for party invites and friend requests (Y accepts, N declines), 5 new capes, 4 new auras and halos',
