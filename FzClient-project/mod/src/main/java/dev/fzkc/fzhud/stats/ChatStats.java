@@ -261,12 +261,26 @@ public class ChatStats {
         StringBuilder sb = new StringBuilder(head);
         String star = g.tabPrefix(c);
         if (!star.isEmpty()) sb.append(star).append(" §r");
-        sb.append(d.display());
+        // the name in its team colour (as the tab list and the game show it), the rank tag stays as it is
+        String team = teamColor(info);
+        sb.append(d.rankPrefix).append(team != null ? team : d.rankColor).append(d.name);
         Denick.Real r = info != null && Denick.isNick(info) ? Denick.real(name) : null;
         if (r != null) sb.append(" §7(§a").append(name).append("§7)");
         String[] heads = g.tabHeadsPublic(), vals = g.tabPublic(c);
         if (heads.length > 0) sb.append(" §7|§r ").append(heads[0]).append(": ").append(vals[0]);
         return sb.toString();
+    }
+
+    /** The last colour code of the player's team prefix ("§c" for red), or null when there is no team colour. */
+    private static String teamColor(net.minecraft.client.network.NetworkPlayerInfo info) {
+        if (info == null || info.getPlayerTeam() == null) return null;
+        String p = info.getPlayerTeam().getColorPrefix();
+        for (int i = p.length() - 2; i >= 0; i--) {
+            if (p.charAt(i) == '§' && "0123456789abcdef".indexOf(Character.toLowerCase(p.charAt(i + 1))) >= 0) {
+                return p.substring(i, i + 2);
+            }
+        }
+        return null;
     }
 
     private static IChatComponent withPrefix(String prefix, IChatComponent msg) {
