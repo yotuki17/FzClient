@@ -46,7 +46,10 @@ import java.util.regex.Pattern;
  * </ul>
  */
 public final class Denick {
-    private Denick() {}
+    /** (an instance only listens for the player name event) */
+    public Denick() {}
+
+    private static boolean lastShow;
 
     /** Who a nick turned out to be. */
     public static final class Real {
@@ -89,7 +92,7 @@ public final class Denick {
     }
 
     static boolean on() {
-        return Modules.stats.enabled && (Modules.denickSkin.get() || Modules.denickNumbers.get()) && Stats.onHypixel();
+        return Modules.stats.enabled && (Modules.denickSkin.get() || Modules.denickNumbers.get() || Modules.denickTeam.get()) && Stats.onHypixel();
     }
 
     /** New world: number lookups start over (the nicks may stay the same, so resolved names are kept). */
@@ -99,6 +102,11 @@ public final class Denick {
 
     /** Once a second: look at nicked players in the tab list. */
     static void tick() {
+        boolean show = Modules.denickShowReal.get() && Modules.stats.enabled;
+        if (show != lastShow) {   // the display setting changed: names again
+            lastShow = show;
+            refreshAllNames();
+        }
         if (!on()) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
@@ -114,6 +122,7 @@ public final class Denick {
             }
             if (Modules.denickSkin.get() && RESOLVED.get(k) == null) bySkin(info, nick);
         }
+        if (Modules.denickTeam.get()) byParty(mc);
         if (skinsDirty) {
             skinsDirty = false;
             saveSkins();
@@ -279,6 +288,142 @@ public final class Denick {
         }
     }
 
+    // ------------------------------------------------------------------ teammates, by elimination
+
+    /** When we sent /pl ourselves (its answer is hidden), and in which world. */
+    private static long partyAskedAt;
+    private static Object partyAskedWorld;
+    private static final List<String> partyReply = new ArrayList<>();
+
+    /**
+     * Your party moves into a game with you, and party members show their real names in party chat and /pl. So a
+     * party member who is not in the tab list under that name is playing nicked: when exactly one nick on your team
+     * is still unknown and exactly one party member is missing, they are the same person.
+     */
+    private static void byParty(Minecraft mc) {
+        if (Stats.lobby || mc.thePlayer == null || mc.theWorld == null) return;
+        NetworkPlayerInfo meInfo = mc.thePlayer.sendQueue.getPlayerInfo(mc.thePlayer.getUniqueID());
+        net.minecraft.scoreboard.ScorePlayerTeam myTeam = meInfo == null ? null : meInfo.getPlayerTeam();
+        java.util.Collection<NetworkPlayerInfo> all = mc.thePlayer.sendQueue.getPlayerInfoMap();
+        int teamSize = 0;
+        if (myTeam != null) for (NetworkPlayerInfo i : all) if (sameTeam(i, myTeam)) teamSize++;
+        // a team that holds everyone (waiting lobby) says nothing: then every nick counts
+        boolean useTeam = myTeam != null && teamSize > 1 && teamSize < all.size();
+        List<String> nicks = new ArrayList<>();
+        Set<String> visible = new HashSet<>();
+        for (NetworkPlayerInfo i : all) {
+            String n = i.getGameProfile().getName();
+            if (n == null) continue;
+            if (!isNick(i)) {
+                visible.add(n.toLowerCase(Locale.ROOT));
+                continue;
+            }
+            Real r = real(n);
+            if (r != null) {
+                visible.add(r.name.toLowerCase(Locale.ROOT));   // already found: that party member is accounted for
+                continue;
+            }
+            if (!useTeam || sameTeam(i, myTeam)) nicks.add(n);
+        }
+        if (nicks.isEmpty()) return;
+        List<String> party = dev.fzkc.fzhud.chat.KnownNames.partyNames();
+        if (party.isEmpty()) {
+            // nothing known about your party yet: ask once per world, without showing the answer
+            if (Modules.denickAskParty.get() && partyAskedWorld != mc.theWorld) {
+                partyAskedWorld = mc.theWorld;
+                partyAskedAt = System.currentTimeMillis();
+                partyReply.clear();
+                mc.thePlayer.sendChatMessage("/pl");
+            }
+            return;
+        }
+        List<String> missing = new ArrayList<>();
+        String me = mc.thePlayer.getName();
+        for (String p : party) {
+            if (p.equalsIgnoreCase(me) || visible.contains(p.toLowerCase(Locale.ROOT))) continue;
+            missing.add(p);
+        }
+        if (nicks.size() == 1 && missing.size() == 1) resolve(nicks.get(0), missing.get(0), Lang.t("パーティ・消去法"));
+    }
+
+    private static boolean sameTeam(NetworkPlayerInfo i, net.minecraft.scoreboard.ScorePlayerTeam t) {
+        net.minecraft.scoreboard.ScorePlayerTeam it = i.getPlayerTeam();
+        return it != null && it.getRegisteredName().equals(t.getRegisteredName());
+    }
+
+    private static final Pattern DOT = Pattern.compile("(?:\\[[^\\]]{1,24}\\] )?([A-Za-z0-9_]{1,16}) ?●");
+
+    /**
+     * True for a line of the /pl answer we asked for ourselves (it is then not shown). The names in it become the
+     * party list.
+     */
+    public static boolean partyReply(String plain) {
+        if (partyAskedAt == 0) return false;
+        long now = System.currentTimeMillis();
+        if (now - partyAskedAt > 4000L) {
+            partyAskedAt = 0;
+            return false;
+        }
+        String s = plain.trim();
+        boolean ours = s.isEmpty() || s.matches("-{10,}") || s.startsWith("Party Members (") || s.startsWith("Party Leader:")
+                || s.startsWith("Party Moderators:") || s.startsWith("Party Members:") || s.startsWith("You are not currently in a party");
+        if (!ours) return false;
+        if (s.startsWith("You are not currently in a party")) {
+            partyAskedAt = 0;
+            return true;
+        }
+        Matcher m = DOT.matcher(s);
+        boolean any = false;
+        while (m.find()) {
+            partyReply.add(m.group(1));
+            any = true;
+        }
+        if (any) dev.fzkc.fzhud.chat.KnownNames.setParty(partyReply);
+        return true;
+    }
+
+    // ------------------------------------------------------------------ showing the real name
+
+    /** "RealName §8(nick)" for a found nick (with the setting on), else null. */
+    public static String shown(String nick) {
+        if (nick == null || !Modules.denickShowReal.get() || !Modules.stats.enabled) return null;
+        Real r = real(nick);
+        return r == null ? null : r.name + " §8(" + nick + ")";
+    }
+
+    /** Puts the real name in place of the nick inside a coloured name ("§cR §cNick" -> "§cR §cReal §8(Nick)§c"). */
+    public static String replaceIn(String formatted, String nick) {
+        String s = shown(nick);
+        if (s == null || formatted == null) return formatted;
+        int i = formatted.indexOf(nick);
+        if (i < 0) return formatted;
+        String after = net.minecraft.client.gui.FontRenderer.getFormatFromString(formatted.substring(0, i));
+        return formatted.substring(0, i) + s + after + formatted.substring(i + nick.length());
+    }
+
+    /** Nametags (and anything else that asks a player for its name): the real name. */
+    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+    public void onNameFormat(net.minecraftforge.event.entity.player.PlayerEvent.NameFormat event) {
+        if (event.entityPlayer == null || event.entityPlayer.getGameProfile() == null) return;
+        UUID id = event.entityPlayer.getGameProfile().getId();
+        if (id == null || id.version() != 1) return;
+        String s = shown(event.username);
+        if (s != null) event.displayname = s;
+    }
+
+    /** Players already in the world keep their cached name until asked again. */
+    private static void refreshNames(String nick) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.theWorld == null) return;
+        for (Object o : mc.theWorld.playerEntities) {
+            net.minecraft.entity.player.EntityPlayer p = (net.minecraft.entity.player.EntityPlayer) o;
+            if (nick == null || nick.equalsIgnoreCase(p.getName())) p.refreshDisplayName();
+        }
+    }
+
+    /** The display setting changed: every player's name again. */
+    public static void refreshAllNames() { refreshNames(null); }
+
     // ------------------------------------------------------------------ result
 
     private static void resolve(String nick, String realName, String how) {
@@ -288,6 +433,7 @@ public final class Denick {
         RESOLVED.put(k, r);
         ANNOUNCED.add(k);
         say("§d[Denick] §f" + nick + " §7→ §a§l" + realName + " §8(" + how + ")");
+        refreshNames(nick);
         // the real UUID, so the tab list and chat show the real player's stats
         new Thread(() -> r.id = StatsApi.lookupName(realName), "FzClient-DenickName").start();
     }

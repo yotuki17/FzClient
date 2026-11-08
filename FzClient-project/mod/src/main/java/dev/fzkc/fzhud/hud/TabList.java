@@ -262,13 +262,14 @@ public class TabList extends HudElement {
             if (id.version() == 1) {
                 // a Hypixel nick: the real player's stats once denicked, "NICK" until then
                 dev.fzkc.fzhud.stats.Denick.Real real = dev.fzkc.fzhud.stats.Denick.real(info.getGameProfile().getName());
+                boolean inPlace = dev.fzkc.fzhud.stats.Denick.shown(info.getGameProfile().getName()) != null;   // the name already shows it
                 if (real == null || real.id == null) {
-                    names.set(i, names.get(i) + (real == null ? "" : " §8(§a" + real.name + "§8)"));
+                    names.set(i, names.get(i) + (real == null || inPlace ? "" : " §8(§a" + real.name + "§8)"));
                     if (cols > 0) row[0] = "§c§lNICK";
                     for (int c = 0; c < cols; c++) statW[c] = Math.max(statW[c], R.width(row[c]));
                     continue;
                 }
-                realSuffix = " §8(§a" + real.name + "§8)";
+                realSuffix = inPlace ? "" : " §8(§a" + real.name + "§8)";
                 id = real.id;
             } else if (id.version() != 4) {
                 continue;   // NPCs: nothing to look up
@@ -343,6 +344,7 @@ public class TabList extends HudElement {
         for (int i = 0; i < n; i++) {
             NetworkPlayerInfo info = players.get(i);
             String s = overlay.getPlayerName(info);
+            if (dev.fzkc.fzhud.stats.Denick.isNick(info)) s = dev.fzkc.fzhud.stats.Denick.replaceIn(s, info.getGameProfile().getName());
             if (info.getGameType() == WorldSettings.GameType.SPECTATOR) s = EnumChatFormatting.ITALIC + s;
             names.add(s);
             isMe[i] = me.equals(info.getGameProfile().getId()) || dev.fzkc.fzhud.integration.FzUsers.uses(info.getGameProfile().getId());

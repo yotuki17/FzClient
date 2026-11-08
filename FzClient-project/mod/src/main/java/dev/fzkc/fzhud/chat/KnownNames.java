@@ -187,6 +187,17 @@ public final class KnownNames {
         }
     }
 
+    /** Party members as far as the chat has shown (not you). */
+    public static java.util.List<String> partyNames() {
+        return new java.util.ArrayList<String>(party.values());
+    }
+
+    /** A fresh party list (read from a /pl answer that was not shown). */
+    public static void setParty(java.util.Collection<String> names) {
+        party.clear();
+        for (String n : names) put(party, n, false);
+    }
+
     private static void put(Map<String, String> map, String name, boolean save) {
         String me = Minecraft.getMinecraft().thePlayer == null ? "" : Minecraft.getMinecraft().thePlayer.getName();
         if (name.equalsIgnoreCase(me)) return;

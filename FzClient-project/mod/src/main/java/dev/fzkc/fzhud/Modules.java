@@ -249,6 +249,11 @@ public final class Modules {
     public static final HeaderSetting denickHeadNum = stats.add(new HeaderSetting("h_denicknum", "数字で調べる"));
     public static final BoolSetting denickNumbers = stats.add(new BoolSetting("denicknumbers", "Bed Wars のファイナル・ベッドの数字で調べる（Aurora キーが必要）", true));
     public static final SliderSetting denickMinFinals = stats.add(new SliderSetting("denickmin", "数字で調べるファイナル数の下限", 1000, 30000, 500, 15000, ""));
+    public static final HeaderSetting denickHeadTeam = stats.add(new HeaderSetting("h_denickteam", "味方を消去法で調べる"));
+    public static final BoolSetting denickTeam = stats.add(new BoolSetting("denickteam", "パーティメンバーのうちタブに本名がいない人と、味方のニックを突き合わせる", true));
+    public static final BoolSetting denickAskParty = stats.add(new BoolSetting("denickaskparty", "パーティが分からない時は /pl を自動で送る（結果は表示しない）", true));
+    public static final HeaderSetting denickHeadShow = stats.add(new HeaderSetting("h_denickshow", "表示"));
+    public static final BoolSetting denickShowReal = stats.add(new BoolSetting("denickshowreal", "見破ったニックはタブとネームタグで本名にする（後ろにニックを小さく）", true));
 
     // ---- Drop protection (only resources and blocks can be dropped)
     public static final Module dropLock = new Module("droplock", "Drop Protection", Category.PVP,

@@ -1034,3 +1034,8 @@ Cosmetics と /pv のプレビューも3Dにする	3D in the Cosmetics and /pv p
 平ら（無効）	Flat (off)
 頭の立体の大きさ（出っぱり）	Head layer size (how far it stands out)
 体・腕・足の立体の大きさ（出っぱり）	Body / arm / leg layer size (how far it stands out)
+味方を消去法で調べる	Teammates by elimination
+パーティメンバーのうちタブに本名がいない人と、味方のニックを突き合わせる	Match a party member missing from the tab list with a nicked teammate
+パーティが分からない時は /pl を自動で送る（結果は表示しない）	Send /pl by itself when the party is unknown (the answer is hidden)
+見破ったニックはタブとネームタグで本名にする（後ろにニックを小さく）	Show found nicks by their real name in the tab list and nametags (nick after it)
+パーティ・消去法	party, elimination

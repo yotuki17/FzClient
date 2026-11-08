@@ -203,6 +203,10 @@ public class ChatStats {
         if (reposting || event.type == 2 || event.isCanceled()) return;
         String plain = net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
         if (plain == null) return;
+        if (Denick.partyReply(plain)) {
+            event.setCanceled(true);
+            return;
+        }
         Denick.onChat(plain);
         gameStarting(plain);
         if (!held.isEmpty()) {
