@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, make knockback look lighter, record clips with the Alt+X overlay, split your chat, and stay up to date with the FzClient Launcher.">
+<meta name="description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, see every player's Hypixel stats in the tab list, make knockback look lighter, record clips with the Alt+X overlay, and stay up to date with the FzClient Launcher.">
 <meta property="og:title" content="FzClient">
-<meta property="og:description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, make knockback look lighter, record clips with the Alt+X overlay, split your chat, and stay up to date with the FzClient Launcher.">
+<meta property="og:description" content="FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, see every player's Hypixel stats in the tab list, make knockback look lighter, record clips with the Alt+X overlay, and stay up to date with the FzClient Launcher.">
 <meta property="og:image" content="img/menu.webp">
 <link rel="icon" href="img/bird.png">
 <title>FzClient</title>
@@ -174,6 +174,32 @@ footer .brand span { font-size: 15px; color: var(--ink); }
 footer .links { display: flex; gap: 20px; }
 footer small { flex-basis: 100%; line-height: 1.6; }
 
+/* stats overlay: an HTML picture of the tab list */
+.feature.overlay { margin-top: 80px; }
+.feature code { font: 500 14px/1 var(--tech); padding: 3px 7px; border-radius: 6px; background: var(--sky-2); border: 1px solid var(--line); color: var(--cyan); }
+.feature p + p { margin-top: 10px; }
+.tabmock { margin: 0; padding: 14px 14px 10px; border-radius: 14px; border: 1px solid var(--line); font: 500 13px/1.2 var(--tech); color: #e8e8e8;
+  background: linear-gradient(rgba(0,0,0,.62), rgba(0,0,0,.62)), radial-gradient(70% 90% at 30% 20%, #3b5a3a, #1b2433 70%); box-shadow: 0 24px 60px -30px rgba(0,0,0,.8); }
+.tm-head { display: flex; justify-content: space-between; color: #ffd166; padding: 2px 6px 10px; letter-spacing: .06em; }
+.tm-row { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) 3.4em 3.4em 4.4em 6.2em; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 4px; white-space: nowrap; }
+.tm-row:nth-child(odd) { background: rgba(255,255,255,.04); }
+.tm-row > span { overflow: hidden; text-overflow: ellipsis; }
+.tm-row b { font-weight: 600; }
+.tm-row i { font-style: normal; color: #8a8a8a; font-size: 11px; }
+.tm-cols { color: #8f95b8; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; background: none !important; }
+.tm-me { outline: 1px solid color-mix(in srgb, var(--cyan) 45%, transparent); }
+.tm-tag { justify-self: start; font-size: 10px; letter-spacing: .08em; padding: 3px 6px; border-radius: 4px; }
+.t-red { background: rgba(255,85,85,.18); color: #ff6b6b; }
+.t-amber { background: rgba(255,170,0,.18); color: #ffbf47; }
+.t-cyan { background: color-mix(in srgb, var(--cyan) 18%, transparent); color: var(--cyan); }
+.c-gold { color: #ffaa00; } .c-red { color: #ff5555; } .c-pink { color: #ff55ff; } .c-cyan { color: #55ffff; } .c-gray { color: #aaaaaa; }
+.c-blue { color: #5599ff; } .c-green { color: #55ff55; } .c-yellow { color: #ffff55; } .c-white { color: #ffffff; }
+.tabmock figcaption { margin-top: 10px; font-size: 11px; color: #7d84a8; text-align: right; }
+@media (max-width: 560px) {
+  .tm-row { grid-template-columns: 4.2em minmax(0, 1fr) 3em 3em; font-size: 12px; }
+  .tm-row > span:nth-child(5), .tm-row > span:nth-child(6) { display: none; }
+}
+
 /* ---- small screens ---- */
 @media (max-width: 860px) {
   .nav nav { display: none; }
@@ -200,6 +226,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
     <a class="brand" href="#top"><img src="img/bird.png" alt=""><span>FzClient</span></a>
     <nav aria-label="On this page">
       <a href="#features">Features</a>
+      <a href="#overlay">Overlay</a>
       <a href="#launcher">Launcher</a>
       <a href="#fair">Fair play</a>
       <a href="#download">Download</a>
@@ -214,7 +241,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
       <div>
         <img class="logo" src="img/title.png" alt="FzClient">
         <h1>1.8.9 PvP,<br><em>your way.</em></h1>
-        <p class="lead">FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, make knockback look lighter, and save your best moments with the Alt+X overlay. Play through the FzClient Launcher and everything stays up to date by itself.</p>
+        <p class="lead">FzClient is a PvP client for Minecraft 1.8.9 Forge. Move every HUD, see the Hypixel stats of everyone in your lobby, make knockback look lighter, and save your best moments with the Alt+X overlay. Play through the FzClient Launcher and everything stays up to date by itself.</p>
         <div class="cta">
           <a class="btn primary" href="https://github.com/yotuki17/FzClient/releases/latest/download/FzClient-Launcher-Setup.exe" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21V12.6h-9.6zm0-15.4v7.2H21V3z"/></svg>
@@ -233,7 +260,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
       <div><b>60+</b><span>built-in features and HUDs</span></div>
       <div><b>Alt+X</b><span>overlay, recording and clips</span></div>
       <div><b>4 tabs</b><span>All · Party · Guild · DMs</span></div>
-      <div><b>20,000</b><span>lines of chat to scroll back</span></div>
+      <div><b>Tab</b><span>stats for every player in the lobby</span></div>
     </div>
   </div>
 
@@ -286,6 +313,29 @@ footer small { flex-basis: 100%; line-height: 1.6; }
         <div class="shot"><img src="img/settings.webp" alt="The FzClient Client Settings screen with cards for Chroma, GUI Scale, Borderless and more" width="1600" height="913"></div>
       </div>
 
+      <div class="feature overlay" id="overlay">
+        <div>
+          <span class="tag">Overlay</span>
+          <h3>Know who you are up against</h3>
+          <p>Hold Tab and every player in the lobby shows their star, FKDR, win rate and finals right in the tab list, with tags that warn you about snipers and cheaters. In waiting lobbies a Mellow-style line sums up each player as they join, and when someone mentions you or invites you to a party, their stats show up in chat.</p>
+          <p>Type <code>/pv name</code> for a full stats window with their skin, every mode and the last 24 hours, 7 days and 30 days. Nicked players on your team can be worked out by elimination from your party, and then show their real name in the tab list and above their head.</p>
+          <ul><li>Bed Wars</li><li>Duels</li><li>SkyWars</li><li>Hypixel · Urchin · Bordic</li><li>Denick</li><li>/pv</li></ul>
+        </div>
+        <figure class="tabmock" aria-label="Illustration of the tab list with stats: a column of players with star level, name, FKDR, win/loss ratio, finals and tags">
+          <div class="tm-head"><span>Bed Wars · Fours</span><span>8 / 16</span></div>
+          <div class="tm-row tm-cols"><span></span><span>Player</span><span>FKDR</span><span>WLR</span><span>Finals</span><span>Tags</span></div>
+          <div class="tm-row"><span class="c-gold">[1024✫]</span><span class="c-red">R <b>SkyDiver_09</b></span><span class="c-red">11.4</span><span class="c-pink">6.20</span><span>48,201</span><span class="tm-tag t-red">SNIPER</span></div>
+          <div class="tm-row"><span class="c-cyan">[612✫]</span><span class="c-red">R <b>Mintleaf</b></span><span class="c-gold">4.12</span><span class="c-gold">2.31</span><span>19,380</span><span></span></div>
+          <div class="tm-row"><span class="c-gray">[38✫]</span><span class="c-blue">B <b>PaperPlane</b> <i>(nick)</i></span><span class="c-gray">0.61</span><span class="c-gray">0.30</span><span>212</span><span class="tm-tag t-amber">NICK</span></div>
+          <div class="tm-row"><span class="c-green">[247✫]</span><span class="c-blue">B <b>Kirara_</b></span><span class="c-green">2.05</span><span class="c-green">1.12</span><span>6,744</span><span></span></div>
+          <div class="tm-row tm-me"><span class="c-green">[419✫]</span><span class="c-green">G <b>You</b></span><span class="c-gold">3.88</span><span class="c-green">1.74</span><span>7,829</span><span></span></div>
+          <div class="tm-row"><span class="c-white">[171✫]</span><span class="c-green">G <b>Teammate</b> <i>(Wisp)</i></span><span class="c-green">1.60</span><span class="c-white">0.94</span><span>3,105</span><span class="tm-tag t-cyan">DENICKED</span></div>
+          <div class="tm-row"><span class="c-cyan">[503✫]</span><span class="c-yellow">Y <b>Cobalt</b></span><span class="c-pink">7.90</span><span class="c-gold">3.02</span><span>27,660</span><span class="tm-tag t-red">CHEATER</span></div>
+          <div class="tm-row"><span class="c-gray">[92✫]</span><span class="c-yellow">Y <b>lowtide</b></span><span class="c-white">0.98</span><span class="c-gray">0.52</span><span>1,017</span><span></span></div>
+          <figcaption>Illustration · names are made up</figcaption>
+        </figure>
+      </div>
+
       <div class="grid">
         <div class="card">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 10 5-3v10l-5-3"/></svg></div>
@@ -332,6 +382,21 @@ footer small { flex-basis: 100%; line-height: 1.6; }
           <h3>Switch accounts in one click</h3>
           <p>Click the account icon on the title screen to swap between Microsoft and offline accounts. Your sign-ins are protected with Windows encryption.</p>
         </div>
+        <div class="card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></div>
+          <h3>Invites you can answer in one click</h3>
+          <p>Party invites and friend requests pop up in a small window with the sender's rank, and their stats show up in chat. Accept or deny with a click or with Y / N, without typing the command.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></svg></div>
+          <h3>3D skin layers</h3>
+          <p>The outer layer of every skin, like jackets, hats and sleeves, is drawn in 3D and follows the body as it moves. Choose how thick it looks and how far away it still shows.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></div>
+          <h3>Void alerts</h3>
+          <p>A sound when someone falls into the void in Bed Wars, a different one for your team, and if you like, a party chat message you write yourself when a teammate goes down.</p>
+        </div>
       </div>
 
       <div class="fair" id="fair">
@@ -344,6 +409,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
             <li>Cosmetics are never drawn on invisible players</li>
             <li>The target HUD only appears after you really deal damage</li>
             <li>No auto-replies or auto-answers in chat</li>
+            <li>Player stats come from public stats services, the same numbers anyone can look up</li>
           </ul>
         </div>
       </div>
@@ -357,7 +423,7 @@ footer small { flex-basis: 100%; line-height: 1.6; }
           <span class="tag">Launcher</span>
           <h3>One click to play</h3>
           <p>With the FzClient Launcher you never install Forge or mods by hand. Every time you press Play, it checks for a newer FzClient and swaps it in automatically. FzClient only runs when the launcher starts the game, and the launcher clears out its own leftover caches every time it opens.</p>
-          <ul><li>FzClient auto-updates</li><li>Mods from Modrinth and CurseForge</li><li>Auto-update your mods</li><li>Alt+X overlay and recording</li><li>Screenshot and clip gallery</li><li>Microsoft sign-in</li></ul>
+          <ul><li>FzClient auto-updates</li><li>Mods from Modrinth and CurseForge</li><li>Auto-update your mods</li><li>Alt+X overlay and recording</li><li>Screenshot and clip gallery</li><li>Microsoft sign-in</li><li>Java 8 (Temurin) set up for you</li></ul>
         </div>
         <div class="shot"><img src="img/launcher.webp" alt="The FzClient Launcher home screen with the logo and the Play button" width="1040" height="640"></div>
       </div>
