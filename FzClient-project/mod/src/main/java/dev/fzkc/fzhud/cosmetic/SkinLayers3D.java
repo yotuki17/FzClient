@@ -54,6 +54,8 @@ public final class SkinLayers3D {
     private static final Map<String, Mesh> CACHE = new LinkedHashMap<String, Mesh>(16, .75f, true);
     /** The settings the cached meshes were built with (flat semi-transparent pixels, head and body size). */
     private static String lastShape = "";
+    /** Skins that could not be read (not uploaded yet): tried again after a moment, not every frame. */
+    private static final Map<String, Long> FAILED = new java.util.HashMap<String, Long>();
 
     /** True when 3D layers should be drawn for this distance (squared, in blocks) from the camera. */
     public static boolean active(boolean self, double distSq) {
@@ -90,12 +92,20 @@ public final class SkinLayers3D {
         String key = skin.toString() + (slim ? "#slim" : "#wide");
         Mesh m = CACHE.get(key);
         if (m != null) return m;
+        long now = System.currentTimeMillis();
+        Long failedAt = FAILED.get(key);
+        if (failedAt != null && now - failedAt < 2000L) return null;
         try {
             m = build(skin, slim, flat, th, tb);
         } catch (Throwable t) {
             m = null;
         }
-        if (m == null) return null;
+        if (m == null) {
+            if (FAILED.size() > 256) FAILED.clear();
+            FAILED.put(key, now);
+            return null;
+        }
+        FAILED.remove(key);
         CACHE.put(key, m);
         if (CACHE.size() > MAX) {
             Iterator<Map.Entry<String, Mesh>> it = CACHE.entrySet().iterator();
@@ -109,6 +119,7 @@ public final class SkinLayers3D {
     public static void clear() {
         for (Mesh m : CACHE.values()) GLAllocation.deleteDisplayLists(m.lists);
         CACHE.clear();
+        FAILED.clear();
     }
 
     // ------------------------------------------------------------------ building

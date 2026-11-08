@@ -271,14 +271,14 @@ public final class StatsApi {
         boolean denied = false;
         try {
             String body = Http.get("Urchin", "https://api.urchin.gg/v3/hypixel/player?player=" + hex + "&max_cache_age=10m", "X-API-Key", key);
-            return new JsonParser().parse(body).getAsJsonObject();   // {"player": {...}} unchanged
+            return Slim.parse(body);   // {"player": {...}} unchanged
         } catch (Http.Status st) {
             if (st.code == 401 || st.code == 403) denied = true;
             else if (st.code != 404) throw st;
         }
         try {
             String body = Http.get("Urchin", "https://api.urchin.gg/v3/player/profile?player=" + hex + "&max_cache_age=10m", "X-API-Key", key);
-            JsonObject o = new JsonParser().parse(body).getAsJsonObject();
+            JsonObject o = Slim.parse(body);
             JsonObject wrap = new JsonObject();
             JsonElement h = o.get("hypixel");
             if (h != null && h.isJsonObject()) {
@@ -309,7 +309,7 @@ public final class StatsApi {
         if (src == Source.HYPIXEL && useHypixel()) {
             try {
                 String body = Http.get("Hypixel", "https://api.hypixel.net/v2/player?uuid=" + hex, "API-Key", hypixelKey());
-                accept(id, name, e, new JsonParser().parse(body).getAsJsonObject(), "Hypixel");
+                accept(id, name, e, Slim.parse(body), "Hypixel");
                 hypixelProblem = null;
                 return;
             } catch (Http.Status s) {
@@ -341,7 +341,7 @@ public final class StatsApi {
         if (src == Source.BEDLIFY && System.currentTimeMillis() > bedlifyPausedUntil) {
             try {
                 String body = Http.get("Bedlify", "https://api.bedlify.xyz/v1/player/cache?uuid=" + hex, null, null);
-                JsonObject o = new JsonParser().parse(body).getAsJsonObject();
+                JsonObject o = Slim.parse(body);
                 if (!o.has("player") && o.has("stats")) {
                     // answered with the player object itself
                     JsonObject wrap = new JsonObject();
@@ -357,7 +357,7 @@ public final class StatsApi {
         }
         try {
             String body = Http.get("Bordic", "https://api.bordic.xyz/v3/cache/hypixel?uuid=" + hex, null, null);
-            accept(id, name, e, new JsonParser().parse(body).getAsJsonObject(), "Bordic");
+            accept(id, name, e, Slim.parse(body), "Bordic");
         } catch (Exception ex) {
             e.failedAt = System.currentTimeMillis();
             e.error = ex.getMessage();
@@ -373,7 +373,7 @@ public final class StatsApi {
             }
             sb.append("]}");
             String body = Http.post("Bordic", "https://api.bordic.xyz/v3/cache/hypixel", sb.toString(), null, null);
-            JsonObject all = new JsonParser().parse(body).getAsJsonObject();
+            JsonObject all = Slim.parse(body);
             for (int i = 0; i < ids.size(); i++) {
                 UUID id = ids.get(i);
                 Entry e = CACHE.get(id);
