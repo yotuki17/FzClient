@@ -95,7 +95,7 @@ public class ChatStats {
     // ------------------------------------------------------------------ game start: everyone's stats
 
     /** "The game starts in 1 second!" (most games), "The match starts in 1 second!" */
-    private static final Pattern COUNTDOWN = Pattern.compile("^The (?:game|match) starts in 1 seconds?!?$");
+    private static final Pattern COUNTDOWN = Pattern.compile("The (?:game|match) starts in 1 seconds?!?$");
     private Object startWorld;
     private long startAt, startUntil;
     private boolean startDone;
@@ -112,7 +112,7 @@ public class ChatStats {
         long now = System.currentTimeMillis();
         long at = 0;
         // teams are filled in the tab list right when the game starts: look a moment later
-        if (COUNTDOWN.matcher(plain).matches()) at = now + 2000;
+        if (COUNTDOWN.matcher(plain.trim()).find()) at = now + 2000;
         else if (plain.trim().equals("Protect your bed and destroy the enemy beds.")) at = now + 1000;
         if (at > 0 && (startAt == 0 || at < startAt)) {
             startAt = at;

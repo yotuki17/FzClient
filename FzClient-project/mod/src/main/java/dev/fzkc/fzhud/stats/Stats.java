@@ -36,6 +36,8 @@ public final class Stats {
     private int askIn = -1, ticks, retries;
     private long askedAt;
     private boolean answered;
+    private long worldAt, appliedAt;
+    private static final org.apache.logging.log4j.Logger LOG = org.apache.logging.log4j.LogManager.getLogger("FzClient-Stats");
     /** Set by /refresh: ask /locraw again on the next tick. */
     private static volatile boolean askAgain;
 
@@ -53,6 +55,7 @@ public final class Stats {
 
     public static void init() {
         importMellowKeys();
+        ModApiLocation.init();
     }
 
     /** Writes the stats history now (game closing). */
@@ -113,7 +116,20 @@ public final class Stats {
             lobby = true;
             Denick.worldChanged();
             retries = 0;
+            worldAt = System.currentTimeMillis();
             askIn = mc.theWorld != null && Modules.stats.enabled && onHypixel() ? 25 : -1;
+            // the Hypixel Mod API's location can arrive just before the world does
+            if (ModApiLocation.at > worldAt - 3000) appliedAt = 0;
+        }
+        long locAt = ModApiLocation.at;
+        if (locAt > 0 && locAt != appliedAt && mc.theWorld != null && onHypixel()) {
+            appliedAt = locAt;
+            String type = ModApiLocation.type, mode = ModApiLocation.mode;
+            lobby = ModApiLocation.lobbyName != null || mode == null || "lobby".equalsIgnoreCase(mode);
+            current = game(type, mode);
+            answered = true;
+            askIn = -1;   // no /locraw needed
+            if (mc.thePlayer != null && Modules.statsHistory.get()) StatsApi.get(mc.thePlayer.getUniqueID(), mc.thePlayer.getName());
         }
         if (askAgain) {
             askAgain = false;
@@ -125,6 +141,7 @@ public final class Stats {
         if (askIn > 0 && --askIn == 0 && mc.thePlayer != null) {
             askedAt = System.currentTimeMillis();
             answered = false;
+            LOG.info("Asking /locraw");
             mc.thePlayer.sendChatMessage("/locraw");
         }
         // no answer (the server was busy or said "too fast"): ask again, twice at most
@@ -157,6 +174,7 @@ public final class Stats {
         if (event.type == 2) return;
         String s = event.message.getUnformattedText();
         if (s == null || !s.startsWith("{\"server\":")) return;
+        LOG.info("locraw answer: " + s + (System.currentTimeMillis() - askedAt > 15_000L ? " (not ours)" : ""));
         if (System.currentTimeMillis() - askedAt > 15_000L) return;   // someone typed /locraw themselves: show it
         event.setCanceled(true);
         answered = true;
