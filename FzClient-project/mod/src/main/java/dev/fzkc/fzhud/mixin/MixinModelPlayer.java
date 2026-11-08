@@ -55,6 +55,8 @@ public abstract class MixinModelPlayer {
         for (int i = 0; i < 6; i++) {
             if (!fzhud$shown[i]) continue;
             GlStateManager.pushMatrix();
+            // postRender does nothing while showModel is false (no position, no rotation): turn it back on first
+            wear[i].showModel = true;
             wear[i].postRender(scale);
             boolean ok = SkinLayers3D.draw(p.getLocationSkin(), slim, i, scale);
             GlStateManager.popMatrix();
