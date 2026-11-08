@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const AdmZip = require('adm-zip');
 const { getJson, download, downloadAll, isValid } = require('./http');
 
@@ -22,6 +22,9 @@ async function getJsonAny(urls) {
   }
   throw last;
 }
+/** The newest Java 8 from Eclipse Temurin: same Java as Mojang's 8u51, ten years of fixes newer (GC pauses, speed). */
+const TEMURIN_8 = 'https://api.adoptium.net/v3/assets/latest/8/hotspot?architecture=x64&image_type=jre&os=windows&vendor=eclipse';
+const GPU_PREFS = 'HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences';
 const LIBRARIES = 'https://libraries.minecraft.net/';
 const RESOURCES = 'https://resources.download.minecraft.net/';
 const FORGE_MAVEN = 'https://maven.minecraftforge.net/';
@@ -55,7 +58,10 @@ class Game {
     this.libDir = path.join(this.root, 'libraries');
     this.assetsDir = path.join(this.root, 'assets');
     this.versionDir = path.join(this.root, 'versions', MC_VERSION);
-    this.runtimeDir = path.join(this.root, 'runtime', 'jre-legacy');
+    this.legacyDir = path.join(this.root, 'runtime', 'jre-legacy');
+    this.temurinDir = path.join(this.root, 'runtime', 'temurin-8');
+    // Temurin once it is installed, else Mojang's Java 8 (installJava decides for real)
+    this.runtimeDir = this.javaReady(this.temurinDir) ? this.temurinDir : this.legacyDir;
     this.nativesDir = path.join(this.root, 'natives', MC_VERSION);
   }
 
@@ -159,7 +165,7 @@ class Game {
     return fv;
   }
 
-  // ------------------------------------------------------------------ Java 8 (Mojang's own runtime)
+  // ------------------------------------------------------------------ Java 8 (Temurin, or Mojang's own runtime)
 
   /** Java under its own name, so Discord (and Task Manager) see "FzClient.exe" instead of a generic javaw.exe. */
   javaExe() {
@@ -175,7 +181,76 @@ class Game {
     fs.copyFileSync(src, dst);
   }
 
+  javaReady(dir) {
+    return fs.existsSync(path.join(dir, '.fz-ok')) && fs.existsSync(path.join(dir, 'bin', 'javaw.exe'))
+      && !fs.existsSync(path.join(dir, '.fz-failed'));
+  }
+
+  /** Temurin 8 when it can be had (FZ_MOJANG_JAVA=1 keeps Mojang's), else Mojang's Java 8. */
   async installJava(progress) {
+    if (process.env.FZ_MOJANG_JAVA !== '1' && await this.installTemurin(progress)) return;
+    this.runtimeDir = this.legacyDir;
+    await this.installMojangJava(progress);
+  }
+
+  /** Downloads the newest Temurin 8 JRE once (checked with its SHA-256). False when that does not work. */
+  async installTemurin(progress) {
+    const dir = this.temurinDir;
+    // the game did not start with it once: stay on Mojang's Java (delete .fz-failed to try again)
+    if (fs.existsSync(path.join(dir, '.fz-failed'))) return false;
+    if (this.javaReady(dir)) {
+      this.runtimeDir = dir;
+      this.ensureNamedJava();
+      return true;
+    }
+    const zipFile = path.join(this.root, 'runtime', 'temurin-8.zip');
+    const tmp = dir + '.tmp';
+    try {
+      const list = await getJson(TEMURIN_8);
+      const pkg = list && list[0] && list[0].binary && list[0].binary.package;
+      if (!pkg || !pkg.link || !pkg.checksum) throw new Error('no Temurin 8 package');
+      progress('Java 8', 0, 1, 0, pkg.size || 0);
+      await download(pkg.link, zipFile);
+      const got = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
+      if (got !== String(pkg.checksum).toLowerCase()) throw new Error('checksum mismatch');
+      fs.rmSync(tmp, { recursive: true, force: true });
+      new AdmZip(zipFile).extractAllTo(tmp, true);
+      // the zip holds one folder ("jdk8u512-b09-jre") with bin/javaw.exe inside
+      let home = tmp;
+      if (!fs.existsSync(path.join(home, 'bin', 'javaw.exe'))) {
+        const sub = fs.readdirSync(tmp).map(n => path.join(tmp, n)).find(p => fs.existsSync(path.join(p, 'bin', 'javaw.exe')));
+        if (!sub) throw new Error('javaw.exe not in the zip');
+        home = sub;
+      }
+      fs.rmSync(dir, { recursive: true, force: true });
+      fs.renameSync(home, dir);
+      fs.writeFileSync(path.join(dir, '.fz-ok'), list[0].release_name || 'ok');
+      progress('Java 8', 1, 1, pkg.size || 0, pkg.size || 0);
+      this.runtimeDir = dir;
+      this.ensureNamedJava();
+      this.copyGpuChoice(path.join(this.legacyDir, 'bin', 'FzClient.exe'), this.javaExe());
+      this.log('[java] using Temurin ' + (list[0].release_name || ''));
+      return true;
+    } catch (e) {
+      this.log('[java] Temurin 8 could not be installed, using Mojang Java 8: ' + (e && e.message));
+      return false;
+    } finally {
+      try { fs.rmSync(tmp, { recursive: true, force: true }); } catch {}
+      try { fs.rmSync(zipFile, { force: true }); } catch {}
+    }
+  }
+
+  /** Windows keeps the graphics card choice per program: the new Java gets the one the old Java had. */
+  copyGpuChoice(fromExe, toExe) {
+    try {
+      const q = spawnSync('reg', ['query', GPU_PREFS, '/v', fromExe], { encoding: 'utf8', windowsHide: true });
+      const m = q.status === 0 && /REG_SZ\s+(.+)\s*$/m.exec(q.stdout || '');
+      if (!m) return;
+      spawnSync('reg', ['add', GPU_PREFS, '/v', toExe, '/t', 'REG_SZ', '/d', m[1].trim(), '/f'], { windowsHide: true });
+    } catch {}
+  }
+
+  async installMojangJava(progress) {
     const marker = path.join(this.runtimeDir, '.fz-ok');
     if (fs.existsSync(marker) && fs.existsSync(path.join(this.runtimeDir, 'bin', 'javaw.exe'))) {
       this.ensureNamedJava();
@@ -309,6 +384,16 @@ class Game {
         `(Get-Process -Id ${child.pid}).ProcessorAffinity = [IntPtr]${Number(opts.affinityMask)}`], { windowsHide: true });
       ps.on('error', e => this.log('[launch] affinity: ' + e.message));
       ps.on('close', code => this.log('[launch] affinity 0x' + Number(opts.affinityMask).toString(16) + (code ? ' failed (' + code + ')' : ' set')));
+    }
+    if (this.runtimeDir === this.temurinDir) {
+      // a game that ends with an error within a minute and a half on Temurin: Mojang's Java from the next start
+      const started = Date.now();
+      child.on('exit', code => {
+        if (code && Date.now() - started < 90000) {
+          try { fs.writeFileSync(path.join(this.temurinDir, '.fz-failed'), 'exit ' + code); } catch {}
+          this.log('[java] the game ended (' + code + ') soon after starting on Temurin: Mojang Java 8 next time');
+        }
+      });
     }
     const onLog = opts.onLog || (() => {});
     child.stdout.on('data', d => onLog(d.toString()));
