@@ -167,8 +167,10 @@ public final class Tags {
             }
             String key = Modules.statsWatcherKey.get().trim();
             String body = Http.get("Watcher", "https://api.watchertag.com/api/v1/cubelify?key="
-                    + URLEncoder.encode(key, "UTF-8") + "&id=" + id.toString().replace("-", "") + "&uuid=" + id.toString().replace("-", ""), null, null);
-            JsonObject r = new JsonParser().parse(body).getAsJsonObject();
+                    + URLEncoder.encode(key, "UTF-8") + "&id=" + id, null, null);   // the dashed UUID, as Cubelify sends it
+            JsonElement root = new JsonParser().parse(body);
+            JsonObject r = root.isJsonObject() ? root.getAsJsonObject() : new JsonObject();
+            if (root.isJsonArray()) r.add("tags", root);
             JsonElement err = r.get("error");
             boolean failed = err != null && err.isJsonPrimitive()
                     && (err.getAsJsonPrimitive().isBoolean() ? err.getAsBoolean() : !err.getAsString().isEmpty() && !"false".equals(err.getAsString()));
@@ -183,10 +185,14 @@ public final class Tags {
                 for (JsonElement te : arr) {
                     if (!te.isJsonObject()) continue;
                     JsonObject t = te.getAsJsonObject();
-                    String label = clean(PlayerData.str(t, "text"));
-                    if (label.isEmpty()) continue;
-                    String color = colorOf(t.get("color"));
+                    // Cubelify tags: "text" is optional, many only have an icon and a tooltip
+                    String text = clean(PlayerData.str(t, "text"));
                     String tip = clean(PlayerData.str(t, "tooltip"));
+                    String icon = clean(PlayerData.str(t, "icon")).replaceFirst("^mdi-", "");
+                    String label = !text.isEmpty() ? text : !tip.isEmpty() ? tip : icon;
+                    if (label.isEmpty()) label = "Tag";
+                    if (label.equals(tip)) tip = "";
+                    String color = colorOf(t.get("color"));
                     tags.add(new Tag("Watcher", badge(watcherIcon(label), color),
                             color + "§l" + label + "§r" + (tip.isEmpty() ? "" : " §7(" + tip + ")")));
                 }
