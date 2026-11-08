@@ -78,15 +78,16 @@ public final class BedwarsAlerts {
         if (mc.thePlayer == null) return;
         String plain = EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
         if (plain == null) return;
-        invite(plain);
+        invite(plain, event.message.getFormattedText());
         if (inBedwarsGame()) death(plain.trim(), mc);
     }
 
-    private void invite(String plain) {
+    private void invite(String plain, String formatted) {
         if (!plain.contains("has invited you to join")) return;
         Matcher m = INVITE.matcher(plain);
         if (!m.find()) return;
         if (Modules.chatInviteSound.get()) ChatAlerts.play(1.2f);
+        RequestPopup.party(m.group(1), RequestPopup.rankedName(formatted, m.group(1)));
         if (Modules.stats.enabled && Modules.statsChatInvite.get() && Stats.onHypixel()) {
             dev.fzkc.fzhud.stats.ChatStats.requestLine(m.group(1));
         }

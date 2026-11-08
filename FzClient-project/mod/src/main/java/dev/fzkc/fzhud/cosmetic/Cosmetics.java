@@ -37,7 +37,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * FzClient cosmetics: capes and auras.
+ * FzClient cosmetics: capes, auras and halos.
  * <ul>
  *   <li>What you wear comes from the Cosmetics page and is published to the FzClient server, so other FzClient
  *       users draw it on you. Publishing proves who you are the same way joining a server does (Mojang's session
@@ -50,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Cosmetics {
     private static final Map<String, ResourceLocation> BUILTIN = new HashMap<String, ResourceLocation>();
     static {
-        for (String id : new String[]{"fzclient", "aurora", "midnight", "sakura"}) {
+        for (String id : new String[]{"fzclient", "aurora", "midnight", "sakura", "ocean", "ember", "galaxy", "neon", "royal"}) {
             BUILTIN.put(id, new ResourceLocation("fzclient", "textures/cosmetics/cape_" + id + ".png"));
         }
     }
@@ -70,6 +70,7 @@ public final class Cosmetics {
         if (!Modules.cosmetics.enabled) return e;
         e.cape = Equip.CAPES[clamp(Modules.cosCape.get(), Equip.CAPES.length)];
         e.aura = Equip.AURAS[clamp(Modules.cosAura.get(), Equip.AURAS.length)];
+        e.halo = Equip.HALOS[clamp(Modules.cosHalo.get(), Equip.HALOS.length)];
         return e;
     }
 

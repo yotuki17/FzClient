@@ -64,8 +64,9 @@ async function curseforge(req, env, ctx, url) {
 
 // ---------------------------------------------------------------- cosmetics
 
-const CAPES = ['', 'fzclient', 'aurora', 'midnight', 'sakura', 'custom'];
-const AURAS = ['', 'hearts', 'flame', 'magic', 'notes', 'snow', 'rainbow'];
+// Any short lowercase id is kept: the game ignores ids it does not know, so new cosmetics in the mod
+// do not need a Worker update. 'custom' (an uploaded cape) is handled below.
+const ID = /^[a-z0-9_]{1,24}$/;
 
 let tablesReady = false;
 async function tables(env) {
@@ -77,12 +78,15 @@ async function tables(env) {
   tablesReady = true;
 }
 
-const pick = (v, list) => (list.includes(v) ? v : '');
+const pick = v => (typeof v === 'string' && ID.test(v) ? v : '');
 
 /** Only the known fields, with values the game can draw. */
 function cleanData(d) {
   d = d && typeof d === 'object' ? d : {};
-  return { cape: pick(d.cape, CAPES), aura: pick(d.aura, AURAS) };
+  const out = { cape: pick(d.cape), aura: pick(d.aura) };
+  const halo = pick(d.halo);
+  if (halo) out.halo = halo;
+  return out;
 }
 
 /** Width / height of a PNG, or null. */

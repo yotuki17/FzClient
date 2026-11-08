@@ -28,7 +28,7 @@ import java.util.Random;
  */
 public final class AuraFx {
     static final ResourceLocation ATLAS = new ResourceLocation("fzclient", "textures/cosmetics/aura.png");
-    static final int HEART = 0, DOT = 1, SPARK = 2, NOTE = 3, SNOW = 4, FLAME = 5, CELLS = 8;
+    static final int HEART = 0, DOT = 1, SPARK = 2, NOTE = 3, SNOW = 4, FLAME = 5, PETAL = 6, STAR = 7, CELLS = 8;
     private static final int MAX = 900;
 
     /** One sprite. Positions are in blocks (world space, or relative to the feet in the preview). */
@@ -98,6 +98,38 @@ public final class AuraFx {
                 p.sway = .005f;
                 out.add(p);
             }
+        } else if ("stars".equals(aura)) {
+            // little stars circling the head
+            if (t % 2 == 0) {
+                double a = t * .18 + (t % 4 == 0 ? Math.PI : 0);
+                int[] cols = {0xFFE36B, 0xFFF6C2, 0xFFC93C};
+                out.add(new P(x + Math.cos(a) * .5, y + 1.95 + Math.sin(t * .11) * .08, z + Math.sin(a) * .5, 0, .002, 0,
+                        16, .1f, cols[r.nextInt(cols.length)], STAR, false));
+            }
+        } else if ("petals".equals(aura)) {
+            if (t % 4 == 0) {
+                int[] cols = {0xFFB7D5, 0xFF8FBF, 0xFFE3EE};
+                P p = new P(x + (r.nextDouble() - .5) * 1.4, y + 2.2, z + (r.nextDouble() - .5) * 1.4, 0, -.018, 0,
+                        60, .1f, cols[r.nextInt(cols.length)], PETAL, false);
+                p.sway = .012f;
+                out.add(p);
+            }
+        } else if ("bubbles".equals(aura)) {
+            if (t % 3 == 0) {
+                P p = new P(x + (r.nextDouble() - .5) * .9, y + .1, z + (r.nextDouble() - .5) * .9, 0, .028 + r.nextDouble() * .01, 0,
+                        40, .05f + r.nextFloat() * .04f, r.nextBoolean() ? 0x9FE6FF : 0xD8F6FF, DOT, false);
+                p.sway = .008f;
+                out.add(p);
+            }
+        } else if ("souls".equals(aura)) {
+            // blue soul fire spiralling up
+            double a = t * .4;
+            double h = (t * .05) % 1.9;
+            int[] cols = {0x63E6FF, 0x2FB8FF, 0xB8F4FF};
+            out.add(new P(x + Math.cos(a) * .45, y + h, z + Math.sin(a) * .45, 0, .01, 0,
+                    16, .1f, cols[r.nextInt(cols.length)], FLAME, false));
+            out.add(new P(x + Math.cos(a + Math.PI) * .45, y + h, z + Math.sin(a + Math.PI) * .45, 0, .01, 0,
+                    16, .1f, cols[r.nextInt(cols.length)], FLAME, false));
         } else if ("rainbow".equals(aura)) {
             double a = t * .3;
             double h = (t * .045) % 1.9;
@@ -232,7 +264,7 @@ public final class AuraFx {
 
     /** Flames get a little smaller as they rise; the rest keep their size. */
     private static float scaleOf(P p, float pt) {
-        if (p.sprite != FLAME) return 1f;
+        if (p.sprite != FLAME) return 1f;   // (soul fire uses the flame sprite too)
         float t = (p.age + pt) / p.life;
         return 1f - t * .5f;
     }

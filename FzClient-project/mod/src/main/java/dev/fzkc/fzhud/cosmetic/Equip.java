@@ -8,13 +8,14 @@ import com.google.gson.JsonObject;
  * what older versions saved.
  */
 public final class Equip {
-    public static final String[] CAPES = {"", "fzclient", "aurora", "midnight", "sakura"};
-    public static final String[] AURAS = {"", "hearts", "flame", "magic", "notes", "snow", "rainbow"};
+    public static final String[] CAPES = {"", "fzclient", "aurora", "midnight", "sakura", "ocean", "ember", "galaxy", "neon", "royal"};
+    public static final String[] AURAS = {"", "hearts", "flame", "magic", "notes", "snow", "rainbow", "stars", "petals", "bubbles", "souls"};
+    public static final String[] HALOS = {"", "gold", "rainbow", "dark", "ice"};
 
-    public String cape = "", capeHash = "", aura = "";
+    public String cape = "", capeHash = "", aura = "", halo = "";
 
     public boolean empty() {
-        return cape.isEmpty() && aura.isEmpty();
+        return cape.isEmpty() && aura.isEmpty() && halo.isEmpty();
     }
 
     public JsonObject toJson() {
@@ -22,6 +23,7 @@ public final class Equip {
         o.addProperty("cape", cape);
         if (!capeHash.isEmpty()) o.addProperty("capeHash", capeHash);
         o.addProperty("aura", aura);
+        if (!halo.isEmpty()) o.addProperty("halo", halo);
         return o;
     }
 
@@ -31,6 +33,7 @@ public final class Equip {
         if (o == null) return e;
         e.cape = pick(o, "cape", CAPES);
         e.aura = pick(o, "aura", AURAS);
+        e.halo = pick(o, "halo", HALOS);
         try { if (o.has("capeHash")) e.capeHash = o.get("capeHash").getAsString().replaceAll("[^0-9a-f]", ""); } catch (Exception ignored) { }
         return e;
     }

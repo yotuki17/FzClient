@@ -999,3 +999,29 @@ void（奈落）に落ちた時	When someone falls into the void
 パーティに招待してきた人の統計をチャットに出す（Mellow と同じ）	Show the stats of who invites you to a party (like Mellow)
 Urchin（Coral キー）	Urchin (Coral key)
 Urchin: このキーでは統計を取れません（Bordic を使います）	Urchin: this key cannot get stats (using Bordic)
+オーシャン	Ocean
+エンバー	Ember
+ギャラクシー	Galaxy
+ネオン	Neon
+ロイヤル	Royal
+花びら	Petals
+泡	Bubbles
+ソウル	Souls
+ゴールド	Gold
+ダーク	Dark
+アイス	Ice
+パーティ招待	Party invite
+参加	Join
+受ける	Accept
+断る	Decline
+場所	Position
+上の真ん中	Top center
+右上	Top right
+左上	Top left
+出しておく時間	How long it stays
+マント・オーラ・ヘイロー。ほかの FzClient ユーザーにも見えます	Capes, auras and halos. Other FzClient users see them too
+パーティ招待・フレンド申請が来たら音を鳴らす	Play a sound on party invites and friend requests
+招待のポップアップ（Y で受ける・N で断る）	Invite popup (Y accepts, N declines)
+パーティ招待をポップアップで出す	Show party invites as a popup
+フレンド申請をポップアップで出す	Show friend requests as a popup
+フレンドの申請が来ました	Friend request

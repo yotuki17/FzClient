@@ -148,10 +148,11 @@ public final class Modules {
     // ---- Cosmetics (other FzClient users see them too). Not in the MODS list: opened from the title screen and
     //      the Right Shift menu (CosmeticsScreen); the settings only live here so they are saved with the rest.
     public static final Module cosmetics = new Module("cosmetics", "Cosmetics", Category.VISUAL,
-            "マントとオーラ。ほかの FzClient ユーザーにも見えます", true).alwaysOn();
+            "マント・オーラ・ヘイロー。ほかの FzClient ユーザーにも見えます", true).alwaysOn();
     public static final ChoiceSetting cosCape = cosmetics.add(new ChoiceSetting("cape", "マント", 0,
-            "なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ"));
-    public static final ChoiceSetting cosAura = cosmetics.add(new ChoiceSetting("aura", "オーラ", 0, "なし", "ハート", "炎", "魔法", "音符", "雪", "虹"));
+            "なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ", "オーシャン", "エンバー", "ギャラクシー", "ネオン", "ロイヤル"));
+    public static final ChoiceSetting cosAura = cosmetics.add(new ChoiceSetting("aura", "オーラ", 0, "なし", "ハート", "炎", "魔法", "音符", "雪", "虹", "星", "花びら", "泡", "ソウル"));
+    public static final ChoiceSetting cosHalo = cosmetics.add(new ChoiceSetting("halo", "ヘイロー", 0, "なし", "ゴールド", "虹", "ダーク", "アイス"));
     public static final BoolSetting cosOthers = cosmetics.add(new BoolSetting("others", "ほかの FzClient ユーザーのコスメを表示", true));
 
     // ---- Party detector (waiting lobbies)
@@ -467,7 +468,12 @@ public final class Modules {
     public static final BoolSetting chatMentionMark = chat.add(new BoolSetting("mentionmark", "呼ばれたメッセージの頭に @ を付ける", true));
     public static final ChoiceSetting chatSoundType = chat.add(new ChoiceSetting("soundtype", "音の種類", 0, "ピコン", "ポロン（経験値）", "ハープ"));
     public static final SliderSetting chatSoundVolume = chat.add(new SliderSetting("soundvolume", "音量", 0.1, 1.0, 0.05, 0.7, ""));
-    public static final BoolSetting chatInviteSound = chat.add(new BoolSetting("invitesound", "パーティに招待されたら音を鳴らす", true));
+    public static final BoolSetting chatInviteSound = chat.add(new BoolSetting("invitesound", "パーティ招待・フレンド申請が来たら音を鳴らす", true));
+    public static final HeaderSetting chatHeadPopup = chat.add(new HeaderSetting("h_popup", "招待のポップアップ（Y で受ける・N で断る）"));
+    public static final BoolSetting chatPopupParty = chat.add(new BoolSetting("popupparty", "パーティ招待をポップアップで出す", true));
+    public static final BoolSetting chatPopupFriend = chat.add(new BoolSetting("popupfriend", "フレンド申請をポップアップで出す", true));
+    public static final ChoiceSetting chatPopupPos = chat.add(new ChoiceSetting("popuppos", "場所", 0, "上の真ん中", "右上", "左上"));
+    public static final SliderSetting chatPopupTime = chat.add(new SliderSetting("popuptime", "出しておく時間", 5, 60, 1, 15, "秒"));
     public static final dev.fzkc.fzhud.config.PageSetting chatPage_bw = chat.add(new dev.fzkc.fzhud.config.PageSetting("p_bw", "Bed Wars"));
     public static final HeaderSetting bwHeadVoid = chat.add(new HeaderSetting("h_void", "void（奈落）に落ちた時"));
     /** 0 = off, 1 = everyone, 2 = teammates, 3 = enemies. */

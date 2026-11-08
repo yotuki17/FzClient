@@ -2,6 +2,7 @@ package dev.fzkc.fzhud.gui;
 
 import dev.fzkc.fzhud.Modules;
 import dev.fzkc.fzhud.cosmetic.AuraFx;
+import dev.fzkc.fzhud.cosmetic.HaloFx;
 import dev.fzkc.fzhud.cosmetic.Cosmetics;
 import dev.fzkc.fzhud.cosmetic.Equip;
 import dev.fzkc.fzhud.cosmetic.PlayerPreview;
@@ -28,10 +29,15 @@ import java.util.Random;
  * and sent to the FzClient server, so other FzClient users see them too.
  */
 public class CosmeticsScreen extends FzScreen {
-    private static final String[] CAPE_NAMES = {"なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ"};
-    private static final String[] AURA_NAMES = {"なし", "ハート", "炎", "魔法", "音符", "雪", "虹"};
+    private static final String[] CAPE_NAMES = {"なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ", "オーシャン", "エンバー", "ギャラクシー", "ネオン", "ロイヤル"};
+    private static final String[] AURA_NAMES = {"なし", "ハート", "炎", "魔法", "音符", "雪", "虹", "星", "花びら", "泡", "ソウル"};
+    private static final String[] HALO_NAMES = {"なし", "ゴールド", "虹", "ダーク", "アイス"};
+    private static final String[] TABS = {"マント", "オーラ", "ヘイロー"};
     /** Sprite and tint for each aura tile (none has no icon). */
-    private static final int[][] AURA_ICON = {{-1, 0}, {0, 0xFF4F7E}, {5, 0xFFA63C}, {2, 0xB07CFF}, {3, 0x5CE1E6}, {4, 0xEEF6FF}, {2, 0xFFD84A}};
+    private static final int[][] AURA_ICON = {{-1, 0}, {0, 0xFF4F7E}, {5, 0xFFA63C}, {2, 0xB07CFF}, {3, 0x5CE1E6}, {4, 0xEEF6FF}, {2, 0xFFD84A},
+            {7, 0xFFE36B}, {6, 0xFFB7D5}, {1, 0x9FE6FF}, {5, 0x63E6FF}};
+    /** The open tab (0 capes, 1 auras, 2 halos), kept while the game runs. */
+    private static int tab;
     private static final float PW = 170, CTW = 46, CTH = 66, ATW = 40, ATH = 50, GAP = 6;
 
     private final GuiScreen parent;
@@ -63,9 +69,15 @@ public class CosmeticsScreen extends FzScreen {
 
     // ------------------------------------------------------------------ layout
 
-    private float capeY() { return py() + 62; }
-    private float auraY() { return capeY() + CTH + 32; }
-    private float showY() { return auraY() + ATH + 22; }
+    private float tabY() { return py() + 58; }
+    private float capeY() { return tabY() + 26; }
+    private float auraY() { return capeY(); }
+    private float showY() { return py() + H() - 26; }
+    private float[] tabBtn(int i) {
+        float x = cx0();
+        for (int k = 0; k < i; k++) x += R.width(Lang.t(TABS[k])) + 22;
+        return new float[]{x, tabY(), R.width(Lang.t(TABS[i])) + 16, 18};
+    }
     private int capeCols() { return Math.max(1, (int) ((cw() + GAP) / (CTW + GAP))); }
     private int auraCols() { return Math.max(1, (int) ((cw() + GAP) / (ATW + GAP))); }
     private float[] capeTile(int i) {
@@ -102,17 +114,28 @@ public class CosmeticsScreen extends FzScreen {
         // aura behind and in front of the player
         AuraFx.draw2D(fx, footX, footY, size, 0f);
         PlayerPreview.draw(footX, footY, size, yaw, cape, age);
+        HaloFx.draw2D(mine.halo, footX, footY, size);
         R.textCentered(Lang.t("ドラッグで回転"), footX, ly + lh - 14, R.alpha(Ui.MUTED, o));
 
         // header
         R.textScaled("Cosmetics", cx0(), py() + 14, 1.6f, R.alpha(Ui.text, o));
-        R.text(Lang.t("マントとオーラ。ほかの FzClient ユーザーにも見えます"), cx0(), py() + 34, R.alpha(Ui.MUTED, o));
+        R.text(Lang.t("マント・オーラ・ヘイロー。ほかの FzClient ユーザーにも見えます"), cx0(), py() + 34, R.alpha(Ui.MUTED, o));
         float[] cb = closeBtn();
         Ui.button(cb[0], cb[1], cb[2], cb[3], Lang.t("閉じる"), anim("close").update(Ui.within(mx, my, cb[0], cb[1], cb[2], cb[3]) ? 1 : 0), o);
         R.rect(cx0(), py() + 50, cw(), 1, R.alpha(Ui.LINE, o));
 
+        // tabs
+        for (int i = 0; i < TABS.length; i++) {
+            float[] b = tabBtn(i);
+            float h = anim("tab" + i).update(Ui.within(mx, my, b[0], b[1], b[2], b[3]) ? 1 : 0);
+            boolean sel = i == tab;
+            R.rounded(b[0], b[1], b[2], b[3], Ui.rad(5f), R.alpha(sel ? Ui.accentA(0x50) : R.lerpColor(0x18FFFFFF, 0x30FFFFFF, h), o));
+            if (sel) R.roundedOutline(b[0], b[1], b[2], b[3], Ui.rad(5f), 1f, R.alpha(Ui.accent, o));
+            R.textCentered(Lang.t(TABS[i]), b[0] + b[2] / 2f, b[1] + 5, R.alpha(sel ? Ui.text : Ui.textA(0xB0), o));
+        }
+
         // capes
-        R.text(Lang.t("マント"), cx0(), capeY(), R.alpha(Ui.accent, o));
+        if (tab == 0) {
         int capeSel = Modules.cosCape.get();
         for (int i = 0; i < Equip.CAPES.length; i++) {
             float[] t = capeTile(i);
@@ -130,8 +153,10 @@ public class CosmeticsScreen extends FzScreen {
             R.textCentered(Lang.t(CAPE_NAMES[i]), t[0] + t[2] / 2f, t[1] + t[3] - 13, R.alpha(sel ? Ui.text : Ui.textA(0xB0), o));
         }
 
+        }
+
         // auras
-        R.text(Lang.t("オーラ"), cx0(), auraY(), R.alpha(Ui.accent, o));
+        if (tab == 1) {
         int auraSel = Modules.cosAura.get();
         for (int i = 0; i < Equip.AURAS.length; i++) {
             float[] t = auraTile(i);
@@ -141,6 +166,21 @@ public class CosmeticsScreen extends FzScreen {
             if (AURA_ICON[i][0] < 0) R.textCentered("—", t[0] + t[2] / 2f, t[1] + 12, R.alpha(Ui.MUTED, o));
             else sprite(AURA_ICON[i][0], AURA_ICON[i][1], t[0] + t[2] / 2f - 9, t[1] + 5, 18, i == 6, o);
             R.textCentered(Lang.t(AURA_NAMES[i]), t[0] + t[2] / 2f, t[1] + t[3] - 13, R.alpha(sel ? Ui.text : Ui.textA(0xB0), o));
+        }
+        }
+
+        // halos
+        if (tab == 2) {
+        int haloSel = Modules.cosHalo.get();
+        for (int i = 0; i < Equip.HALOS.length; i++) {
+            float[] t = auraTile(i);
+            boolean sel = i == haloSel;
+            float h = anim("h" + i).update(Ui.within(mx, my, t[0], t[1], t[2], t[3]) ? 1 : 0);
+            tile(t, sel, h, o);
+            if (i == 0) R.textCentered("—", t[0] + t[2] / 2f, t[1] + 12, R.alpha(Ui.MUTED, o));
+            else HaloFx.draw2D(Equip.HALOS[i], t[0] + t[2] / 2f, t[1] + 15 + 2.12f * 40, 40);
+            R.textCentered(Lang.t(HALO_NAMES[i]), t[0] + t[2] / 2f, t[1] + t[3] - 13, R.alpha(sel ? Ui.text : Ui.textA(0xB0), o));
+        }
         }
 
         // who sees what
@@ -222,18 +262,32 @@ public class CosmeticsScreen extends FzScreen {
             mc.displayGuiScreen(parent);
             return;
         }
-        for (int i = 0; i < Equip.CAPES.length; i++) {
+        for (int i = 0; i < TABS.length; i++) {
+            float[] b = tabBtn(i);
+            if (Ui.inside(mx, my, b[0], b[1], b[2], b[3])) {
+                tab = i;
+                return;
+            }
+        }
+        for (int i = 0; tab == 0 && i < Equip.CAPES.length; i++) {
             float[] t = capeTile(i);
             if (Ui.inside(mx, my, t[0], t[1], t[2], t[3])) {
                 Modules.cosCape.index = i;
                 return;
             }
         }
-        for (int i = 0; i < Equip.AURAS.length; i++) {
+        for (int i = 0; tab == 1 && i < Equip.AURAS.length; i++) {
             float[] t = auraTile(i);
             if (Ui.inside(mx, my, t[0], t[1], t[2], t[3])) {
                 Modules.cosAura.index = i;
                 fx.clear();
+                return;
+            }
+        }
+        for (int i = 0; tab == 2 && i < Equip.HALOS.length; i++) {
+            float[] t = auraTile(i);
+            if (Ui.inside(mx, my, t[0], t[1], t[2], t[3])) {
+                Modules.cosHalo.index = i;
                 return;
             }
         }

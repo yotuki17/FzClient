@@ -166,6 +166,9 @@ public class FzHud {
         dev.fzkc.fzhud.chat.BedwarsAlerts bwAlerts = new dev.fzkc.fzhud.chat.BedwarsAlerts();   // void sound / party message, invite sound
         MinecraftForge.EVENT_BUS.register(bwAlerts);
         FMLCommonHandler.instance().bus().register(bwAlerts);
+        dev.fzkc.fzhud.chat.RequestPopup popup = new dev.fzkc.fzhud.chat.RequestPopup();   // party invite / friend request box (Y / N)
+        MinecraftForge.EVENT_BUS.register(popup);
+        FMLCommonHandler.instance().bus().register(popup);
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatExtras());
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.PartyDetector());   // groups joining a waiting lobby together   // FzClient chat box, tabs, shortcuts
         ChatHistory chatHistory = new ChatHistory();
@@ -184,6 +187,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.KnownNames());   // names for the command suggestions
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.Cosmetics());   // capes and auras (sync)
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.AuraFx());      // aura sprites, drawn after the world
+        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.HaloFx());      // halos, drawn after the world
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.gui.PauseButtons());     // FzClient Settings / Cosmetics in the game menu
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new PartyRelay.TestCommand());
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new DiscordVoice.CodeCommand());
