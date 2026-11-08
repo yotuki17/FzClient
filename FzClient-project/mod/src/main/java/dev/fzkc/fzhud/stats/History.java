@@ -53,7 +53,7 @@ public final class History {
     private static long savedAt;
 
     public enum Period {
-        TOTAL("total", "全期間"), DAILY("daily", "今日"), WEEKLY("weekly", "今週"), MONTHLY("monthly", "今月");
+        TOTAL("total", "全期間"), DAILY("daily", "24時間"), WEEKLY("weekly", "1週間"), MONTHLY("monthly", "1か月");
 
         public final String key, label;
 
@@ -66,27 +66,22 @@ public final class History {
             if (s == null) return null;
             switch (s.toLowerCase(java.util.Locale.ROOT)) {
                 case "total": case "all": case "overall": return TOTAL;
-                case "daily": case "day": case "today": case "d": return DAILY;
+                case "daily": case "day": case "today": case "d": case "24h": return DAILY;
                 case "weekly": case "week": case "w": return WEEKLY;
                 case "monthly": case "month": case "m": return MONTHLY;
                 default: return null;
             }
         }
 
-        /** When this period started (local time). */
+        /** When this period started: the last 24 hours / 7 days / 30 days (like Aurora). */
         long start() {
-            Calendar c = Calendar.getInstance();
-            c.set(Calendar.HOUR_OF_DAY, 0);
-            c.set(Calendar.MINUTE, 0);
-            c.set(Calendar.SECOND, 0);
-            c.set(Calendar.MILLISECOND, 0);
-            if (this == WEEKLY) {
-                int back = (c.get(Calendar.DAY_OF_WEEK) + 5) % 7;   // Monday = 0
-                c.add(Calendar.DAY_OF_MONTH, -back);
-            } else if (this == MONTHLY) {
-                c.set(Calendar.DAY_OF_MONTH, 1);
+            long day = 24 * 3600_000L, now = System.currentTimeMillis();
+            switch (this) {
+                case DAILY: return now - day;
+                case WEEKLY: return now - 7 * day;
+                case MONTHLY: return now - 30 * day;
+                default: return 0;
             }
-            return c.getTimeInMillis();
         }
     }
 

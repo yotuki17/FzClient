@@ -954,3 +954,9 @@ Aurora にこの期間の記録がありません	Aurora has no record for this 
 Aurora: API キーが違います	Aurora: wrong API key
 Aurora: 回数制限	Aurora: rate limited
 Aurora API キー（Bed Wars の今日・今週・今月とデニック）	Aurora API key (Bed Wars today / week / month, and denick)
+24時間	24 hours
+1週間	1 week
+1か月	1 month
+Aurora API キー（Bed Wars の 24時間・1週間・1か月とデニック）	Aurora API key (Bed Wars 24 hours / 1 week / 1 month, and denick)
+24時間・1週間・1か月の統計のために記録する（この PC だけ）	Record stats for 24 hours / 1 week / 1 month (on this PC only)
+モード別の 24時間・1週間・1か月は Bed Wars で Aurora キーがある時だけです	Per-mode 24 hours / 1 week / 1 month needs Bed Wars and an Aurora key
