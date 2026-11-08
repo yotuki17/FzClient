@@ -65,7 +65,11 @@ public final class Stats {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.getCurrentServerData() == null || mc.getCurrentServerData().serverIP == null) return false;
         String ip = mc.getCurrentServerData().serverIP.toLowerCase(Locale.ROOT);
-        return ip.contains("hypixel.net") || ip.contains("hypixel.io");
+        // hypixel.net, and proxies / boosters such as Overlag (mc.hypixel.fast, booster.hypixel.fast)
+        if (ip.contains("hypixel")) return true;
+        // any other address that leads to Hypixel: the server says so in its brand
+        String brand = mc.thePlayer == null ? null : mc.thePlayer.getClientBrand();
+        return brand != null && brand.toLowerCase(Locale.ROOT).contains("hypixel");
     }
 
     /** Stats are shown in the tab list right now. */
