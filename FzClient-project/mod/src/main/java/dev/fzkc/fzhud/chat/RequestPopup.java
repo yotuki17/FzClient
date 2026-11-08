@@ -6,7 +6,9 @@ import dev.fzkc.fzhud.util.Lang;
 import dev.fzkc.fzhud.render.R;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.event.ClickEvent;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -32,12 +34,14 @@ public final class RequestPopup {
     private static final class Req {
         final Kind kind;
         final String name, shown;   // shown keeps the rank colors
+        String accept, deny;        // the commands behind the message's own buttons, when it has them
         long until;
 
-        Req(Kind kind, String name, String shown) {
+        Req(Kind kind, String name, String shown, IChatComponent message) {
             this.kind = kind;
             this.name = name;
             this.shown = shown;
+            if (message != null) commands(message, this);
         }
     }
 
@@ -46,8 +50,20 @@ public final class RequestPopup {
     private static long shownAt;
 
     /** A party invite from this player (BedwarsAlerts reads the invite message). */
-    static void party(String name, String shown) {
-        if (Modules.chatPopupParty.get()) add(new Req(Kind.PARTY, name, shown));
+    static void party(String name, String shown, IChatComponent message) {
+        if (Modules.chatPopupParty.get()) add(new Req(Kind.PARTY, name, shown, message));
+    }
+
+    /** Finds the commands Hypixel put on the message's clickable parts ("/party accept ...", "/friend deny ..."). */
+    private static void commands(IChatComponent c, Req r) {
+        ClickEvent ce = c.getChatStyle() == null ? null : c.getChatStyle().getChatClickEvent();
+        if (ce != null && ce.getAction() == ClickEvent.Action.RUN_COMMAND && ce.getValue() != null) {
+            String v = ce.getValue().trim(), low = v.toLowerCase(java.util.Locale.ROOT);
+            if (r.kind == Kind.PARTY && (low.startsWith("/party accept ") || low.startsWith("/p accept "))) r.accept = v;
+            if (r.kind == Kind.FRIEND && (low.startsWith("/friend accept ") || low.startsWith("/f accept "))) r.accept = v;
+            if (r.kind == Kind.FRIEND && (low.startsWith("/friend deny ") || low.startsWith("/f deny "))) r.deny = v;
+        }
+        for (Object o : c.getSiblings()) if (o instanceof IChatComponent) commands((IChatComponent) o, r);
     }
 
     private static synchronized void add(Req r) {
@@ -83,8 +99,8 @@ public final class RequestPopup {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null) return;
         String cmd = null;
-        if (yes) cmd = (r.kind == Kind.PARTY ? "/party accept " : "/friend accept ") + r.name;
-        else if (r.kind == Kind.FRIEND) cmd = "/friend deny " + r.name;
+        if (yes) cmd = r.accept != null ? r.accept : (r.kind == Kind.PARTY ? "/party accept " : "/friend accept ") + r.name;
+        else if (r.kind == Kind.FRIEND) cmd = r.deny != null ? r.deny : "/friend deny " + r.name;
         if (cmd != null) mc.thePlayer.sendChatMessage(cmd);
     }
 
@@ -97,7 +113,7 @@ public final class RequestPopup {
         if (plain == null || !plain.contains("Friend request from")) return;
         Matcher m = FRIEND.matcher(plain);
         if (!m.find()) return;
-        add(new Req(Kind.FRIEND, m.group(1), rankedName(event.message.getFormattedText(), m.group(1))));
+        add(new Req(Kind.FRIEND, m.group(1), rankedName(event.message.getFormattedText(), m.group(1)), event.message));
         if (Modules.chatInviteSound.get()) ChatAlerts.play(1.2f);
     }
 

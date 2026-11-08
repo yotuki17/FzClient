@@ -273,6 +273,7 @@ public class ChatStats {
                 String p = prefix(h.name, id);
                 if (p == null && now < h.until) break;   // still loading
                 if (p != null) prefix = p;
+                else lineWatch.add(new LineWatch(h.name, now + TAG_WAIT_MS));   // too slow: the stats follow on their own line
             }
             held.pollFirst();
             repost(h.type, prefix.isEmpty() ? h.message : withPrefix(prefix, h.message));

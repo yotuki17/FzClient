@@ -27,7 +27,7 @@ public final class BedwarsAlerts {
     /** Words in Hypixel's void death messages (the default ones and the kill message themes). */
     private static final String[] VOID_WORDS = {"void", "off the edge", " fell", "abyss", "off a cliff", "knocked off", "off the map"};
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
-    private static final Pattern INVITE = Pattern.compile("(?:\\[[^\\]]{1,24}\\] )?([A-Za-z0-9_]{1,16}) has invited you to join (?:their|[A-Za-z0-9_]{1,16}'s) party!");
+    private static final Pattern INVITE = Pattern.compile("(?:\\[[^\\]]{1,24}\\] )?([A-Za-z0-9_]{1,16}) has invited you to join (?:their|(?:\\[[^\\]]{1,24}\\] )?[A-Za-z0-9_]{1,16}'s) party!");
 
     /** Each player's height about 2 seconds ago (a player falling fast who then dies went into the void). */
     private final Map<String, double[]> heights = new HashMap<>();
@@ -78,16 +78,17 @@ public final class BedwarsAlerts {
         if (mc.thePlayer == null) return;
         String plain = EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
         if (plain == null) return;
-        invite(plain, event.message.getFormattedText());
+        invite(plain, event.message);
         if (inBedwarsGame()) death(plain.trim(), mc);
     }
 
-    private void invite(String plain, String formatted) {
+    private void invite(String plain, net.minecraft.util.IChatComponent message) {
+        String formatted = message.getFormattedText();
         if (!plain.contains("has invited you to join")) return;
         Matcher m = INVITE.matcher(plain);
         if (!m.find()) return;
         if (Modules.chatInviteSound.get()) ChatAlerts.play(1.2f);
-        RequestPopup.party(m.group(1), RequestPopup.rankedName(formatted, m.group(1)));
+        RequestPopup.party(m.group(1), RequestPopup.rankedName(formatted, m.group(1)), message);
         if (Modules.stats.enabled && Modules.statsChatInvite.get() && Stats.onHypixel()) {
             dev.fzkc.fzhud.stats.ChatStats.requestLine(m.group(1));
         }
