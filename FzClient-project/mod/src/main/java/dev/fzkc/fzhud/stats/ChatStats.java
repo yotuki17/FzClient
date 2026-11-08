@@ -66,6 +66,21 @@ public class ChatStats {
     }
 
     private final List<TagWatch> tagWatch = new ArrayList<>();
+
+    /** Waiting lobby: a stats line under the message, like Mellow (once per player and world). */
+    private static final class LineWatch {
+        final String name;
+        final long until;
+
+        LineWatch(String name, long until) {
+            this.name = name;
+            this.until = until;
+        }
+    }
+
+    private final List<LineWatch> lineWatch = new ArrayList<>();
+    private final Set<String> lineShown = new HashSet<>();
+    private Object lineWorld;
     private final Set<UUID> warned = new HashSet<>();
 
     private static boolean statsOn() {
@@ -102,6 +117,16 @@ public class ChatStats {
         UUID id = idOf(name);
         if (warn && id != null) watchTags(id, name);
         if (!stats) return;
+        if (!Stats.lobby) {
+            // waiting lobby / game: the message stays as it is, the stats follow on their own line
+            if (mc.theWorld != lineWorld) {
+                lineWorld = mc.theWorld;
+                lineShown.clear();
+                lineWatch.clear();
+            }
+            if (lineShown.add(name.toLowerCase(Locale.ROOT))) lineWatch.add(new LineWatch(name, System.currentTimeMillis() + TAG_WAIT_MS));
+            return;
+        }
         String prefix = prefix(name, id);
         if (prefix != null) {
             if (!prefix.isEmpty()) event.message = withPrefix(prefix, event.message);
@@ -133,6 +158,20 @@ public class ChatStats {
             }
             held.pollFirst();
             repost(h.type, prefix.isEmpty() ? h.message : withPrefix(prefix, h.message));
+        }
+        if (!lineWatch.isEmpty()) {
+            for (Iterator<LineWatch> it = lineWatch.iterator(); it.hasNext(); ) {
+                LineWatch w = it.next();
+                String line = line(w.name, idOf(w.name));
+                if (line != null) {
+                    it.remove();
+                    if (!line.isEmpty() && Minecraft.getMinecraft().thePlayer != null) {
+                        Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(line));
+                    }
+                } else if (now > w.until) {
+                    it.remove();
+                }
+            }
         }
         if (!tagWatch.isEmpty()) {
             for (Iterator<TagWatch> it = tagWatch.iterator(); it.hasNext(); ) {
@@ -200,6 +239,34 @@ public class ChatStats {
         Denick.Real r = info != null && Denick.isNick(info) ? Denick.real(name) : null;
         if (r != null) sb.append(" §7= §a").append(r.name);
         return sb.append("§8] ").toString();
+    }
+
+    /**
+     * "[FzClient] [422✫] [MVP+] Name | FKDR: 1.98" (Mellow's waiting lobby format, with the first tab column),
+     * "" when there is nothing to show, null while loading.
+     */
+    private static String line(String name, UUID id) {
+        final String head = "§8[§bFzClient§8]§r ";
+        Minecraft mc = Minecraft.getMinecraft();
+        net.minecraft.client.network.NetworkPlayerInfo info = mc.thePlayer == null || mc.thePlayer.sendQueue == null
+                ? null : mc.thePlayer.sendQueue.getPlayerInfo(name);
+        if (Denick.isNick(info) && Denick.real(name) == null) return head + "§7" + name + " §7|§r §c§lNICK";
+        if (id == null) return StatsApi.nameUnknown(name) ? head + "§7" + name + " §7|§r §c§lNICK" : null;
+        PlayerData d = StatsApi.get(id, name);
+        if (d == null) return StatsApi.pending(id) ? null : "";
+        if (d.nicked) return head + "§7" + name + " §7|§r §c§lNICK";
+        Game g = Stats.current != null ? Stats.current : Game.BEDWARS;
+        java.util.Map<String, Long> c = d.of(g);
+        if (c.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder(head);
+        String star = g.tabPrefix(c);
+        if (!star.isEmpty()) sb.append(star).append(" §r");
+        sb.append(d.display());
+        Denick.Real r = info != null && Denick.isNick(info) ? Denick.real(name) : null;
+        if (r != null) sb.append(" §7(§a").append(name).append("§7)");
+        String[] heads = g.tabHeadsPublic(), vals = g.tabPublic(c);
+        if (heads.length > 0) sb.append(" §7|§r ").append(heads[0]).append(": ").append(vals[0]);
+        return sb.toString();
     }
 
     private static IChatComponent withPrefix(String prefix, IChatComponent msg) {

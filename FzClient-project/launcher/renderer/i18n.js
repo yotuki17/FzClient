@@ -134,6 +134,7 @@ const EN = {
   '修正：Watcher のタグが出ないのを修正・/pv にタグがない時は「タグなし」': 'Fix: Watcher tags now show; /pv says "No tags" when there are none',
   '修正：Watcher のタグが出ないのを修正・チャットの統計は待機ロビーでは全員、ロビーでは自分の名前を出した人だけ': 'Fix: Watcher tags now show; chat stats for everyone in waiting lobbies, only for people who say your name in main lobbies',
   '修正：チャットに統計が付くと [訳] の押せる場所がずれるのを修正・タブの名前と統計の間をさらに詰めて、HP のハートをなくした': 'Fix: the [TL] button no longer shifts when stats are added to a chat message; tab list name and stats are closer, no heart after HP',
+  'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（[FzClient] [星] 名前 | FKDR: 数字）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow ([FzClient] [star] name | FKDR: value)',
   'NEW：/pv の画面を作り直し：スキンを 3D で表示・Solo／Doubles や UHC／Sumo などモード別の統計・数字の色を Mellow と同じに': 'NEW: redesigned /pv window: 3D skin, per-mode stats (Solo/Doubles, UHC/Sumo and more), number colours like Mellow',
   'NEW：/fzstats は /pv に。統計を画面で見られるように（ゲーム・期間をタブで切り替え・名前を打って Enter で別の人）': 'NEW: /fzstats is now /pv and shows stats in a window (games and periods as tabs, type a name and press Enter for someone else)',
   'NEW：Player Stats は「Overlay」に名前を変えて PvP へ・設定をページ（タブリスト／列／データ・API／チャット／タグ／デニック）に分けて見やすく': 'NEW: Player Stats is now "Overlay" under PvP, its settings split into pages (Tab list / Columns / Data & API / Chat / Tags / Denick)',
