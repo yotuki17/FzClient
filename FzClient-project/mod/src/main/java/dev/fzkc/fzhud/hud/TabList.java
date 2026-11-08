@@ -196,7 +196,7 @@ public class TabList extends HudElement {
     private boolean builtIcon, builtPing, builtEnglish;
 
     // ---- stats columns (Player Stats): column titles, one cell per player and column, column widths
-    private static final float STAT_GAP = 5f, NAME_GAP = 6f;
+    private static final float STAT_GAP = 4f, NAME_GAP = 3f;
     private boolean statsOn;
     private String[] statHeads = new String[0];
     private String[][] statCells = new String[0][];
@@ -381,7 +381,7 @@ public class TabList extends HudElement {
         }
         if (hp < 0) return "";
         String c = hp >= 15 ? "§a" : hp >= 8 ? "§e" : "§c";
-        return c + hp + "§c❤";
+        return c + hp;
     }
 
     private static int pingColor(int ms) {

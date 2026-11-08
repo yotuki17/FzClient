@@ -436,12 +436,12 @@ public class FzChat extends GuiNewChat {
         if (line == null) return null;
         int x = hitX - pad();
         if (x < 0) return null;
-        int w = 0;
+        // measure the same text that is drawn (style codes included, e.g. bold, and the colour codes inside a
+        // piece such as the stats in front of a message), so the click lands on the piece under the mouse
+        StringBuilder drawn = new StringBuilder();
         for (IChatComponent c : line.getChatComponent()) {
-            if (c instanceof ChatComponentText) {
-                w += mc.fontRendererObj.getStringWidth(GuiUtilRenderComponents.func_178909_a(((ChatComponentText) c).getChatComponentText_TextValue(), false));
-                if (w > x) return c;
-            }
+            drawn.append(c.getChatStyle().getFormattingCode()).append(c.getUnformattedTextForChat()).append(EnumChatFormatting.RESET);
+            if (mc.fontRendererObj.getStringWidth(drawn.toString()) > x) return c instanceof ChatComponentText ? c : null;
         }
         return null;
     }
