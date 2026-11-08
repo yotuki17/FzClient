@@ -64,10 +64,13 @@ public final class FzUsers {
     }
 
     /** Client tick: hands the current tab list to the background thread and starts it once. */
+    private static int listTicks;
+
     public static void tick() {
         if (ENDPOINT.isEmpty()) return;
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.getNetHandler() != null && mc.thePlayer != null && Modules.fzUsersOthers.get()) {
+        // the list is sent every 5 seconds: gathering it twice a second is plenty
+        if (++listTicks % 10 == 0 && mc.getNetHandler() != null && mc.thePlayer != null && Modules.fzUsersOthers.get()) {
             List<UUID> ids = new ArrayList<UUID>();
             for (NetworkPlayerInfo info : mc.getNetHandler().getPlayerInfoMap()) {
                 if (info.getGameProfile() != null && info.getGameProfile().getId() != null) ids.add(info.getGameProfile().getId());

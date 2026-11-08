@@ -61,8 +61,22 @@ public final class Stats {
     /** Writes the stats history now (game closing). */
     public static void saveHistory() { History.save(); }
 
+    /** The last answer of onHypixel and what it was worked out from (asked every frame while Tab is open). */
+    private static String hyIp, hyBrand;
+    private static boolean hyAnswer;
+
     public static boolean onHypixel() {
         Minecraft mc = Minecraft.getMinecraft();
+        String ipNow = mc.getCurrentServerData() == null ? null : mc.getCurrentServerData().serverIP;
+        String brandNow = mc.thePlayer == null ? null : mc.thePlayer.getClientBrand();
+        if (ipNow == hyIp && brandNow == hyBrand) return hyAnswer;
+        hyIp = ipNow;
+        hyBrand = brandNow;
+        hyAnswer = workOutHypixel(mc);
+        return hyAnswer;
+    }
+
+    private static boolean workOutHypixel(Minecraft mc) {
         if (mc.getCurrentServerData() == null || mc.getCurrentServerData().serverIP == null) return false;
         String ip = mc.getCurrentServerData().serverIP.toLowerCase(Locale.ROOT);
         // hypixel.net, and proxies / boosters such as Overlag (mc.hypixel.fast, booster.hypixel.fast)
