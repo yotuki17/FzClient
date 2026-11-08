@@ -24,7 +24,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Chat in Hypixel lobbies: puts the speaker's stats in front of their message ("[223✫ FKDR 2.10]") and warns
+ * Chat on Hypixel (waiting lobbies and games: everyone; main lobbies, where many people talk: only people who say
+ * your name, so the APIs are not flooded): puts the speaker's stats in front of their message ("[223✫ FKDR 2.10]") and warns
  * when someone with a Watcher / Xadia / Coral tag talks. A message whose speaker is not loaded yet waits up to
  * 1.2 s (later messages wait behind it, so the order stays the same) and is then sent on through Forge as usual.
  */
@@ -68,7 +69,7 @@ public class ChatStats {
     private final Set<UUID> warned = new HashSet<>();
 
     private static boolean statsOn() {
-        return Modules.stats.enabled && Modules.statsChat.get() && Stats.lobby && Stats.onHypixel();
+        return Modules.stats.enabled && Modules.statsChat.get() && Stats.onHypixel();
     }
 
     private static boolean warnOn() {
@@ -96,6 +97,8 @@ public class ChatStats {
         String name = m.group(1);
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer != null && name.equalsIgnoreCase(mc.thePlayer.getName())) return;
+        // a main lobby (Bed Wars lobby and so on): only people who mention you
+        if (Stats.lobby && (mc.thePlayer == null || !mentions(plain.substring(m.end()), mc.thePlayer.getName()))) return;
         UUID id = idOf(name);
         if (warn && id != null) watchTags(id, name);
         if (!stats) return;
@@ -106,6 +109,12 @@ public class ChatStats {
         }
         held.add(new Held(event.type, event.message, name, System.currentTimeMillis() + WAIT_MS));
         event.setCanceled(true);
+    }
+
+    /** True when the message text contains your name as a word (any case). */
+    static boolean mentions(String text, String me) {
+        return Pattern.compile("(?<![A-Za-z0-9_])" + Pattern.quote(me) + "(?![A-Za-z0-9_])", Pattern.CASE_INSENSITIVE)
+                .matcher(text).find();
     }
 
     @SubscribeEvent

@@ -214,8 +214,8 @@ public final class Modules {
     public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "記録"));
     public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "過去24時間・7日・30日の統計のために記録する（この PC だけ）", true));
     public static final dev.fzkc.fzhud.config.PageSetting statsPageChat = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_chat", "チャット"));
-    public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "ロビーのチャット"));
-    public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "ロビーで発言した人の統計をメッセージの前に付ける（タブの列 1・2）", true));
+    public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "チャット"));
+    public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "発言した人の統計をメッセージの前に付ける（待機ロビー・試合中は全員、ロビーは自分の名前を出した人だけ）", true));
     public static final HeaderSetting statsHeadWarn = stats.add(new HeaderSetting("h_warn", "警告"));
     public static final BoolSetting statsChatWarn = stats.add(new BoolSetting("chatwarn", "タグ付きの人が発言したら警告", true));
     public static final BoolSetting statsChatWarnSound = stats.add(new BoolSetting("chatwarnsound", "警告の時に音を鳴らす", true));
