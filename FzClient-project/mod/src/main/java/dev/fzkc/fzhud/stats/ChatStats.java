@@ -138,9 +138,15 @@ public class ChatStats {
 
     /** True when the message text contains your name as a word (any case). */
     static boolean mentions(String text, String me) {
-        return Pattern.compile("(?<![A-Za-z0-9_])" + Pattern.quote(me) + "(?![A-Za-z0-9_])", Pattern.CASE_INSENSITIVE)
-                .matcher(text).find();
+        if (!me.equals(mentionName)) {
+            mentionName = me;
+            mentionPattern = Pattern.compile("(?<![A-Za-z0-9_])" + Pattern.quote(me) + "(?![A-Za-z0-9_])", Pattern.CASE_INSENSITIVE);
+        }
+        return mentionPattern.matcher(text).find();
     }
+
+    private static String mentionName;
+    private static Pattern mentionPattern;
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {

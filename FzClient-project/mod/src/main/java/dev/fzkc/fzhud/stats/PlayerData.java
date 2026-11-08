@@ -36,9 +36,28 @@ public final class PlayerData {
         this.fetchedAt = System.currentTimeMillis();
     }
 
-    public Map<String, Long> of(Game g) { return g.slice(counters); }
+    /** One game's (or mode's) counters, worked out once: the tab list asks for them many times a second. */
+    private final Map<Object, Map<String, Long>> slices = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public Map<String, Long> of(Game g, Game.Mode m) { return g.slice(counters, m); }
+    public Map<String, Long> of(Game g) {
+        Map<String, Long> s = slices.get(g);
+        if (s == null) {
+            s = java.util.Collections.unmodifiableMap(g.slice(counters));
+            slices.put(g, s);
+        }
+        return s;
+    }
+
+    public Map<String, Long> of(Game g, Game.Mode m) {
+        if (m == null || m.overall()) return of(g);
+        String k = g.name() + "|" + m.key;
+        Map<String, Long> s = slices.get(k);
+        if (s == null) {
+            s = java.util.Collections.unmodifiableMap(g.slice(counters, m));
+            slices.put(k, s);
+        }
+        return s;
+    }
 
     /** Coloured "[MVP+] Name". */
     public String display() { return rankPrefix + rankColor + name; }

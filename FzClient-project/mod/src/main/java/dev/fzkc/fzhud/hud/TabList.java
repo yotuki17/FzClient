@@ -196,6 +196,11 @@ public class TabList extends HudElement {
     private float nameW, pingW;
     private int builtTick = Integer.MIN_VALUE, builtWidthGen = Integer.MIN_VALUE;
     private boolean builtIcon, builtPing, builtEnglish;
+    private int builtCount = -1;
+    private float builtNameGap = -1, builtStatGap = -1;
+    /** Column titles as drawn ("§7FKDR"), made once per build instead of every frame. */
+    private String[] statHeadsShown = new String[0];
+    private String nameHead = "";
 
     // ---- stats columns (Player Stats): column titles, one cell per player and column, column widths
     private float statGap() { return (float) statGapSetting.get(); }
@@ -238,6 +243,9 @@ public class TabList extends HudElement {
         dev.fzkc.fzhud.stats.Game g = dev.fzkc.fzhud.stats.Stats.current;
         statHeads = g.tabHeadsPublic();
         int cols = statHeads.length;
+        statHeadsShown = new String[cols];
+        for (int c = 0; c < cols; c++) statHeadsShown[c] = "§7" + statHeads[c];
+        nameHead = "§7" + dev.fzkc.fzhud.util.Lang.t("名前");
         if (statCells.length < n || (statCells.length > 0 && statCells[0].length != cols)) statCells = new String[Math.max(n, 1)][cols];
         statW = new float[cols];
         for (int c = 0; c < cols; c++) statW[c] = R.width(statHeads[c]);
@@ -298,10 +306,18 @@ public class TabList extends HudElement {
     private void build(Minecraft mc, GuiPlayerTabOverlay overlay) {
         boolean icon = fzIcon.get(), ping = pingNumbers.get(), english = dev.fzkc.fzhud.util.Lang.english();
         boolean stats = dev.fzkc.fzhud.stats.Stats.tabActive();
-        if (builtTick == dev.fzkc.fzhud.util.Stamp.ticks && builtIcon == icon && builtPing == ping
-                && builtEnglish == english && builtWidthGen == R.widthGen && statsOn == stats) {
+        // the stats, tags, health and ping change slowly: 4 times a second is plenty (at once when someone
+        // joins or leaves, or a setting changes)
+        int count = mc.thePlayer.sendQueue.getPlayerInfoMap().size();
+        int age = dev.fzkc.fzhud.util.Stamp.ticks - builtTick;
+        if (age >= 0 && age < 5 && count == builtCount && builtIcon == icon && builtPing == ping
+                && builtEnglish == english && builtWidthGen == R.widthGen && statsOn == stats
+                && builtNameGap == nameGap() && builtStatGap == statGap()) {
             return;
         }
+        builtCount = count;
+        builtNameGap = nameGap();
+        builtStatGap = statGap();
         statsOn = stats;
         players.clear();
         players.addAll(mc.thePlayer.sendQueue.getPlayerInfoMap());
@@ -461,10 +477,10 @@ public class TabList extends HudElement {
             R.batchEnd();
             for (int col = 0; col < cols; col++) {
                 float x = bodyX + col * (colW + COL_GAP);
-                R.text("§7" + dev.fzkc.fzhud.util.Lang.t("名前"), x + headW, y, R.alpha(0xFFFFFFFF, alpha));
+                R.text(nameHead, x + headW, y, R.alpha(0xFFFFFFFF, alpha));
                 float sx = x + statX;
                 for (int c = 0; c < statHeads.length; c++) {
-                    R.textCentered("§7" + statHeads[c], sx + statW[c] / 2f, y, R.alpha(0xFFFFFFFF, alpha));
+                    R.textCentered(statHeadsShown[c], sx + statW[c] / 2f, y, R.alpha(0xFFFFFFFF, alpha));
                     sx += statW[c] + statGap();
                 }
                 if (hpW > 0) R.textCentered("§7HP", x + hpRight - hpW / 2f, y, R.alpha(0xFFFFFFFF, alpha));
