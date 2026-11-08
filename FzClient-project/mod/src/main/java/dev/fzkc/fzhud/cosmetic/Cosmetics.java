@@ -158,11 +158,14 @@ public final class Cosmetics {
                         JsonObject r = publish(mc, e);
                         if (r != null && r.has("ok")) {
                             sent = want;
+                            note("Cosmetics: published what you wear");
                         } else {
                             failUntil = now + 60000L;
+                            note("Cosmetics: could not publish: " + (r == null ? "no answer (offline account?)" : r));
                         }
                     } catch (Throwable ex) {
                         failUntil = now + 60000L;   // offline account, no internet, server down: try again later
+                        note("Cosmetics: could not publish: " + ex);
                     }
                 }
 
@@ -211,6 +214,15 @@ public final class Cosmetics {
         return FzUsers.post("/cos/set", body);
     }
 
+
+    private static String lastNote;
+
+    /** One log line per different result, so the log shows why others might not see your cosmetics. */
+    private static void note(String s) {
+        if (s.equals(lastNote)) return;
+        lastNote = s;
+        org.apache.logging.log4j.LogManager.getLogger("FzClient").info(s);
+    }
 
     private static UUID uuid(String hex) {
         if (hex == null || !hex.matches("[0-9a-f]{32}")) return null;

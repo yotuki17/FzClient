@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '改善：コスメがほかの人に見えない原因を調べられるように、送れなかった時に理由をログに残すように': 'Better: when your cosmetics cannot be sent to the server, the reason goes to the log',
   'NEW：パーティチャットで話した人の統計もメッセージの前に出すように（名前を呼ばれた時と同じ・ロビーでも）': 'New: people talking in party chat get their stats in front of the message too, like a mention (also in lobbies)',
   'NEW：プリセットのコードが6文字に（例：K7QF3M）。貼り付けて読み込むだけで使えます・サーバーにつながらない時は今までの長いコードをコピー': 'New: preset codes are 6 characters now (like K7QF3M), just paste and load; the long code is copied when the server cannot be reached',
   '修正：Bordic の統計が何日も前のまま止まることがあったのを修正（一番新しいデータを取るように）・/pv にデータが何時間前のものかを表示': 'Fix: Bordic stats could stay days old (the newest copy is asked for now); /pv shows how old the data is',

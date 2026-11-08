@@ -103,14 +103,26 @@ async function sha1(bytes) {
   return [...d].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
-/** Mojang says this account did a session "join" with this serverId just now: the request really is from them. */
+/**
+ * Mojang says this account did a session "join" with this serverId just now: the request really is from them.
+ * {id} when proven, else {status}: Mojang's HTTP status (204 = no such join, others = Mojang could not answer).
+ */
 async function verify(name, serverId) {
-  if (!/^[A-Za-z0-9_]{1,16}$/.test(String(name || '')) || !/^-?[0-9a-f]{1,64}$/.test(String(serverId || ''))) return null;
-  const res = await fetch('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=' + encodeURIComponent(name)
-    + '&serverId=' + encodeURIComponent(serverId), { headers: { 'User-Agent': 'FzClient-Users' } });
-  if (res.status !== 200) return null;
-  const p = await res.json();
-  return clean(p.id);
+  if (!/^[A-Za-z0-9_]{1,16}$/.test(String(name || '')) || !/^-?[0-9a-f]{1,64}$/.test(String(serverId || ''))) return { status: 0 };
+  let res;
+  try {
+    res = await fetch('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=' + encodeURIComponent(name)
+      + '&serverId=' + encodeURIComponent(serverId), { headers: { 'User-Agent': 'FzClient-Users' } });
+  } catch {
+    return { status: -1 };
+  }
+  if (res.status !== 200) return { status: res.status };
+  try {
+    const id = clean((await res.json()).id);
+    return id ? { id } : { status: 200 };
+  } catch {
+    return { status: 200 };
+  }
 }
 
 async function cosmetics(req, env, url) {
@@ -140,8 +152,9 @@ async function cosmetics(req, env, url) {
   }
 
   if (url.pathname === '/cos/set') {
-    const id = await verify(body.name, body.serverId);
-    if (!id) return json({ error: 'not verified' }, 403);
+    const v = await verify(body.name, body.serverId);
+    const id = v.id;
+    if (!id) return json({ error: 'not verified', mojang: v.status }, 403);
     const old = await env.DB.prepare('SELECT data, updated FROM cosmetics WHERE uuid = ?1').bind(id).first();
     if (old && now - old.updated < 3000) return json({ error: 'too fast' }, 429);
     const data = cleanData(body.data);
