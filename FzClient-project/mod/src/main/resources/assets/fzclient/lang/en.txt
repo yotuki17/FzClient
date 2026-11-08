@@ -966,3 +966,9 @@ Aurora API キー（Bed Wars の 24時間・1週間・1か月とデニック）	
 Aurora API キー（Bed Wars の 過去24時間・7日・30日とデニック）	Aurora API key (Bed Wars past 24 hours / 7 days / 30 days, and denick)
 過去24時間・7日・30日の統計のために記録する（この PC だけ）	Record stats for the past 24 hours / 7 days / 30 days (on this PC only)
 モード別の 過去24時間・7日・30日は Bed Wars で Aurora キーがある時だけです	Per-mode past 24 hours / 7 days / 30 days needs Bed Wars and an Aurora key
+過去の記録を取得中…	Loading past stats…
+モード別の 過去24時間・7日・30日は Bed Wars で Urchin か Aurora のキーがある時だけです	Per-mode past 24 hours / 7 days / 30 days needs Bed Wars and an Urchin or Aurora key
+Coral（Urchin）API キー（タグと Bed Wars の過去24時間・7日・30日）	Coral (Urchin) API key (tags, and Bed Wars past 24 hours / 7 days / 30 days)
+Urchin にこの期間の記録がありません	Urchin has no record for this period
+Urchin: API キーが違います	Urchin: wrong API key
+Urchin: 回数制限	Urchin: rate limited

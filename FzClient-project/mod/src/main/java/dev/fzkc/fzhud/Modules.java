@@ -229,7 +229,7 @@ public final class Modules {
     public static final BoolSetting statsXadiaVerified = stats.add(new BoolSetting("xadiaverified", "Xadia は確認済みのタグだけ", false));
     public static final HeaderSetting statsHeadCoral = stats.add(new HeaderSetting("h_coral", "Coral（Urchin）"));
     public static final BoolSetting statsCoral = stats.add(new BoolSetting("coral", "Coral（Urchin）のタグを使う", false));
-    public static final TextSetting statsCoralKey = stats.add(new TextSetting("coralkey", "Coral（Urchin）API キー", "", 128).secret());
+    public static final TextSetting statsCoralKey = stats.add(new TextSetting("coralkey", "Coral（Urchin）API キー（タグと Bed Wars の過去24時間・7日・30日）", "", 128).secret());
     public static final dev.fzkc.fzhud.config.PageSetting statsPageDenick = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_denick", "デニック"));
     public static final HeaderSetting denickHead = stats.add(new HeaderSetting("h_denick", "スキンで調べる"));
     public static final BoolSetting denickSkin = stats.add(new BoolSetting("denickskin", "スキンで調べる（キー不要・本人が今そのスキンなら確定）", true));

@@ -182,7 +182,7 @@ public class StatsCommand extends CommandBase {
             if (period != History.Period.TOTAL) {
                 View a = aurora(d, game, mode, period, m);
                 if (a != null) return a;
-                return new View(none, "§7" + Lang.t("モード別の 過去24時間・7日・30日は Bed Wars で Aurora キーがある時だけです"), null);
+                return new View(none, "§7" + Lang.t("モード別の 過去24時間・7日・30日は Bed Wars で Urchin か Aurora のキーがある時だけです"), null);
             }
             return new View(game.chat(m, m, false), null, null);
         }
@@ -220,14 +220,14 @@ public class StatsCommand extends CommandBase {
         if (game != Game.BEDWARS || !Sessions.available()) return null;
         Sessions.Result r = Sessions.get(d.id, period);
         if (r == null) {
-            if (Sessions.loading(d.id, period)) return new View(new ArrayList<String[]>(), "§7" + Lang.t("Aurora から取得中…"), null);
+            if (Sessions.loading(d.id, period)) return new View(new ArrayList<String[]>(), "§7" + Lang.t("過去の記録を取得中…"), null);
             return null;
         }
         Map<String, Long> diff = game.fromDelta(r.delta, mode, now);
         String range = r.start > 0
                 ? new SimpleDateFormat("M/d HH:mm").format(new Date(r.start)) + " 〜 " + new SimpleDateFormat("M/d HH:mm").format(new Date(r.end > 0 ? r.end : System.currentTimeMillis()))
                 : "";
-        String note = "Aurora" + (range.isEmpty() ? "" : " · " + range) + " · " + Lang.t("1時間ごとに更新");
+        String note = r.source + (range.isEmpty() ? "" : " · " + range) + ("Aurora".equals(r.source) ? " · " + Lang.t("1時間ごとに更新") : "");
         return new View(game.chat(diff, now, true), null, note);
     }
 
