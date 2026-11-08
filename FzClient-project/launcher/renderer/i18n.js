@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '修正：一部のマップでアカシア・ダークオークの葉や原木が原因でゲームが落ちるのを修正': 'Fix: a crash caused by acacia / dark oak leaves or logs on some maps',
   '修正：Overlag など（mc.hypixel.fast・booster.hypixel.fast）から入った時もオーバーレイが動くように': 'Fix: the overlay also works when joining through Overlag and similar (mc.hypixel.fast, booster.hypixel.fast)',
   '修正：オーバーレイが動かないのを修正（Hypixel Mod API があればそこから今のゲームを受け取る）・試合開始の統計が出ないのを修正': 'Fix: the overlay works again (the current game comes from the Hypixel Mod API when installed); the game start stats now appear',
   'NEW：/refresh でオーバーレイを読み込み直し（再接続した時は自動）・試合が始まったら全員の統計をチャットに表示': 'New: /refresh reloads the overlay (automatic after a reconnect); everyone’s stats are shown in chat when a game starts',
