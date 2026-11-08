@@ -977,3 +977,4 @@ Urchin: 回数制限	Urchin: rate limited
 発言した人の統計をメッセージの前に付ける（待機ロビー・試合中は全員、ロビーは自分の名前を出した人だけ）	Show the speaker's stats before their message (waiting lobby and games: everyone; main lobbies: only people who say your name)
 名前と統計の間（統計がある時）	Gap between name and stats (when stats are shown)
 統計どうしの間	Gap between stats
+試合中の名前をランクの色にする（オフ＝チームの色）	Name in rank colour during games (off = team colour)

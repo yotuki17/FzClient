@@ -173,7 +173,7 @@ public final class Modules {
     /** 0 = like the normal tab list, 1 = shaded (column titles, shaded rows), 2 = clean (column titles, no stripes). */
     public static final ChoiceSetting statsTabStyle = stats.add(new ChoiceSetting("tabstyle", "タブの見た目", 1,
             "いつもの", "影つき（shaded）", "すっきり（clean）"));
-    public static final BoolSetting statsRankColors = stats.add(new BoolSetting("rankcolors", "試合中の名前をランクの色にする（チームの文字はそのまま）", true));
+    public static final BoolSetting statsRankColors = stats.add(new BoolSetting("rankcolors2", "試合中の名前をランクの色にする（オフ＝チームの色）", false));
     public static final BoolSetting statsTagsInTab = stats.add(new BoolSetting("tabtags", "タブにタグを表示", true));
     public static final BoolSetting statsStar = stats.add(new BoolSetting("star", "Bed Wars：名前の前に星を表示", true));
     public static final dev.fzkc.fzhud.config.PageSetting statsPageCols = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_cols", "タブの列"));
