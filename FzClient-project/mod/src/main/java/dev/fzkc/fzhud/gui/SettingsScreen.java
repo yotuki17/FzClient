@@ -61,9 +61,16 @@ public class SettingsScreen extends FzScreen {
     }
 
     /** Width of the preview on the right (0 when the panel is too narrow for it). */
-    private static final float PV = 180;
-    private float W() { return Ui.menuW(vw, 640 + PV); }
-    private float pvW() { return (top() ? W() - 28 : W() - SW - 28) >= 620 ? PV : 0; }
+    private static final float PV = 150;
+    /**
+     * The virtual screen is only about 640 wide at 1080p, so the panel may use almost all of it to make room for
+     * the preview (the controls in each row get narrower to fit).
+     */
+    private float W() { return Math.min(vw - 16, (640 + PV) * dev.fzkc.fzhud.Modules.uiSize.get() / 100f); }
+    private float pvW() { return (top() ? W() - 28 : W() - SW - 28) >= 430 ? PV : 0; }
+    /** Width of a slider and of a text box in a row (narrower when the preview takes space). */
+    private float sliderW() { return Math.min(140, cw() * .38f); }
+    private float textW() { return Math.min(210, cw() * .56f); }
     /** Right edge of the header (the whole width, over the preview too). */
     private float hRight() { return x0() + cw() + (pvW() > 0 ? pvW() + 14 : 0) - 10; }
     private float H() { return Ui.menuH(vh, 340); }
@@ -367,15 +374,15 @@ public class SettingsScreen extends FzScreen {
         boolean over = Ui.inside(mx, my, x0(), y, cw(), ROW) && my >= y0() && my < y0() + ch();
         float hv = anim(s, 0).update(over || s == draggingSlider ? 1 : 0);
         Ui.card(x0(), y, cw(), h, hv, -1f, o);
-        R.text(s.label, x0() + 10, y + 10, R.alpha(Ui.text, o));
         float rx = right();
+        R.text(Ui.trim(dev.fzkc.fzhud.util.Lang.t(s.label), Math.max(40, rx - controlW(s) - 12 - (x0() + 10))), x0() + 10, y + 10, R.alpha(Ui.text, o));
 
         if (s instanceof BoolSetting) {
             BoolSetting b = (BoolSetting) s;
             Ui.toggle(rx - 24, y + 8, switchAnim(s, b.get() ? 1 : 0).update(b.get() ? 1 : 0), o);
         } else if (s instanceof SliderSetting) {
             SliderSetting sl = (SliderSetting) s;
-            float sw = 140;
+            float sw = sliderW();
             Ui.slider(rx - sw, y + 8, sw, (float) sl.fraction(), hv, o);
             String v = sl.display();
             float pw = Math.max(40, R.width(v) + 12);
@@ -394,11 +401,21 @@ public class SettingsScreen extends FzScreen {
             if (ts.secret && !focused && !text.isEmpty()) text = dev.fzkc.fzhud.util.Lang.t("●●●●●●●● 設定済み");
             // not editing: show the end of a long text (as before); editing: follow the caret
             int caret = focused ? clampCursor(text) : text.length();
-            Ui.textBox(rx - 210, y + 5, 210, 18, text,
+            Ui.textBox(rx - textW(), y + 5, textW(), 18, text,
                     "クリックして入力（右クリックで消去）", focused, caret, o);
         } else if (s instanceof ColorSetting) {
             drawColorRow((ColorSetting) s, y, rx, mx, my, o);
         }
+    }
+
+    /** How wide the control on the right of a row is (the label stops before it). */
+    private float controlW(Setting s) {
+        if (s instanceof BoolSetting) return 26;
+        if (s instanceof SliderSetting) return sliderW() + 10 + Math.max(40, R.width(((SliderSetting) s).display()) + 12);
+        if (s instanceof ChoiceSetting) return Math.max(100, R.width("‹  " + ((ChoiceSetting) s).display() + "  ›") + 16);
+        if (s instanceof TextSetting) return textW();
+        if (s instanceof ColorSetting) return 26 + 8 + 74 + 8 + 46;
+        return 0;
     }
 
     private void drawColorRow(ColorSetting c, float y, float rx, int mx, int my, float o) {
@@ -555,7 +572,7 @@ public class SettingsScreen extends FzScreen {
                 if (!bs.value) UiSound.cancel();
             }
         } else if (s instanceof SliderSetting) {
-            if (button == 0 && mx >= rx - 150) {
+            if (button == 0 && mx >= rx - sliderW() - 10) {
                 UiSound.hit();
                 draggingSlider = (SliderSetting) s;
                 setSlider(mx);
@@ -571,13 +588,13 @@ public class SettingsScreen extends FzScreen {
             TextSetting ts = (TextSetting) s;
             if (button == 1) {
                 ts.value = "";
-            } else if (mx >= rx - 210) {
+            } else if (mx >= rx - textW()) {
                 UiSound.hit();
                 editing = s;
                 String t = ts.get();
                 // already editing this box: keep the current view; otherwise it was showing the end of the text
                 int basis = wasEditing == s ? clampCursor(t) : t.length();
-                cursor = Ui.cursorFromX(t, rx - 210, 210, basis, mx);
+                cursor = Ui.cursorFromX(t, rx - textW(), textW(), basis, mx);
             }
         } else if (s instanceof ColorSetting) {
             ColorSetting c = (ColorSetting) s;
@@ -636,7 +653,7 @@ public class SettingsScreen extends FzScreen {
     }
 
     private void setSlider(int mx) {
-        float rx = right(), sw = 140;
+        float rx = right(), sw = sliderW();
         double f = Math.max(0, Math.min(1, (mx - (rx - sw)) / sw));
         draggingSlider.set(draggingSlider.min + f * (draggingSlider.max - draggingSlider.min));
     }
