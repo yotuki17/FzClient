@@ -972,3 +972,5 @@ Coral（Urchin）API キー（タグと Bed Wars の過去24時間・7日・30�
 Urchin にこの期間の記録がありません	Urchin has no record for this period
 Urchin: API キーが違います	Urchin: wrong API key
 Urchin: 回数制限	Urchin: rate limited
+タグなし	No tags
+タグの確認はオフ	Tag lookups are off

@@ -70,11 +70,11 @@ public final class Tags {
     private static final Deque<Long> watcherCalls = new ArrayDeque<>();
     private static volatile long watcherPausedUntil;
 
-    static boolean watcherOn() { return Modules.statsWatcher.get() && !Modules.statsWatcherKey.get().trim().isEmpty(); }
+    public static boolean watcherOn() { return Modules.statsWatcher.get() && !Modules.statsWatcherKey.get().trim().isEmpty(); }
 
-    static boolean xadiaOn() { return Modules.statsXadia.get() && !Modules.statsXadiaKey.get().trim().isEmpty(); }
+    public static boolean xadiaOn() { return Modules.statsXadia.get() && !Modules.statsXadiaKey.get().trim().isEmpty(); }
 
-    static boolean coralOn() { return Modules.statsCoral.get() && !Modules.statsCoralKey.get().trim().isEmpty(); }
+    public static boolean coralOn() { return Modules.statsCoral.get() && !Modules.statsCoralKey.get().trim().isEmpty(); }
 
     /** The tags known right now (empty while loading); asks for missing ones in the background. */
     public static List<Tag> get(UUID id) {
@@ -167,7 +167,7 @@ public final class Tags {
             }
             String key = Modules.statsWatcherKey.get().trim();
             String body = Http.get("Watcher", "https://api.watchertag.com/api/v1/cubelify?key="
-                    + URLEncoder.encode(key, "UTF-8") + "&uuid=" + id.toString().replace("-", ""), null, null);
+                    + URLEncoder.encode(key, "UTF-8") + "&id=" + id.toString().replace("-", "") + "&uuid=" + id.toString().replace("-", ""), null, null);
             JsonObject r = new JsonParser().parse(body).getAsJsonObject();
             JsonElement err = r.get("error");
             boolean failed = err != null && err.isJsonPrimitive()

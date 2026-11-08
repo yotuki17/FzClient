@@ -330,10 +330,15 @@ public class TabList extends HudElement {
             float iw = icon && isMe[i] ? ICON_W + ICON_GAP : 0f;
             nw = Math.max(nw, iw + R.width(trimEnd(s)));
             tagText[i] = "";
-            // Hypixel sends 1 ms for everyone now: only your own ping (measured by FzClient) is real
-            boolean self = me.equals(info.getGameProfile().getId());
-            pingMs[i] = self && myPing >= 0 ? myPing : info.getResponseTime();
-            pingText[i] = !self && pingMs[i] <= 1 ? "" : dev.fzkc.fzhud.util.Fmt.num(pingMs[i]) + "ms";
+            // Hypixel sends 1 ms for everyone now: your own ping is measured by FzClient, other players' comes
+            // from Aurora's ping history (their recent daily average)
+            java.util.UUID pid = info.getGameProfile().getId();
+            boolean self = me.equals(pid);
+            int real = info.getResponseTime();
+            if (self && myPing >= 0) pingMs[i] = myPing;
+            else if (real > 1) pingMs[i] = real;
+            else pingMs[i] = ping && !self ? dev.fzkc.fzhud.stats.PingHistory.get(pid) : -1;
+            pingText[i] = pingMs[i] <= 1 ? "" : dev.fzkc.fzhud.util.Fmt.num(pingMs[i]);
             if (ping) pw = Math.max(pw, R.width(pingText[i]) * 0.5f);
             hpText[i] = health(mc, board, hpObj, info);
             hw = Math.max(hw, R.width(hpText[i]));

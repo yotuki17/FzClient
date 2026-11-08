@@ -277,8 +277,14 @@ public class StatsScreen extends FzScreen {
                 R.text(Ui.trim(txt, tw - 8), cx + 5, y + 3, R.alpha(Ui.text, o));
                 cx += tw + 4;
             }
-            if (tags.isEmpty() && Tags.loading(id)) R.textCentered("§8" + Lang.t("タグを確認中…"), skinX(), y, R.alpha(Ui.text, o));
-            if (!tags.isEmpty()) y += 17;
+            if (tags.isEmpty()) {
+                boolean any = Tags.watcherOn() || Tags.xadiaOn() || Tags.coralOn();
+                String none = Tags.loading(id) ? Lang.t("タグを確認中…") : any ? Lang.t("タグなし") : Lang.t("タグの確認はオフ");
+                R.textCentered("§8" + none, skinX(), y, R.alpha(Ui.text, o));
+                y += 13;
+            } else {
+                y += 17;
+            }
             // why a lookup failed (a wrong key, a limit), so a missing tag is not a mystery
             for (String p : Tags.problems(id)) {
                 String line = "§c" + Lang.t(p);
