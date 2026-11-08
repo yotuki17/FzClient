@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '修正：Block Outline のプレビューに枠が出ていなかったのを修正・プレビューの背景をタイトル画面のパノラマ（止めたもの）に': 'Fix: the Block Outline preview did not show the outline; the preview background is now the title screen panorama (standing still)',
   '修正：設定画面の右のプレビューが出ていなかったのを修正（普通の画面の大きさでも出るように、設定の欄を少し詰めました）': 'Fix: the preview on the right of the settings page did not show (the settings column is a little narrower now so it fits)',
   'NEW：設定画面の右に、その機能がどう見えるかのプレビュー・3D Skin Layers の立体の大きさ（出っぱり）を頭と体で調整できるように': 'New: a preview on the right of each settings page showing how the feature looks; 3D Skin Layers size (how far it stands out) for the head and the body',
   '修正：3D Skin Layers のレイヤーが体の動きについてこない・腕や足の位置がずれるのを修正': 'Fix: 3D Skin Layers did not follow the body when moving and arms / legs were in the wrong place',

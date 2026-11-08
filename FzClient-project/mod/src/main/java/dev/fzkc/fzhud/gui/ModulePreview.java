@@ -45,8 +45,11 @@ final class ModulePreview {
     private static String fxAura = "";
 
     static void draw(Module m, float x, float y, float w, float h, float o) {
-        R.rounded(x, y, w, h, Ui.rad(8f), R.alpha(0x38000000, o));
-        R.text(Lang.t("プレビュー"), x + 8, y + 6, R.alpha(Ui.MUTED, o));
+        Ui.scissor(x, y, w, h);
+        panorama(x, y, w, h, o);
+        Ui.endScissor();
+        R.roundedOutline(x, y, w, h, Ui.rad(8f), 1f, R.alpha(0x30FFFFFF, o));
+        R.text(Lang.t("プレビュー"), x + 8, y + 6, R.alpha(0xFFFFFFFF, o));
         float iy = y + 18, ih = h - 22;
         Ui.scissor(x, iy, w, ih);
         try {
@@ -66,10 +69,6 @@ final class ModulePreview {
     // ------------------------------------------------------------------ HUD elements
 
     private static void hud(HudElement e, float x, float y, float w, float h, float o) {
-        // a calm sky / grass background so the element is seen like in game
-        R.rounded(x + 6, y + 2, w - 12, h - 8, Ui.rad(6f), R.alpha(0xFF4A7FB5, o));
-        R.rect(x + 6, y + h * .62f, w - 12, h * .38f - 10, R.alpha(0xFF4E8A3A, o));
-        R.rect(x + 6, y + h * .62f, w - 12, 3, R.alpha(0xFF6BAA4E, o));
         float ew = e.width(), eh = e.height();
         float s = Math.min(e.scale(), Math.min((w - 24) / ew, (h - 24) / eh));
         if (s <= 0) return;
@@ -83,6 +82,33 @@ final class ModulePreview {
         }
         GlStateManager.color(1f, 1f, 1f, 1f);
         GlStateManager.enableBlend();
+    }
+
+    private static final ResourceLocation PANO = new ResourceLocation("fzclient", "textures/panorama/panorama_0.jpg");
+
+    /** The title screen's panorama standing still (its front picture, cut to the box), a little darker. */
+    private static void panorama(float x, float y, float w, float h, float o) {
+        Minecraft.getMinecraft().getTextureManager().bindTexture(PANO);
+        org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+        org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.disableCull();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.color(1f, 1f, 1f, o);
+        // the picture is square: show the middle part with the box's shape
+        float a = w / h, u0 = .5f - Math.min(.5f, a / 2f), u1 = .5f + Math.min(.5f, a / 2f);
+        float v0 = .5f - Math.min(.5f, 1f / a / 2f), v1 = .5f + Math.min(.5f, 1f / a / 2f);
+        net.minecraft.client.renderer.Tessellator t = net.minecraft.client.renderer.Tessellator.getInstance();
+        net.minecraft.client.renderer.WorldRenderer wr = t.getWorldRenderer();
+        wr.begin(org.lwjgl.opengl.GL11.GL_QUADS, net.minecraft.client.renderer.vertex.DefaultVertexFormats.POSITION_TEX);
+        wr.pos(x, y + h, 0).tex(u0, v1).endVertex();
+        wr.pos(x + w, y + h, 0).tex(u1, v1).endVertex();
+        wr.pos(x + w, y, 0).tex(u1, v0).endVertex();
+        wr.pos(x, y, 0).tex(u0, v0).endVertex();
+        t.draw();
+        GlStateManager.color(1f, 1f, 1f, 1f);
+        R.rect(x, y, w, h, R.alpha(0x50000000, o));
     }
 
     // ------------------------------------------------------------------ the player
@@ -177,6 +203,7 @@ final class ModulePreview {
     private static void quad(float[] p, int argb) {
         net.minecraft.client.renderer.Tessellator t = net.minecraft.client.renderer.Tessellator.getInstance();
         net.minecraft.client.renderer.WorldRenderer wr = t.getWorldRenderer();
+        GlStateManager.disableCull();   // the outline's quads go round the other way: they were culled and never showed
         GlStateManager.disableTexture2D();
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
@@ -189,6 +216,7 @@ final class ModulePreview {
         t.draw();
         GlStateManager.color(1f, 1f, 1f, 1f);
         GlStateManager.enableTexture2D();
+        GlStateManager.enableCull();
     }
 
     /** A thick line as a quad. */
