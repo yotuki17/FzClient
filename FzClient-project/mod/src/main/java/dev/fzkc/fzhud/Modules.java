@@ -207,12 +207,12 @@ public final class Modules {
             "Hypixel API（キー必要）", "Bordic", "Bedlify"));
     public static final HeaderSetting statsHeadKeys = stats.add(new HeaderSetting("h_keys", "キー（空なら Mellow の設定から自動で読み込み）"));
     public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー", "", 64).secret());
-    public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（Bed Wars の 24時間・1週間・1か月とデニック）", "", 128).secret());
+    public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（Bed Wars の 過去24時間・7日・30日とデニック）", "", 128).secret());
     public static final HeaderSetting statsHeadPv = stats.add(new HeaderSetting("h_pv", "/pv コマンド"));
     /** 0 = window, 1 = chat. */
     public static final ChoiceSetting statsPvMode = stats.add(new ChoiceSetting("pvmode", "/pv の表示", 0, "画面", "チャット"));
     public static final HeaderSetting statsHeadData = stats.add(new HeaderSetting("h_data", "記録"));
-    public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "24時間・1週間・1か月の統計のために記録する（この PC だけ）", true));
+    public static final BoolSetting statsHistory = stats.add(new BoolSetting("history", "過去24時間・7日・30日の統計のために記録する（この PC だけ）", true));
     public static final dev.fzkc.fzhud.config.PageSetting statsPageChat = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_chat", "チャット"));
     public static final HeaderSetting statsHeadChat = stats.add(new HeaderSetting("h_chat", "ロビーのチャット"));
     public static final BoolSetting statsChat = stats.add(new BoolSetting("chat", "ロビーで発言した人の統計をメッセージの前に付ける（タブの列 1・2）", true));

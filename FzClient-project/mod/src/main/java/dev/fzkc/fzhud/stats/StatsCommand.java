@@ -182,7 +182,7 @@ public class StatsCommand extends CommandBase {
             if (period != History.Period.TOTAL) {
                 View a = aurora(d, game, mode, period, m);
                 if (a != null) return a;
-                return new View(none, "§7" + Lang.t("モード別の 24時間・1週間・1か月は Bed Wars で Aurora キーがある時だけです"), null);
+                return new View(none, "§7" + Lang.t("モード別の 過去24時間・7日・30日は Bed Wars で Aurora キーがある時だけです"), null);
             }
             return new View(game.chat(m, m, false), null, null);
         }

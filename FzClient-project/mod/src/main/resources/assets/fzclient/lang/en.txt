@@ -960,3 +960,9 @@ Aurora API キー（Bed Wars の今日・今週・今月とデニック）	Auror
 Aurora API キー（Bed Wars の 24時間・1週間・1か月とデニック）	Aurora API key (Bed Wars 24 hours / 1 week / 1 month, and denick)
 24時間・1週間・1か月の統計のために記録する（この PC だけ）	Record stats for 24 hours / 1 week / 1 month (on this PC only)
 モード別の 24時間・1週間・1か月は Bed Wars で Aurora キーがある時だけです	Per-mode 24 hours / 1 week / 1 month needs Bed Wars and an Aurora key
+過去24時間	Past 24 Hours
+過去7日	Past 7 Days
+過去30日	Past 30 Days
+Aurora API キー（Bed Wars の 過去24時間・7日・30日とデニック）	Aurora API key (Bed Wars past 24 hours / 7 days / 30 days, and denick)
+過去24時間・7日・30日の統計のために記録する（この PC だけ）	Record stats for the past 24 hours / 7 days / 30 days (on this PC only)
+モード別の 過去24時間・7日・30日は Bed Wars で Aurora キーがある時だけです	Per-mode past 24 hours / 7 days / 30 days needs Bed Wars and an Aurora key

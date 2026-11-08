@@ -127,6 +127,7 @@ const EN = {
   '修正：/pv の今日・今週・今月がすぐ出るように・タグが取れない時に理由を表示': 'Fix: today / this week / this month show right away in /pv; the reason is shown when tags cannot be loaded',
   'NEW：Bed Wars の今日・今週・今月を Aurora から取得（初めて見る人でも出る・モード別も）・修正：タグが取れない時に理由を表示': 'NEW: Bed Wars today / week / month come from Aurora (works for anyone, per mode too); fix: the reason is shown when tags cannot be loaded',
   'NEW：/pv の期間は「24時間・1週間・1か月」に。Bed Wars は Aurora から取得（初めて見る人でも・モード別も）': 'NEW: /pv periods are now 24 hours / 1 week / 1 month; Bed Wars comes from Aurora (works for anyone, per mode too)',
+  'NEW：/pv の期間は「過去24時間・過去7日・過去30日」に。Bed Wars は Aurora から取得（初めて見る人でも・モード別も）': 'NEW: /pv periods are now Past 24 Hours / Past 7 Days / Past 30 Days; Bed Wars comes from Aurora (works for anyone, per mode too)',
   'NEW：/pv の画面を作り直し：スキンを 3D で表示・Solo／Doubles や UHC／Sumo などモード別の統計・数字の色を Mellow と同じに': 'NEW: redesigned /pv window: 3D skin, per-mode stats (Solo/Doubles, UHC/Sumo and more), number colours like Mellow',
   'NEW：/fzstats は /pv に。統計を画面で見られるように（ゲーム・期間をタブで切り替え・名前を打って Enter で別の人）': 'NEW: /fzstats is now /pv and shows stats in a window (games and periods as tabs, type a name and press Enter for someone else)',
   'NEW：Player Stats は「Overlay」に名前を変えて PvP へ・設定をページ（タブリスト／列／データ・API／チャット／タグ／デニック）に分けて見やすく': 'NEW: Player Stats is now "Overlay" under PvP, its settings split into pages (Tab list / Columns / Data & API / Chat / Tags / Denick)',

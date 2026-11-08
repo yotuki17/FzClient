@@ -53,7 +53,7 @@ public final class History {
     private static long savedAt;
 
     public enum Period {
-        TOTAL("total", "全期間"), DAILY("daily", "24時間"), WEEKLY("weekly", "1週間"), MONTHLY("monthly", "1か月");
+        TOTAL("total", "全期間"), DAILY("daily", "過去24時間"), WEEKLY("weekly", "過去7日"), MONTHLY("monthly", "過去30日");
 
         public final String key, label;
 
