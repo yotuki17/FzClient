@@ -196,12 +196,15 @@ public class TabList extends HudElement {
     private boolean builtIcon, builtPing, builtEnglish;
 
     // ---- stats columns (Player Stats): column titles, one cell per player and column, column widths
-    private static final float STAT_GAP = 7f;
+    private static final float STAT_GAP = 5f, NAME_GAP = 6f;
     private boolean statsOn;
     private String[] statHeads = new String[0];
     private String[][] statCells = new String[0][];
     private float[] statW = new float[0];
     private float statsW;
+    // tag badges (after the stats) and health (before the ping), one per player
+    private String[] tagText = new String[0], hpText = new String[0];
+    private float tagW, hpW;
 
     /** Total width of the stats columns (0 when they are off). */
     private float statsWidth() { return statsOn ? statsW : 0f; }
@@ -216,8 +219,6 @@ public class TabList extends HudElement {
     private static String statsName(NetworkPlayerInfo info, String shown, dev.fzkc.fzhud.stats.PlayerData d,
                                      java.util.List<dev.fzkc.fzhud.stats.Tags.Tag> tags, dev.fzkc.fzhud.stats.Game g) {
         StringBuilder sb = new StringBuilder();
-        for (dev.fzkc.fzhud.stats.Tags.Tag t : tags) sb.append(t.badge);
-        if (sb.length() > 0) sb.append(' ');
         if (d != null && !d.nicked) {
             String star = g.tabPrefix(d.of(g));
             if (!star.isEmpty()) sb.append(star).append(' ');
@@ -238,10 +239,12 @@ public class TabList extends HudElement {
         statW = new float[cols];
         for (int c = 0; c < cols; c++) statW[c] = R.width(statHeads[c]);
         boolean tagsOn = dev.fzkc.fzhud.Modules.statsTagsInTab.get();
+        tagW = 0;
         for (int i = 0; i < n; i++) {
             NetworkPlayerInfo info = players.get(i);
             java.util.UUID id = info.getGameProfile().getId();
             String[] row = statCells[i];
+            tagText[i] = "";
             java.util.Arrays.fill(row, "");
             if (id == null) continue;
             String realSuffix = "";
@@ -263,6 +266,12 @@ public class TabList extends HudElement {
             java.util.List<dev.fzkc.fzhud.stats.Tags.Tag> tags = tagsOn
                     ? dev.fzkc.fzhud.stats.Tags.get(id) : java.util.Collections.<dev.fzkc.fzhud.stats.Tags.Tag>emptyList();
             names.set(i, statsName(info, names.get(i), d, tags, g) + realSuffix);
+            if (!tags.isEmpty()) {
+                StringBuilder tb = new StringBuilder();
+                for (dev.fzkc.fzhud.stats.Tags.Tag t : tags) tb.append(t.badge);
+                tagText[i] = tb.toString();
+                tagW = Math.max(tagW, R.width(tagText[i]));
+            }
             if (d == null) {
                 if (cols > 0) row[0] = "§8…";
             } else if (d.nicked) {
@@ -301,7 +310,14 @@ public class TabList extends HudElement {
             pingMs = new int[n];
             pingText = new String[n];
             isMe = new boolean[n];
+            tagText = new String[n];
+            hpText = new String[n];
         }
+        tagW = 0;
+        float hw = 0;
+        net.minecraft.scoreboard.Scoreboard board = mc.theWorld == null ? null : mc.theWorld.getScoreboard();
+        net.minecraft.scoreboard.ScoreObjective hpObj = board == null ? null : board.getObjectiveInDisplaySlot(0);
+        int myPing = dev.fzkc.fzhud.util.PingMeter.get();
         names.clear();
         float nw = 0, pw = 0;
         java.util.UUID me = mc.thePlayer.getUniqueID();
@@ -312,19 +328,25 @@ public class TabList extends HudElement {
             names.add(s);
             isMe[i] = me.equals(info.getGameProfile().getId()) || dev.fzkc.fzhud.integration.FzUsers.uses(info.getGameProfile().getId());
             float iw = icon && isMe[i] ? ICON_W + ICON_GAP : 0f;
-            nw = Math.max(nw, iw + R.width(s));
-            pingMs[i] = info.getResponseTime();
-            pingText[i] = dev.fzkc.fzhud.util.Fmt.num(pingMs[i]);
+            nw = Math.max(nw, iw + R.width(trimEnd(s)));
+            tagText[i] = "";
+            // Hypixel sends 1 ms for everyone now: only your own ping (measured by FzClient) is real
+            boolean self = me.equals(info.getGameProfile().getId());
+            pingMs[i] = self && myPing >= 0 ? myPing : info.getResponseTime();
+            pingText[i] = !self && pingMs[i] <= 1 ? "" : dev.fzkc.fzhud.util.Fmt.num(pingMs[i]) + "ms";
             if (ping) pw = Math.max(pw, R.width(pingText[i]) * 0.5f);
+            hpText[i] = health(mc, board, hpObj, info);
+            hw = Math.max(hw, R.width(hpText[i]));
         }
         if (statsOn) {
             buildStats(n);
             nw = 0;
             for (int i = 0; i < n; i++) {
                 float iw = icon && isMe[i] ? ICON_W + ICON_GAP : 0f;
-                nw = Math.max(nw, iw + R.width(names.get(i)));
+                nw = Math.max(nw, iw + R.width(trimEnd(names.get(i))));
             }
         }
+        hpW = hw;
         nameW = nw;
         pingW = ping ? pw : 0;
         builtTick = dev.fzkc.fzhud.util.Stamp.ticks;
@@ -332,6 +354,29 @@ public class TabList extends HudElement {
         builtIcon = icon;
         builtPing = ping;
         builtEnglish = english;
+    }
+
+    private static String trimEnd(String s) {
+        int e = s.length();
+        while (e > 0 && s.charAt(e - 1) == ' ') e--;
+        return s.substring(0, e);
+    }
+
+    /** Health from the tab list score (Bed Wars and others), else from the player in the world during a game. */
+    private static String health(Minecraft mc, net.minecraft.scoreboard.Scoreboard board,
+                                 net.minecraft.scoreboard.ScoreObjective obj, NetworkPlayerInfo info) {
+        String name = info.getGameProfile().getName();
+        int hp = -1;
+        if (obj != null && board != null && board.entityHasObjective(name, obj)) {
+            hp = board.getValueFromObjective(name, obj).getScorePoints();
+        } else if (mc.theWorld != null && !dev.fzkc.fzhud.stats.Stats.lobby
+                && info.getGameType() != WorldSettings.GameType.SPECTATOR) {
+            net.minecraft.entity.player.EntityPlayer p = mc.theWorld.getPlayerEntityByName(name);
+            if (p != null && !p.isDead) hp = (int) Math.ceil(p.getHealth());
+        }
+        if (hp < 0) return "";
+        String c = hp >= 15 ? "§a" : hp >= 8 ? "§e" : "§c";
+        return c + hp + "§c❤";
     }
 
     private static int pingColor(int ms) {
@@ -370,7 +415,10 @@ public class TabList extends HudElement {
         float statsW = statsWidth();
         int style = statsStyle();
         float titleRow = style != 0 && n > 0 ? ROW + 2 : 0;   // column titles above the players
-        float colW = headW + nameW + (statsW > 0 ? STAT_GAP + statsW : 0) + (pingNumbers.get() ? 6 + pingW : 0);
+        float tagW = statsW > 0 ? this.tagW : 0, hpW = this.hpW;
+        boolean pingOn = pingNumbers.get() && pingW > 0;
+        float colW = headW + nameW + (statsW > 0 ? NAME_GAP + statsW - STAT_GAP : 0) + (tagW > 0 ? NAME_GAP + tagW : 0)
+                + (hpW > 0 ? NAME_GAP + hpW : 0) + (pingOn ? 4 + pingW : 0);
         float bodyW = cols * colW + (cols - 1) * COL_GAP;
         float w = bodyW;
         for (String s : header) w = Math.max(w, R.width(s));
@@ -391,7 +439,9 @@ public class TabList extends HudElement {
 
         float bodyX = (w - bodyW) / 2f;
         // where the stats columns start inside a column of players
-        float statX = headW + nameW + STAT_GAP;
+        float statX = headW + nameW + NAME_GAP;
+        // health: right aligned, just before the ping
+        float hpRight = colW - (pingOn ? 4 + pingW : 0);
         if (titleRow > 0) {
             // column titles; shaded: on a darker band, clean: with a thin line under them
             R.batchBegin();
@@ -409,6 +459,7 @@ public class TabList extends HudElement {
                     R.textCentered("§7" + statHeads[c], sx + statW[c] / 2f, y, R.alpha(0xFFFFFFFF, alpha));
                     sx += statW[c] + STAT_GAP;
                 }
+                if (hpW > 0) R.textCentered("§7HP", x + hpRight - hpW / 2f, y, R.alpha(0xFFFFFFFF, alpha));
             }
             y += titleRow;
         }
@@ -464,8 +515,14 @@ public class TabList extends HudElement {
                     if (!cells[c].isEmpty()) R.textCentered(cells[c], sx + statW[c] / 2f, ry, R.alpha(0xFFFFFFFF, alpha));
                     sx += statW[c] + STAT_GAP;
                 }
+                if (tagW > 0 && i < tagText.length && !tagText[i].isEmpty()) {
+                    R.text(tagText[i], sx - STAT_GAP + NAME_GAP, ry, R.alpha(0xFFFFFFFF, alpha));
+                }
             }
-            if (pingNumbers.get()) {
+            if (hpW > 0 && !hpText[i].isEmpty()) {
+                R.text(hpText[i], x + hpRight - R.width(hpText[i]), ry, R.alpha(0xFFFFFFFF, alpha));
+            }
+            if (pingOn && !pingText[i].isEmpty()) {
                 int ms = pingMs[i];
                 String ping = pingText[i];
                 // half-size ping, right aligned and vertically centred in the row
