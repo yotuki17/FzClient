@@ -461,11 +461,22 @@ public class FzMainMenu extends FzScreen {
     private float smallX(int i) { return colX() + i * (smallW() + GAP); }
     private float quitX() { return vw - 30; }
     private float quitY() { return 10; }
+    private float themeX() { return quitX() - 6 - Ui.langW() - 6 - themeW(); }
+
+    /** Wide enough for the longest theme name and the colour dot in front of it. */
+    private static float themeW() {
+        float w = 0;
+        for (String o : dev.fzkc.fzhud.Modules.uiTheme.options) w = Math.max(w, R.width(dev.fzkc.fzhud.util.Lang.t(o)));
+        return Math.max(64f, w + 28f);
+    }
 
     // ---------------------------------------------------------------- drawing
 
     @Override
     protected void render(int mx, int my, float pt) {
+        // the title screen draws on the panorama: light text and shadows whatever the menu style
+        Ui.refreshRaw();
+        R.noShadow = false;
         float t = (System.currentTimeMillis() - start) / 1000f;
         long now = System.nanoTime();
         if (intro) {
@@ -513,6 +524,15 @@ public class FzMainMenu extends FzScreen {
 
         // language switch (left of quit)
         Ui.langButton(quitX() - 6 - Ui.langW(), quitY(), anim("lang").update(Ui.inside(mx, my, quitX() - 6 - Ui.langW(), quitY(), Ui.langW(), 20) ? 1 : 0), o);
+
+        // theme switch (left of the language): click = next theme, right click = the one before
+        float thv = anim("theme").update(Ui.within(mx, my, themeX(), quitY(), themeW(), 20) ? 1 : 0);
+        Ui.button(themeX(), quitY(), themeW(), 20, "", thv, o);
+        String tn = dev.fzkc.fzhud.Modules.uiTheme.display();
+        float tx = themeX() + (themeW() - R.width(tn) - 11) / 2f;
+        R.rounded(tx, quitY() + 6.5f, 7, 7, 3.5f, R.alpha(Ui.accent, o));
+        R.text(tn, tx + 11, quitY() + 6, R.alpha(Ui.buttonText(), o));
+        if (thv > 0.01f) R.textCentered(dev.fzkc.fzhud.util.Lang.t("テーマ"), themeX() + themeW() / 2f, quitY() + 24, R.alpha(R.alpha(Ui.text, thv), o));
 
         // footer: a dark strip with a thin light line on top
         R.rect(0, vh - 28, vw, 28, R.alpha(0x70000000, o));
@@ -855,6 +875,17 @@ public class FzMainMenu extends FzScreen {
 
     @Override
     protected void click(int mx, int my, int button) {
+        if ((button == 0 || button == 1) && Ui.inside(mx, my, themeX(), quitY(), themeW(), 20)) {
+            dev.fzkc.fzhud.config.ChoiceSetting t = dev.fzkc.fzhud.Modules.uiTheme;
+            int n = t.options.length;
+            // "custom" is skipped here: it only means "changed by hand"
+            int i = t.index;
+            do { i = (i + (button == 0 ? 1 : n - 1)) % n; } while (i == 0);
+            t.index = i;
+            Themes.apply(i);
+            dev.fzkc.fzhud.Config.save();
+            return;
+        }
         if (button != 0) return;
         if (clickFavourite(mx, my)) return;
         if (Ui.inside(mx, my, colX(), rowY(0), BW, BH)) {

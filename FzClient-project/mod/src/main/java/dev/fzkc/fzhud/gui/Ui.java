@@ -23,8 +23,8 @@ public final class Ui {
     public static int MUTED = 0xFF8FA5AA;
 
     // dashboard (light, flat) palette
-    public static final int FLAT_BG = 0xFFF3F5F8, FLAT_SIDE = 0xFFE7EBF0, FLAT_CARD = 0xFFFFFFFF,
-            FLAT_BORDER = 0xFFDCE2E8, FLAT_TEXT = 0xFF2C3A41, FLAT_MUTED = 0xFF7A8992;
+    public static final int FLAT_BG = 0xFFEEF1F5, FLAT_SIDE = 0xFFE2E7ED, FLAT_CARD = 0xFFFFFFFF,
+            FLAT_BORDER = 0xFFC9D2DB, FLAT_TEXT = 0xFF1B252B, FLAT_MUTED = 0xFF55656F;
 
     /** True with the "ダッシュボード" style: light panels, flat coloured widgets, dark text. */
     public static boolean flat() {
@@ -43,9 +43,34 @@ public final class Ui {
         accent = 0xFF000000 | (R.solid(dev.fzkc.fzhud.Modules.uiAccent.get()) & 0xFFFFFF);
         text = 0xFF000000 | (R.solid(dev.fzkc.fzhud.Modules.uiTextColor.get()) & 0xFFFFFF);
         boolean f = flat();
-        if (f && (text & 0xFFFFFF) == 0xFFFFFF) text = FLAT_TEXT;   // white (the default) is unreadable on light panels
+        if (f) {
+            // light panels: a light text colour (white, the default, or any pale one) is unreadable, and a pale accent
+            // (the cyan default) is too faint for titles and links: those are made dark enough here
+            if (luma(text) > 0.55f) text = FLAT_TEXT;
+            for (int i = 0; i < 6 && luma(accent) > 0.5f; i++) accent = R.lerpColor(accent, 0xFF000000, 0.18f) | 0xFF000000;
+        }
         MUTED = f ? FLAT_MUTED : 0xFF8FA5AA;
         LINE = f ? FLAT_BORDER : 0x30FFFFFF;
+    }
+
+    /**
+     * The text and accent exactly as set, without the darkening for light panels: for screens that draw on the
+     * game picture (the title screen) even while the dashboard style is on.
+     */
+    public static void refreshRaw() {
+        accent = 0xFF000000 | (R.solid(dev.fzkc.fzhud.Modules.uiAccent.get()) & 0xFFFFFF);
+        text = 0xFF000000 | (R.solid(dev.fzkc.fzhud.Modules.uiTextColor.get()) & 0xFFFFFF);
+        if (luma(text) < 0.45f) text = 0xFFFFFFFF;
+    }
+
+    /** Text for a light dashboard button (its own colour when that is dark enough). */
+    public static int buttonText() {
+        return flat() && luma(text) > 0.55f ? FLAT_TEXT : text;
+    }
+
+    /** Perceived brightness 0..1 of an RGB colour. */
+    public static float luma(int rgb) {
+        return (0.299f * (rgb >> 16 & 255) + 0.587f * (rgb >> 8 & 255) + 0.114f * (rgb & 255)) / 255f;
     }
 
     /** Pie / ring piece from fraction {@code from} to {@code to} (0 = top, clockwise), for the dashboard. */
@@ -152,8 +177,9 @@ public final class Ui {
 
     public static void button(float x, float y, float w, float h, String label, float hover, float alpha) {
         if (flat()) {
-            R.rounded(x, y, w, h, rad(4f), R.alpha(R.lerpColor(0xFFE4E9EE, 0xFFD3DCE4, hover), alpha));
-            R.textCentered(label, x + w / 2f, y + (h - 8) / 2f, R.alpha(text, alpha));
+            R.rounded(x, y, w, h, rad(4f), R.alpha(R.lerpColor(0xFFFFFFFF, 0xFFE8EEF4, hover), alpha));
+            R.roundedOutline(x, y, w, h, rad(4f), 1f, R.alpha(R.lerpColor(FLAT_BORDER, accent, hover), alpha));
+            R.textCentered(label, x + w / 2f, y + (h - 8) / 2f, R.alpha(buttonText(), alpha));
             return;
         }
         if (Glass.on()) {
@@ -184,7 +210,7 @@ public final class Ui {
     /** Pill switch 24x12. t = 0..1 animated state. */
     public static void toggle(float x, float y, float t, float alpha) {
         if (flat()) {
-            R.rounded(x, y, 24, 12, rad(6f), R.alpha(R.lerpColor(0xFFC3CCD4, accent, t), alpha));
+            R.rounded(x, y, 24, 12, rad(6f), R.alpha(R.lerpColor(0xFFAEB9C3, accent, t), alpha));
             R.rounded(x + 2 + t * 12, y + 2, 8, 8, rad(4f), R.alpha(0xFFFFFFFF, alpha));
             return;
         }
@@ -247,7 +273,7 @@ public final class Ui {
         boxFrame(x, y, w, h, focused, alpha);
         float ty = y + (h - 8) / 2f;
         if ((text == null || text.isEmpty()) && !focused) {
-            R.text(placeholder, x + 5, ty, R.alpha(0x70FFFFFF, alpha));
+            R.text(placeholder, x + 5, ty, R.alpha(flat() ? MUTED : 0x70FFFFFF, alpha));
             return;
         }
         String vis = text == null ? "" : text;
@@ -266,7 +292,7 @@ public final class Ui {
         float ty = y + (h - 8) / 2f;
         String t = text == null ? "" : text;
         if (t.isEmpty() && !focused) {
-            R.text(placeholder, x + 5, ty, R.alpha(0x70FFFFFF, alpha));
+            R.text(placeholder, x + 5, ty, R.alpha(flat() ? MUTED : 0x70FFFFFF, alpha));
             return;
         }
         cursor = Math.max(0, Math.min(cursor, t.length()));
@@ -357,8 +383,9 @@ public final class Ui {
      */
     public static void card(float x, float y, float w, float h, float hover, float accentT, float alpha) {
         if (flat()) {
-            R.rounded(x, y, w, h, rad(4f), R.alpha(R.lerpColor(FLAT_CARD, 0xFFF4F8FB, hover), alpha));
-            R.roundedOutline(x, y, w, h, rad(4f), 1f, R.alpha(R.lerpColor(FLAT_BORDER, accentA(0xC0), hover), alpha));
+            R.rounded(x, y + 1, w, h, rad(4f), R.alpha(0x14000000, alpha));   // a soft shadow under each card
+            R.rounded(x, y, w, h, rad(4f), R.alpha(R.lerpColor(FLAT_CARD, 0xFFF6F9FC, hover), alpha));
+            R.roundedOutline(x, y, w, h, rad(4f), 1f, R.alpha(R.lerpColor(FLAT_BORDER, accent, hover), alpha));
             return;
         }
         if (Glass.on()) {

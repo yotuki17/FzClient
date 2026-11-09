@@ -23,6 +23,22 @@ function el(tag, cls, html) {
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const face = uuid => `https://mc-heads.net/avatar/${uuid}/64`;
 
+// ---------------------------------------------------------------- theme (home screen picker)
+// <html data-theme> switches the colour variables in style.css. Kept in the settings, and in localStorage too so
+// the right colours are there from the first frame.
+function applyTheme(name) {
+  const k = name && name !== 'dark' ? name : '';
+  if (k) document.documentElement.dataset.theme = k; else delete document.documentElement.dataset.theme;
+  document.querySelectorAll('#themes button').forEach(b => b.classList.toggle('on', b.dataset.theme === (name || 'dark')));
+}
+try { applyTheme(localStorage.getItem('theme') || 'dark'); } catch { applyTheme('dark'); }
+fz.settings.get().then(st => { if (st.launcherTheme) { applyTheme(st.launcherTheme); try { localStorage.setItem('theme', st.launcherTheme); } catch { /* private */ } } });
+document.querySelectorAll('#themes button').forEach(b => b.onclick = () => {
+  applyTheme(b.dataset.theme);
+  try { localStorage.setItem('theme', b.dataset.theme); } catch { /* private */ }
+  fz.settings.set({ launcherTheme: b.dataset.theme });
+});
+
 // ---------------------------------------------------------------- window + navigation
 $('wMin').onclick = () => fz.win.min();
 $('wMax').onclick = () => fz.win.max();

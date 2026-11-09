@@ -349,7 +349,7 @@ public class ModsScreen extends FzScreen {
         if (maxScroll > 0) {
             float barH = Math.max(20, ch() * ch() / content);
             float barY = y0() + (ch() - barH) * (sc / maxScroll);
-            R.rounded(x0() + cw() + 7, barY, 3, barH, 1.5f, R.alpha(0x70FFFFFF, o));
+            R.rounded(x0() + cw() + 7, barY, 3, barH, 1.5f, R.alpha(Ui.flat() ? 0x50000000 : 0x70FFFFFF, o));
         }
         Decoration.corner(vw, vh, o);
     }

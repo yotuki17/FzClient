@@ -22,6 +22,8 @@ import org.lwjgl.opengl.GL11;
 public final class PlayerPreview {
     private static final ModelPlayer WIDE = new ModelPlayer(0f, false), SLIM = new ModelPlayer(0f, true);
     private static volatile ResourceLocation skin;
+    /** The account's own Mojang cape, shown when no FzClient cape is worn. */
+    private static volatile ResourceLocation ownCape;
     private static volatile boolean slim, asked;
 
     private PlayerPreview() {}
@@ -31,8 +33,9 @@ public final class PlayerPreview {
         if (mc.thePlayer != null) {
             skin = mc.thePlayer.getLocationSkin();
             slim = "slim".equals(mc.thePlayer.getSkinType());
-            return;
         }
+        // the account's textures are looked up once in any case: the Mojang cape comes only from there (in a world
+        // getLocationCape() would answer with the FzClient cape while one is worn)
         if (asked || mc.getSession() == null) return;
         asked = true;
         final GameProfile profile = mc.getSession().getProfile();
@@ -50,7 +53,11 @@ public final class PlayerPreview {
                             mc.getSkinManager().loadProfileTextures(full, new SkinManager.SkinAvailableCallback() {
                                 @Override
                                 public void skinAvailable(MinecraftProfileTexture.Type type, ResourceLocation location, MinecraftProfileTexture texture) {
-                                    if (type != MinecraftProfileTexture.Type.SKIN) return;
+                                    if (type == MinecraftProfileTexture.Type.CAPE) {
+                                        ownCape = location;
+                                        return;
+                                    }
+                                    if (type != MinecraftProfileTexture.Type.SKIN || Minecraft.getMinecraft().thePlayer != null) return;
                                     slim = "slim".equals(texture.getMetadata("model"));
                                     skin = location;
                                 }
@@ -79,7 +86,7 @@ public final class PlayerPreview {
             GameProfile p = mc.getSession() == null ? null : mc.getSession().getProfile();
             s = p != null && p.getId() != null ? DefaultPlayerSkin.getDefaultSkin(p.getId()) : DefaultPlayerSkin.getDefaultSkinLegacy();
         }
-        drawSkin(s, slim, x, footY, size, yaw, cape, age);
+        drawSkin(s, slim, x, footY, size, yaw, cape != null ? cape : ownCape, age);
     }
 
     /** Same as {@link #draw}, with any skin (another player's). */
