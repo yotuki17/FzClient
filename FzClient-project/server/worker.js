@@ -12,6 +12,8 @@
 //   POST /cos/admin/remove {uuid} + header x-admin-key: ADMIN_KEY secret -> takes a player's custom cape down
 //   POST /preset/put {code}                    -> {id} a 6 character id for a long FzClient preset code
 //   POST /preset/get {id}                      -> {code}
+//   Identity check: Mojang refuses requests from Cloudflare (403), so with the secrets VERIFY_URL (the Deno Deploy
+//        address of verify-deno.ts) and VERIFY_SECRET set, the check is done there and its signed answer used.
 //   GET  /cf/v1/...                             -> CurseForge API for the launcher (Minecraft mods only).
 //        The CurseForge API key stays here as the secret CF_API_KEY, so it is never inside the launcher.
 
@@ -107,8 +109,9 @@ async function sha1(bytes) {
  * Mojang says this account did a session "join" with this serverId just now: the request really is from them.
  * {id} when proven, else {status}: Mojang's HTTP status (204 = no such join, others = Mojang could not answer).
  */
-async function verify(name, serverId) {
+async function verify(env, name, serverId) {
   if (!/^[A-Za-z0-9_]{1,16}$/.test(String(name || '')) || !/^-?[0-9a-f]{1,64}$/.test(String(serverId || ''))) return { status: 0 };
+  if (env.VERIFY_URL && env.VERIFY_SECRET) return verifyRemote(env, name, serverId);
   const url = 'https://sessionserver.mojang.com/session/minecraft/hasJoined?username=' + encodeURIComponent(name)
     + '&serverId=' + encodeURIComponent(serverId);
   // Mojang sometimes turns Cloudflare away (403): ask a few different ways, report every answer.
@@ -138,6 +141,36 @@ async function verify(name, serverId) {
   return { status: statuses };
 }
 
+/**
+ * The same check done by verify-deno.ts on Deno Deploy (Mojang turns Cloudflare away). Its answer is signed with
+ * HMAC-SHA256 and the shared secret VERIFY_SECRET, so nobody in between can fake it; answers older than a minute
+ * are refused.
+ */
+async function verifyRemote(env, name, serverId) {
+  let p;
+  try {
+    const base = String(env.VERIFY_URL).trim().replace(/\/+$/, '');
+    const res = await fetch(base + '/?username=' + encodeURIComponent(name) + '&serverId=' + encodeURIComponent(serverId));
+    if (res.status !== 200) return { status: 'verifier ' + res.status };
+    p = await res.json();
+  } catch {
+    return { status: 'verifier unreachable' };
+  }
+  const id = typeof p.id === 'string' ? p.id : '';
+  const status = Number(p.status);
+  const ts = Number(p.ts);
+  if (!Number.isFinite(ts) || Math.abs(Date.now() - ts) > 60000) return { status: 'verifier stale' };
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(env.VERIFY_SECRET).trim()),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+  const sig = String(p.sig || '');
+  if (!/^[0-9a-f]{64}$/.test(sig)) return { status: 'verifier bad signature' };
+  const sigBytes = new Uint8Array(sig.match(/../g).map(h => parseInt(h, 16)));
+  const ok = await crypto.subtle.verify('HMAC', key, sigBytes, new TextEncoder().encode(`${id}|${name}|${serverId}|${status}|${ts}`));
+  if (!ok) return { status: 'verifier bad signature' };
+  const clean_id = clean(id);
+  return clean_id ? { id: clean_id, status } : { status };
+}
+
 async function cosmetics(req, env, url) {
   await tables(env);
   const now = Date.now();
@@ -165,7 +198,7 @@ async function cosmetics(req, env, url) {
   }
 
   if (url.pathname === '/cos/set') {
-    const v = await verify(body.name, body.serverId);
+    const v = await verify(env, body.name, body.serverId);
     const id = v.id;
     if (!id) return json({ error: 'not verified', mojang: v.status }, 403);
     const old = await env.DB.prepare('SELECT data, updated FROM cosmetics WHERE uuid = ?1').bind(id).first();
