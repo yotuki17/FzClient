@@ -347,11 +347,14 @@ public final class Modules {
     public static final SliderSetting kbFov = overlays.add(new SliderSetting("kbfov", "被弾時のFOV（＋広げる/－狭める/0オフ）", -30, 30, 1, 10, "°"));
     public static final SliderSetting kbFovTime = overlays.add(new SliderSetting("kbfovtime", "広げている時間", 0.2, 1.5, 0.05, 0.5, "秒"));
 
-    // ---- Auto GG (Hypixel)
+    // ---- Auto GG (Hypixel: every game with an end summary — Bed Wars, Duels, Sky Wars...)
     public static final Module autoGG = new Module("autogg", "Auto GG", Category.SERVER,
             "ゲーム終了時に自動でgg", false);
     public static final TextSetting autoGGText = autoGG.add(new TextSetting("text", "送る言葉", "gg", 40));
-    public static final SliderSetting autoGGDelay = autoGG.add(new SliderSetting("delay", "送るまでの時間", 0, 5, 0.25, 1, "秒"));
+    public static final SliderSetting autoGGDelay = autoGG.add(new SliderSetting("delay", "送るまでの時間", 0, 5, 0.05, 1, "秒"));
+    public static final BoolSetting autoGG2 = autoGG.add(new BoolSetting("second", "2つ目も送る", false));
+    public static final TextSetting autoGGText2 = autoGG.add(new TextSetting("text2", "2つ目の言葉", "gg wp", 40));
+    public static final SliderSetting autoGGDelay2 = autoGG.add(new SliderSetting("delay2", "1つ目から2つ目までの時間", 0, 5, 0.05, 0.5, "秒"));
     public static final BoolSetting autoGGHypixelOnly = autoGG.add(new BoolSetting("hypixel", "Hypixelでだけ動かす", true));
 
     // ---- Background FPS limit

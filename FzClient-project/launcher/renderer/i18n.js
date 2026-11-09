@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '修正：Auto GG が Bed Wars 以外（Duels など）で動かなかった問題。2つ目のメッセージを送る設定（1つ目からの時間は 0.05 秒刻み）を追加': 'Fixed: Auto GG did not work outside Bed Wars (Duels and others). Added an optional second message with its own delay (in 0.05 s steps)',
   '修正：パーティチャットの統計が試合中・待機ロビーでは1人1回しか出なかったのを、毎回メッセージの前に付くように': 'Fixed: party chat stats now go in front of every message (in games and waiting lobbies they only showed once per player)',
   '修正：全画面を切り替えた時などに録画が一度落ちて、重いエンコーダーに切り替わってしまうことがある問題（ゲーム終了後に録画が再開するのも修正）': 'Fixed: recording could crash once when switching fullscreen and then fall back to a heavier encoder (it also no longer restarts after the game closes)',
   '改善：シェーダーを入れているとリプレイ録画のせいでゲームがカクつく問題を軽減（録画の優先度を下げ、GPU の負担が一番軽い設定で録画するように）': 'Improved: less stutter from replay recording with shaders on (the recorder now runs at lower priority with the lightest GPU encoder settings)',

@@ -327,9 +327,11 @@ public final class Extras {
 
     private static final String[] GAME_END = {
             "1st Killer - ", "1st Place - ", "Winner: ", "Winners: ", " won the game!", "Winning Team: ",
-            "Top Survivors", "Reward Summary", "1st - ", "YOUR STATS"
+            "Top Survivors", "Reward Summary", "1st - ", "YOUR STATS",
+            // Duels ("[MVP++] Fzkc WINNER!  [VIP] Name"), team Duels and others
+            " WINNER!", "Most Kills - ", "Winner - ", "Winning Team - "
     };
-    private static long ggAt, lastGG;
+    private static long ggAt, gg2At, lastGG;
 
     private static void autoGG(String plain) {
         if (!Modules.autoGG.enabled || ggAt != 0) return;
@@ -358,6 +360,14 @@ public final class Extras {
         lastGG = System.currentTimeMillis();
         String text = Modules.autoGGText.get().trim();
         if (mc.thePlayer != null && !text.isEmpty()) mc.thePlayer.sendChatMessage("/ac " + text);
+        if (Modules.autoGG2.get()) gg2At = lastGG + Math.max(50L, (long) (Modules.autoGGDelay2.get() * 1000f));
+    }
+
+    private static void gg2Tick(Minecraft mc) {
+        if (gg2At == 0 || System.currentTimeMillis() < gg2At) return;
+        gg2At = 0;
+        String text = Modules.autoGGText2.get().trim();
+        if (mc.thePlayer != null && !text.isEmpty()) mc.thePlayer.sendChatMessage("/ac " + text);
     }
 
     // ============================================================ ticks
@@ -368,6 +378,7 @@ public final class Extras {
         Minecraft mc = Minecraft.getMinecraft();
         combatTick(mc);
         ggTick(mc);
+        gg2Tick(mc);
     }
 
     @SubscribeEvent
