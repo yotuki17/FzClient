@@ -51,9 +51,11 @@ public abstract class MixinModelBiped {
 
         // Blocking pose (you see this on other players and on yourself in F5)
         if (Modules.animBlockPose.get() && player.isBlocking() && swing <= 0F) {
-            self.bipedRightArm.rotateAngleX -= 0.3F;
+            // depth 0 = the old shallow pose, ~0.55 = vanilla 1.8's sideways angle, 1 = sword well across the body
+            float d = Modules.animBlockDepth.get();
+            self.bipedRightArm.rotateAngleX -= 0.3F + 0.25F * d;
             self.bipedLeftArm.rotateAngleX -= 0.3F;
-            self.bipedRightArm.rotateAngleY = -0.25F;
+            self.bipedRightArm.rotateAngleY = -0.25F - 0.55F * d;
             self.bipedLeftArm.rotateAngleY = 0.25F;
         }
     }

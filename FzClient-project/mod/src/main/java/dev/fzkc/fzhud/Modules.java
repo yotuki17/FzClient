@@ -53,6 +53,7 @@ public final class Modules {
     public static final BoolSetting rightPriority = animations.add(new BoolSetting("rightprio", "左クリック中も右クリックを優先", true));
     public static final BoolSetting animBlockHitBlock = animations.add(new BoolSetting("blockhitblock", "ガード中にブロックを叩くと腕を振る", true));
     public static final BoolSetting animBlockPose = animations.add(new BoolSetting("blockpose", "ガード中の腕の形を補正（三人称）", true));
+    public static final SliderSetting animBlockDepth = animations.add(new SliderSetting("blockdepth", "ガードの深さ（三人称）", 0.0, 1.0, 0.05, 0.7, ""));
     public static final SliderSetting animOtherSwing = animations.add(new SliderSetting("otherswing", "他プレイヤーの腕振りの大きさ", 0.1, 1.0, 0.05, 0.3, "x"));
     public static final BoolSetting animEat = animations.add(new BoolSetting("eat", "食べる・飲む時も腕を振る", true));
     public static final BoolSetting animBow = animations.add(new BoolSetting("bow", "弓を引く時も腕を振る", true));
