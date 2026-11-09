@@ -80,7 +80,10 @@ public final class StatsApi {
 
     /** True when the cached copy should be replaced: too old, or from a weaker source than the one in use now. */
     private static boolean stale(PlayerData d, long now) {
-        if (d == null || now - d.fetchedAt > FRESH_MS || d.fetchedAt < refreshedAt) return true;
+        if (d == null || d.fetchedAt < refreshedAt) return true;
+        // a fresh copy fetched with a key because Bordic's was old: kept for the same 30 minutes
+        long fresh = !"Bordic".equals(d.source) && effective(false) == Source.BORDIC ? BORDIC_MAX_AGE : FRESH_MS;
+        if (now - d.fetchedAt > fresh) return true;
         return Source.rankOf(d.source) < effective(false).rank() && now - d.fetchedAt > 60_000L;
     }
 
@@ -183,6 +186,7 @@ public final class StatsApi {
         bedlifyPausedUntil = 0;
         urchinPausedUntil = 0;
         urchinProblem = null;
+        toppedAt.clear();
         for (Entry e : CACHE.values()) {
             e.failedAt = 0;
             e.error = null;
@@ -418,8 +422,60 @@ public final class StatsApi {
             } catch (Exception ignored) {
             }
         }
+        if ("Bordic".equals(source) && !d.nicked) {
+            PlayerData old = e.data;
+            boolean refetch = topUp(id, name, e, d);
+            if (refetch && old != null && !old.nicked && old.dataAt > d.dataAt) {
+                // Bordic still has the older copy and a fresh one is on its way: keep showing the newer numbers
+                // (failedAt holds the next Bordic request back for a while)
+                e.failedAt = System.currentTimeMillis();
+                e.error = null;
+                return;
+            }
+        }
         e.data = d;
         e.error = null;
         if (!d.nicked) History.record(d);
+    }
+
+    // ------------------------------------------------------------------ Bordic's copy too old: ask again with a key
+
+    /** Bordic keeps its copies up to a day; older than this, the player is fetched again with a key. */
+    private static final long BORDIC_MAX_AGE = 30 * 60_000L;
+    /** When each player was last fetched again that way (once per 30 minutes each). */
+    private static final Map<UUID, Long> toppedAt = new ConcurrentHashMap<>();
+    /** Times of the last such requests: at most 30 a minute, well inside a personal Hypixel key's 300 per 5 minutes. */
+    private static final java.util.ArrayDeque<Long> topUps = new java.util.ArrayDeque<>();
+
+    private static synchronized boolean topUpBudget(long now) {
+        while (!topUps.isEmpty() && now - topUps.peekFirst() > 60_000L) topUps.pollFirst();
+        if (topUps.size() >= 30) return false;
+        topUps.addLast(now);
+        return true;
+    }
+
+    /**
+     * Bordic answered with a copy older than 30 minutes: fetch this player again through the Hypixel API key, else
+     * the Urchin (Coral) key, when one is set. True when that request was sent.
+     */
+    private static boolean topUp(UUID id, String name, Entry e, PlayerData d) {
+        if (!Modules.statsBordicFresh.get()) return false;
+        long now = System.currentTimeMillis();
+        if (now - d.dataAt < BORDIC_MAX_AGE) return false;
+        Source s = useHypixel() ? Source.HYPIXEL : useUrchin() ? Source.URCHIN : null;
+        if (s == null) return false;
+        Long last = toppedAt.get(id);
+        if (last != null && now - last < BORDIC_MAX_AGE) return false;
+        if (queued.get() >= MAX_QUEUED || !topUpBudget(now)) return false;
+        toppedAt.put(id, now);
+        queued.incrementAndGet();
+        POOL.execute(() -> {
+            try {
+                load(id, name, e, s);
+            } finally {
+                queued.decrementAndGet();
+            }
+        });
+        return true;
     }
 }

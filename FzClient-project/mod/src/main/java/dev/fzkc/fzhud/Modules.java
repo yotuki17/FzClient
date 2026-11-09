@@ -216,6 +216,7 @@ public final class Modules {
             "Hypixel API（キー必要）", "Bordic", "Bedlify", "Urchin（Coral キー）"));
     public static final ChoiceSetting statsLobbySource = stats.add(new ChoiceSetting("lobbysource", "ロビー（チャット・タブ）", 1,
             "Hypixel API（キー必要）", "Bordic", "Bedlify", "Urchin（Coral キー）"));
+    public static final BoolSetting statsBordicFresh = stats.add(new BoolSetting("bordicfresh", "Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで取り直す", true));
     public static final HeaderSetting statsHeadKeys = stats.add(new HeaderSetting("h_keys", "キー（空なら Mellow の設定から自動で読み込み）"));
     public static final TextSetting statsHypixelKey = stats.add(new TextSetting("hypixelkey", "Hypixel API キー", "", 64).secret());
     public static final TextSetting denickAuroraKey = stats.add(new TextSetting("aurorakey", "Aurora API キー（Bed Wars の 過去24時間・7日・30日とデニック）", "", 128).secret());
