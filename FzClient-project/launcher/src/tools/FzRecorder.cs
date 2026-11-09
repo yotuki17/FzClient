@@ -140,8 +140,7 @@ static class FzRecorder {
             Console.Error.WriteLine("usage: FzRecorder <game pid> <log file> <ffmpeg.exe> <ffmpeg arguments...>");
             return 2;
         }
-        log = new StreamWriter(args[1], false, new UTF8Encoding(false));
-        log.AutoFlush = true;
+        log = OpenLog(args[1]);
         Process ffmpeg = null;
         try {
             Process game = Process.GetProcessById(pid);
@@ -320,6 +319,27 @@ static class FzRecorder {
 
     static void Check(int hr, string what) {
         if (hr < 0) throw new Exception(what + " failed (0x" + hr.ToString("X8") + ")");
+    }
+
+    /**
+     * The log file, shared so the launcher can read it while we write. A recorder that is still stopping may hold
+     * it for a moment (the game went fullscreen and the capture started again): wait a little, then do without it.
+     * (Opening it plainly threw here, and the launcher took the quick exit for an encoder this PC cannot use.)
+     */
+    static StreamWriter OpenLog(string file) {
+        for (int i = 0; i < 30; i++) {
+            try {
+                FileStream fs = new FileStream(file, FileMode.Create, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+                StreamWriter w = new StreamWriter(fs, new UTF8Encoding(false));
+                w.AutoFlush = true;
+                return w;
+            } catch (IOException) {
+                Thread.Sleep(100);
+            } catch (UnauthorizedAccessException) {
+                Thread.Sleep(100);
+            }
+        }
+        return new StreamWriter(Stream.Null);
     }
 
     static void Log(string text) {

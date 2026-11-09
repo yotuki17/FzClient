@@ -230,7 +230,8 @@ public class ChatStats {
         UUID id = idOf(name);
         if (warn && id != null) watchTags(id, name);
         if (!stats) return;
-        if (!Stats.lobby) {
+        // party chat: the stats go in front of every message, everywhere (the party is few people, their stats stay loaded)
+        if (!Stats.lobby && !party) {
             // waiting lobby / game: the message stays as it is, the stats follow on their own line
             if (mc.theWorld != lineWorld) {
                 lineWorld = mc.theWorld;

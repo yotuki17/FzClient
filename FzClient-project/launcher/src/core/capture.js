@@ -127,7 +127,7 @@ class Capture {
     this.fullscreen = fs;
     if (this.running && this.options().area !== 'monitor') {
       this.stop();
-      setTimeout(() => this.start(), 600);   // the new window needs a moment
+      setTimeout(() => this.start(), 600);   // the new window needs a moment (the new helper waits for the old one to let go of ffmpeg.log)
     }
   }
 
@@ -209,7 +209,9 @@ class Capture {
     if (this.helper !== child) return;   // stopped on purpose
     this.helper = null;
     const o = this.options();
-    const want = this.recording || o.replay;
+    // the game went away (the helper stops by itself then): nothing to start again
+    const gameGone = (() => { try { process.kill(this.game.pid, 0); return false; } catch (e) { return e.code !== 'EPERM'; } })();
+    const want = (this.recording || o.replay) && !gameGone && !this.closed;
     this.log(`[capture] stopped by itself (${code}) after ${Date.now() - this.startedAt} ms: ${this.lastLogLine()}`);
     if (!want) { this.changed(); return; }
     if (Date.now() - this.startedAt < 5000 && this.encoder < ENCODERS.length - 1) {
