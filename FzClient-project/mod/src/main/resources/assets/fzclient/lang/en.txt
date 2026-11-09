@@ -1073,3 +1073,4 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 カスタム	Custom
 ホワイト	White
 カジュアル	Casual
+クリックでコスメ・ドラッグで回す	Click for cosmetics, drag to turn

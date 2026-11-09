@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '修正：コスメ画面のキャラが FPS が高いと速く回りすぎていた問題（ゆっくり一定の速さに）。タイトル画面のキャラはドラッグした時だけ回るように（クリックでコスメ）': 'Fixed: the player on the cosmetics screen spun too fast at high FPS (now a slow, steady turn). The player on the title screen only turns while you drag it (a click opens the cosmetics)',
   'NEW：ランチャーのホーム画面（左下）とタイトル画面（右上）でテーマを切り替えられるように（ダーク・ホワイト・カジュアル・ネオン・サクラ・オーシャン・ミッドナイト）': 'NEW: switch the theme on the launcher home screen (bottom left) and on the title screen (top right): Dark, White, Casual, Neon, Sakura, Ocean, Midnight',
   '改善：ダッシュボード（ホワイト）の見た目を読みやすく（文字とアクセント色を自動で濃く、ボタンとカードに枠）。修正：スキンのプレビューに自分のマント（Mojang）が映っていなかった問題': 'Improved: the dashboard (White) look is easier to read (text and accent darkened automatically, outlined buttons and cards). Fixed: your own Mojang cape was missing in the skin previews',
   'NEW：クライアント設定の UI に「テーマ」。ダーク・ホワイト・カジュアル・ネオン・サクラ・オーシャン・ミッドナイトから選ぶと、メニューの見た目と色がまとめて変わります': 'NEW: Theme in the UI client settings. Pick Dark, White, Casual, Neon, Sakura, Ocean or Midnight to change the menu style and colors at once',

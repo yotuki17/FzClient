@@ -160,6 +160,9 @@ public class FzMainMenu extends FzScreen {
     private long skinStep;
     private int skinTick;
     private float skinYaw = -25f;
+    /** Turning the player by dragging it (the only way it turns); a press without moving opens the cosmetics. */
+    private float skinDragX = Float.NaN, skinDragFrom;
+    private boolean skinDragged;
 
     private float skinTop() { return galY() + galH() + 10; }
     private float skinFoot() { return vh - 40; }
@@ -195,9 +198,7 @@ public class FzMainMenu extends FzScreen {
         blob(x, foot - s, s * 1.4f, Ui.accent & 0xFFFFFF, (int) ((20 + 34 * h) * o));
         R.rounded(x - s * 0.45f, foot - 1.5f, s * 0.9f, 3f, 1.5f, R.alpha(0x50000000, o));
 
-        // turns a little toward the mouse, with a slow sway when it is far away
-        float want = MathHelper.clamp_float((mxs - x) * 0.18f, -55f, 55f) - 18f + MathHelper.sin((now - start) / 2600f) * 6f;
-        skinYaw += (want - skinYaw) * 0.06f;
+        // stands still; only dragging it turns it (see drag())
         float age = (now % 1000000L) / 50f;
         ResourceLocation cape = mine.cape.isEmpty() ? null : dev.fzkc.fzhud.cosmetic.Cosmetics.capeTexture(mine.cape);
         dev.fzkc.fzhud.cosmetic.AuraFx.draw2D(skinFx, x, foot, s, 0f);
@@ -205,7 +206,7 @@ public class FzMainMenu extends FzScreen {
         dev.fzkc.fzhud.cosmetic.HaloFx.draw2D(mine.halo, x, foot, s);
 
         if (h > 0.01f) {
-            String hint = dev.fzkc.fzhud.util.Lang.t("クリックでコスメティック");
+            String hint = dev.fzkc.fzhud.util.Lang.t("クリックでコスメ・ドラッグで回す");
             R.textCentered(hint, x, foot + 4, R.alpha(R.alpha(0xFF000000 | MAGENTA, h), o));
         }
     }
@@ -899,7 +900,10 @@ public class FzMainMenu extends FzScreen {
         } else if (clickGallery(mx, my)) {
             return;
         } else if (overSkin(mx, my)) {
-            mc.displayGuiScreen(new CosmeticsScreen(this));
+            // a drag turns the player, a plain click (on release) opens the cosmetics
+            skinDragX = mx;
+            skinDragFrom = mx;
+            skinDragged = false;
         } else if (Ui.inside(mx, my, smallX(0), smallY(), smallW(), SBH)) {
             mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings));
         } else if (Ui.inside(mx, my, smallX(1), smallY(), smallW(), SBH)) {
@@ -911,6 +915,22 @@ public class FzMainMenu extends FzScreen {
         } else if (mc.getSession() != null && Ui.inside(mx, my, accountX(), accountY(), accountW(mc.getSession().getUsername()), 19)) {
             mc.displayGuiScreen(new AccountScreen(this));
         }
+    }
+
+    @Override
+    protected void drag(int mx, int my) {
+        if (Float.isNaN(skinDragX)) return;
+        skinYaw += (mx - skinDragX) * 1.2f;
+        skinDragX = mx;
+        if (Math.abs(mx - skinDragFrom) > 3) skinDragged = true;
+    }
+
+    @Override
+    protected void release(int mx, int my) {
+        if (Float.isNaN(skinDragX)) return;
+        boolean open = !skinDragged && overSkin(mx, my);
+        skinDragX = Float.NaN;
+        if (open) mc.displayGuiScreen(new CosmeticsScreen(this));
     }
 
     @Override

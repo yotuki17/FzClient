@@ -48,6 +48,8 @@ public class CosmeticsScreen extends FzScreen {
     private long lastStep;
     private int fxTick;
     private float yaw = 200f, dragX = Float.NaN;
+    /** Last frame, for turning by time (by frame it spun faster the higher the FPS). */
+    private long spinAt;
     private long lastDrag;
 
     public CosmeticsScreen(GuiScreen parent) {
@@ -105,7 +107,10 @@ public class CosmeticsScreen extends FzScreen {
         // left: preview
         float lx = px() + 10, ly = py() + 10, lw = PW, lh = H() - 20;
         R.rounded(lx, ly, lw, lh, Ui.rad(8f), R.alpha(0x38000000, o));
-        if (Float.isNaN(dragX) && System.currentTimeMillis() - lastDrag > 2500L) yaw += 0.6f;
+        long nowNs = System.nanoTime();
+        float dt = spinAt == 0 ? 0f : Math.min(0.1f, (nowNs - spinAt) / 1e9f);
+        spinAt = nowNs;
+        if (Float.isNaN(dragX) && System.currentTimeMillis() - lastDrag > 2500L) yaw += 24f * dt;   // a slow turn: 24 degrees a second
         Equip mine = Cosmetics.mine();
         ResourceLocation cape = mine.cape.isEmpty() ? null : Cosmetics.capeTexture(mine.cape);
         float size = Math.min(lw * 0.36f, (lh - 40) / 2.3f);
@@ -298,7 +303,7 @@ public class CosmeticsScreen extends FzScreen {
     @Override
     protected void drag(int mx, int my) {
         if (Float.isNaN(dragX)) return;
-        yaw += (mx - dragX) * 2f;
+        yaw += (mx - dragX) * 1.2f;
         dragX = mx;
         lastDrag = System.currentTimeMillis();
     }
