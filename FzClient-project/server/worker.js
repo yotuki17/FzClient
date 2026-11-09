@@ -12,8 +12,8 @@
 //   POST /cos/admin/remove {uuid} + header x-admin-key: ADMIN_KEY secret -> takes a player's custom cape down
 //   POST /preset/put {code}                    -> {id} a 6 character id for a long FzClient preset code
 //   POST /preset/get {id}                      -> {code}
-//   Identity check: Mojang refuses requests from Cloudflare (403), so with the secrets VERIFY_URL (the Deno Deploy
-//        address of verify-deno.ts) and VERIFY_SECRET set, the check is done there and its signed answer used.
+//   Identity check: Mojang refuses requests from Cloudflare (403), so with the secrets VERIFY_URL (the Val Town
+//        address of verify.ts) and VERIFY_SECRET set, the check is done there and its signed answer used.
 //   GET  /cf/v1/...                             -> CurseForge API for the launcher (Minecraft mods only).
 //        The CurseForge API key stays here as the secret CF_API_KEY, so it is never inside the launcher.
 
@@ -142,7 +142,7 @@ async function verify(env, name, serverId) {
 }
 
 /**
- * The same check done by verify-deno.ts on Deno Deploy (Mojang turns Cloudflare away). Its answer is signed with
+ * The same check done by verify.ts on Val Town (Mojang turns Cloudflare away). Its answer is signed with
  * HMAC-SHA256 and the shared secret VERIFY_SECRET, so nobody in between can fake it; answers older than a minute
  * are refused.
  */

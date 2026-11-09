@@ -1,4 +1,4 @@
-// FzClient - Mojang identity check, run on Deno Deploy (Mojang turns Cloudflare Workers away).
+// FzClient - Mojang identity check, run on Val Town as an HTTP val (Mojang turns Cloudflare Workers away).
 //
 //   GET /?username=<name>&serverId=<hex>  -> {id, status, ts, sig}
 //
@@ -6,7 +6,7 @@
 // HMAC-SHA256 using the secret VERIFY_SECRET, which only this program and the FzClient Worker know. So the Worker
 // can trust the answer even though it passes through the internet. Stores nothing.
 //
-// Setup: Deno Deploy -> new project (playground) -> paste this file -> Settings -> Environment Variables ->
+// Setup: val.town -> New -> HTTP val -> paste this file -> Environment variables (val settings or account) ->
 // VERIFY_SECRET = the same value as the Worker secret VERIFY_SECRET.
 
 const SECRET = Deno.env.get("VERIFY_SECRET") ?? "";
@@ -17,7 +17,7 @@ const key = SECRET
 
 const hex = (b: ArrayBuffer) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
 
-Deno.serve(async (req) => {
+export default async function (req: Request): Promise<Response> {
   if (!key) return Response.json({ error: "VERIFY_SECRET is not set" }, { status: 503 });
   const u = new URL(req.url);
   const name = u.searchParams.get("username") ?? "";
@@ -47,4 +47,4 @@ Deno.serve(async (req) => {
   const ts = Date.now();
   const sig = hex(await crypto.subtle.sign("HMAC", await key, enc.encode(`${id}|${name}|${serverId}|${status}|${ts}`)));
   return Response.json({ id, status, ts, sig });
-});
+}
