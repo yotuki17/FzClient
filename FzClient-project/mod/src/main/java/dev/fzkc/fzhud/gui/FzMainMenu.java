@@ -100,6 +100,7 @@ public class FzMainMenu extends FzScreen {
             quickRow(q[0], q[1], q[2], q[3], QUICK_TINT[i], quickY(i), mx, my, o);
         }
         galleryCard(mx, my, o);
+        drawSkin(mx, my, o);
     }
 
     /** One slim row: a small tinted icon, the title, a muted note on the right; on hover it lights up and slides a little. */
@@ -150,6 +151,62 @@ public class FzMainMenu extends FzScreen {
                 R.triangleRight(cx + 0.5f, cy, 3f, R.alpha(0xFFFFFFFF, o));
             }
             R.roundedOutline(tx, ty - lift, tw, th, 3f, 1f, R.alpha(R.lerpColor(0x22FFFFFF, 0xFF000000 | GALLERY_TINT, th2), o));
+        }
+    }
+
+    // ---- your skin under the gallery: stands in the free corner, looks a little toward the mouse, wears your cosmetics
+    private final java.util.List<dev.fzkc.fzhud.cosmetic.AuraFx.P> skinFx = new java.util.ArrayList<>();
+    private final Random skinRnd = new Random();
+    private long skinStep;
+    private int skinTick;
+    private float skinYaw = -25f;
+
+    private float skinTop() { return galY() + galH() + 10; }
+    private float skinFoot() { return vh - 40; }
+    /** Screen units per block (the player is about 2.1 blocks with the hat), or 0 when there is no room. */
+    private float skinSize() {
+        float s = Math.min((skinFoot() - skinTop()) / 2.25f, 46f);
+        return s < 22f ? 0f : s;
+    }
+    private float skinX() { return quickX() + FAV_W / 2f; }
+    private boolean overSkin(int mx, int my) {
+        float s = skinSize();
+        return s > 0 && Ui.inside(mx, my, skinX() - s * 0.6f, skinFoot() - s * 2.2f, s * 1.2f, s * 2.2f + 4);
+    }
+
+    private void drawSkin(int mx, int my, float o) {
+        float s = skinSize();
+        if (s <= 0 || o < 0.6f) return;   // the model cannot fade: it comes in once the menu is mostly there
+        float x = skinX(), foot = skinFoot() + (1f - o) * 10f;
+        float h = anim("skin").update(overSkin(mx, my) ? 1 : 0);
+
+        // aura moves at game speed (20 steps a second)
+        dev.fzkc.fzhud.cosmetic.Equip mine = dev.fzkc.fzhud.cosmetic.Cosmetics.mine();
+        long now = System.currentTimeMillis();
+        if (skinStep == 0 || now - skinStep > 1000L) skinStep = now;
+        while (now - skinStep >= 50L) {
+            skinStep += 50L;
+            skinTick++;
+            dev.fzkc.fzhud.cosmetic.AuraFx.update(skinFx);
+            if (!mine.aura.isEmpty()) dev.fzkc.fzhud.cosmetic.AuraFx.emit(skinFx, mine.aura, 0, 0, 0, skinTick, skinRnd);
+        }
+
+        // a soft light behind the player (brighter on hover) and a shadow on the ground
+        blob(x, foot - s, s * 1.4f, Ui.accent & 0xFFFFFF, (int) ((20 + 34 * h) * o));
+        R.rounded(x - s * 0.45f, foot - 1.5f, s * 0.9f, 3f, 1.5f, R.alpha(0x50000000, o));
+
+        // turns a little toward the mouse, with a slow sway when it is far away
+        float want = MathHelper.clamp_float((mxs - x) * 0.18f, -55f, 55f) - 18f + MathHelper.sin((now - start) / 2600f) * 6f;
+        skinYaw += (want - skinYaw) * 0.06f;
+        float age = (now % 1000000L) / 50f;
+        ResourceLocation cape = mine.cape.isEmpty() ? null : dev.fzkc.fzhud.cosmetic.Cosmetics.capeTexture(mine.cape);
+        dev.fzkc.fzhud.cosmetic.AuraFx.draw2D(skinFx, x, foot, s, 0f);
+        dev.fzkc.fzhud.cosmetic.PlayerPreview.draw(x, foot, s, skinYaw, cape, age);
+        dev.fzkc.fzhud.cosmetic.HaloFx.draw2D(mine.halo, x, foot, s);
+
+        if (h > 0.01f) {
+            String hint = dev.fzkc.fzhud.util.Lang.t("クリックでコスメティック");
+            R.textCentered(hint, x, foot + 4, R.alpha(R.alpha(0xFF000000 | MAGENTA, h), o));
         }
     }
 
@@ -810,6 +867,8 @@ public class FzMainMenu extends FzScreen {
             mc.displayGuiScreen(new CosmeticsScreen(this));
         } else if (clickGallery(mx, my)) {
             return;
+        } else if (overSkin(mx, my)) {
+            mc.displayGuiScreen(new CosmeticsScreen(this));
         } else if (Ui.inside(mx, my, smallX(0), smallY(), smallW(), SBH)) {
             mc.displayGuiScreen(new GuiOptions(this, mc.gameSettings));
         } else if (Ui.inside(mx, my, smallX(1), smallY(), smallW(), SBH)) {
