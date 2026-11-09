@@ -109,20 +109,33 @@ async function sha1(bytes) {
  */
 async function verify(name, serverId) {
   if (!/^[A-Za-z0-9_]{1,16}$/.test(String(name || '')) || !/^-?[0-9a-f]{1,64}$/.test(String(serverId || ''))) return { status: 0 };
-  let res;
-  try {
-    res = await fetch('https://sessionserver.mojang.com/session/minecraft/hasJoined?username=' + encodeURIComponent(name)
-      + '&serverId=' + encodeURIComponent(serverId), { headers: { 'User-Agent': 'FzClient-Users' } });
-  } catch {
-    return { status: -1 };
+  const url = 'https://sessionserver.mojang.com/session/minecraft/hasJoined?username=' + encodeURIComponent(name)
+    + '&serverId=' + encodeURIComponent(serverId);
+  // Mojang sometimes turns Cloudflare away (403): ask a few different ways, report every answer.
+  const ways = [
+    { headers: { 'User-Agent': 'FzClient-Users' } },
+    { headers: { Accept: 'application/json' } },
+    { headers: { 'User-Agent': 'FzClient-Users (github.com/yotuki17/FzClient)', Accept: 'application/json' }, cf: { cacheTtl: 0, cacheEverything: false } },
+  ];
+  const statuses = [];
+  for (const w of ways) {
+    let res;
+    try {
+      res = await fetch(url, w);
+    } catch {
+      statuses.push(-1);
+      continue;
+    }
+    statuses.push(res.status);
+    if (res.status === 200) {
+      try {
+        const id = clean((await res.json()).id);
+        if (id) return { id, status: statuses };
+      } catch { /* try the next way */ }
+    }
+    if (res.status === 204) break;   // Mojang answered: no such join
   }
-  if (res.status !== 200) return { status: res.status };
-  try {
-    const id = clean((await res.json()).id);
-    return id ? { id } : { status: 200 };
-  } catch {
-    return { status: 200 };
-  }
+  return { status: statuses };
 }
 
 async function cosmetics(req, env, url) {
@@ -177,7 +190,7 @@ async function cosmetics(req, env, url) {
       .bind(id, JSON.stringify(data), now).run();
     // custom capes nobody uses any more
     await env.DB.prepare('DELETE FROM capes WHERE owner = ?1 AND hash != ?2').bind(id, data.capeHash || '').run();
-    return json({ ok: true, capeHash: data.capeHash || '' });
+    return json({ ok: true, capeHash: data.capeHash || '', mojang: v.status });
   }
 
   if (url.pathname === '/cos/admin/remove') {
