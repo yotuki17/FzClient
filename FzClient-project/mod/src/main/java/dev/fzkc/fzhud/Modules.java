@@ -397,6 +397,7 @@ public final class Modules {
     public static final BoolSetting optGlErrors = optimize.add(new BoolSetting("glerrors", "GL エラーの確認を省く（毎フレームの待ちが減る）", true));
     public static final SliderSetting optTileDist = optimize.add(new SliderSetting("tiledist", "チェスト・看板・頭などの描画距離（64 = いつも通り）", 8, 64, 4, 64, "m"));
     public static final SliderSetting optParticles = optimize.add(new SliderSetting("maxparticles", "パーティクルの上限（4000 = いつも通り）", 200, 4000, 200, 4000, ""));
+    public static final BoolSetting optNoParticles = optimize.add(new BoolSetting("noparticles", "パーティクルを完全に消す", false));
     public static final BoolSetting optNoGlint = optimize.add(new BoolSetting("noglint", "エンチャントの光沢を描かない", false));
 
     // ---- Bug fixes in the style of Patcher

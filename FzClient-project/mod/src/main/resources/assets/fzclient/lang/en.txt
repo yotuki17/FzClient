@@ -1074,3 +1074,4 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 ホワイト	White
 カジュアル	Casual
 クリックでコスメ・ドラッグで回す	Click for cosmetics, drag to turn
+パーティクルを完全に消す	Remove all particles
