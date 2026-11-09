@@ -83,14 +83,25 @@ public class TargetHud extends HudElement {
     public void onTick(net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent event) {
         if (event.phase != net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.theWorld == null || mc.thePlayer == null) return;
+        if (!enabled || mc.theWorld == null || mc.thePlayer == null) {
+            // switched off: nothing is watched (this used to scan every entity each tick even then)
+            if (!lastHurtTime.isEmpty()) lastHurtTime.clear();
+            if (!hurtAt.isEmpty()) hurtAt.clear();
+            pending = null;
+            return;
+        }
         long now = System.nanoTime();
         for (net.minecraft.entity.Entity e : mc.theWorld.loadedEntityList) {
             if (!(e instanceof EntityLivingBase) || e == mc.thePlayer) continue;
             EntityLivingBase l = (EntityLivingBase) e;
-            Integer before = lastHurtTime.get(l);
-            if (l.hurtTime > 0 && (before == null || l.hurtTime > before)) hurtAt.put(l, now);   // just got hurt
-            lastHurtTime.put(l, l.hurtTime);
+            int ht = l.hurtTime;
+            // only entities in their hurt animation are remembered (a lobby is full of ones that never are)
+            if (ht > 0) {
+                Integer before = lastHurtTime.put(l, ht);
+                if (before == null || ht > before) hurtAt.put(l, now);   // just got hurt
+            } else if (!lastHurtTime.isEmpty()) {
+                lastHurtTime.remove(l);
+            }
         }
         if (pending != null) {
             Long h = hurtAt.get(pending);
@@ -106,7 +117,7 @@ public class TargetHud extends HudElement {
     /** The arrow "ding": the player who was just hurt is the one your arrow hit. */
     @SubscribeEvent
     public void onSound(net.minecraftforge.client.event.sound.PlaySoundEvent event) {
-        if (!"random.successful_hit".equals(event.name)) return;
+        if (!enabled || !"random.successful_hit".equals(event.name)) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.theWorld == null || mc.thePlayer == null) return;
         long now = System.nanoTime();
@@ -133,7 +144,7 @@ public class TargetHud extends HudElement {
     /** Hypixel's "Name is on X HP!" after a bow hit names the target exactly. */
     @SubscribeEvent
     public void onChat(net.minecraftforge.client.event.ClientChatReceivedEvent event) {
-        if (event.type == 2) return;
+        if (event.type == 2 || !enabled) return;
         String plain = net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText()).trim();
         java.util.regex.Matcher m = BOW_HP.matcher(plain);
         if (!m.matches()) return;

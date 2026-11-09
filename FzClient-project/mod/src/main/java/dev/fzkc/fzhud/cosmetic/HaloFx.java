@@ -44,7 +44,10 @@ public final class HaloFx {
         double cz = v.lastTickPosZ + (v.posZ - v.lastTickPosZ) * pt;
         float t = (mc.theWorld.getTotalWorldTime() + pt) / 20f;
         boolean begun = false;
-        for (EntityPlayer p : new ArrayList<EntityPlayer>(mc.theWorld.playerEntities)) {
+        // by index, without copying the list every frame (nothing changes it while a frame is drawn)
+        java.util.List<EntityPlayer> all = mc.theWorld.playerEntities;
+        for (int i = 0; i < all.size(); i++) {
+            EntityPlayer p = all.get(i);
             Equip e = Cosmetics.of(p);
             if (e == null || e.halo.isEmpty()) continue;
             if (p == v && mc.gameSettings.thirdPersonView == 0) continue;

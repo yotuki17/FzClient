@@ -37,11 +37,21 @@ public abstract class MixinRendererLivingEntity {
     // ------------------------------------------------------------------ the red flash when hit (Animations)
 
     /** Our hit tint: null = vanilla (red, 0.3), else r, g, b, a (a = 0 when switched off). */
+    private static final float[] FZHUD$TINT = new float[4];
+
     private static float[] fzhud$hitTint() {
         if (!Modules.animations.enabled) return null;
-        if (!Modules.animHitColor.get()) return new float[]{0F, 0F, 0F, 0F};
+        float[] t = FZHUD$TINT;
+        if (!Modules.animHitColor.get()) {
+            t[0] = t[1] = t[2] = t[3] = 0F;
+            return t;
+        }
         int c = Modules.animHitColorRgb.get();
-        return new float[]{(c >> 16 & 255) / 255F, (c >> 8 & 255) / 255F, (c & 255) / 255F, Modules.animHitColorAlpha.get()};
+        t[0] = (c >> 16 & 255) / 255F;
+        t[1] = (c >> 8 & 255) / 255F;
+        t[2] = (c & 255) / 255F;
+        t[3] = Modules.animHitColorAlpha.get();
+        return t;
     }
 
     /** Without shaders: the colour is handed to OpenGL here (the buffer holds the vanilla 1, 0, 0, 0.3 while hurt). */

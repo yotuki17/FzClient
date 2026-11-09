@@ -168,7 +168,9 @@ public final class AuraFx {
         update(world);
         Entity view = mc.getRenderViewEntity();
         if (view == null) return;
-        for (EntityPlayer p : new ArrayList<EntityPlayer>(mc.theWorld.playerEntities)) {
+        java.util.List<EntityPlayer> all = mc.theWorld.playerEntities;
+        for (int i = 0; i < all.size(); i++) {
+            EntityPlayer p = all.get(i);
             Equip e = Cosmetics.of(p);
             if (e == null || e.aura.isEmpty()) continue;
             if (p == view && mc.gameSettings.thirdPersonView == 0) continue;   // never in your own view

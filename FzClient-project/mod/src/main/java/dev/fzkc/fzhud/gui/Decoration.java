@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.client.renderer.GlStateManager;
@@ -67,7 +66,7 @@ public final class Decoration {
     /** Draws in "virtual pixels" (same size as in the FzClient menus, whatever the GUI scale setting). */
     private static void scaled(GuiScreen gui, float o) {
         Minecraft mc = Minecraft.getMinecraft();
-        int sf = new ScaledResolution(mc).getScaleFactor();
+        int sf = Ui.scaleFactor();
         int phys = Math.max(1, (int) Math.floor(Math.min(mc.displayWidth / 640f, mc.displayHeight / 360f)));
         float k = phys / (float) sf;
 

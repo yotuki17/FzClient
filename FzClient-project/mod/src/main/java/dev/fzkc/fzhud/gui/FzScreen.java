@@ -3,7 +3,6 @@ package dev.fzkc.fzhud.gui;
 import dev.fzkc.fzhud.Config;
 import dev.fzkc.fzhud.render.R;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.input.Mouse;
 
@@ -21,7 +20,7 @@ public abstract class FzScreen extends GuiScreen {
     protected int vw, vh;
 
     protected void computeScale() {
-        int sf = new ScaledResolution(mc).getScaleFactor();
+        int sf = Ui.scaleFactor();
         int phys = Math.max(1, (int) Math.floor(Math.min(mc.displayWidth / 640f, mc.displayHeight / 360f)));
         k = phys / (float) sf;
         vw = (int) (width / k);

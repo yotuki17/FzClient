@@ -30,7 +30,7 @@ public abstract class MixinGuiButton {
         GuiButton self = (GuiButton) (Object) this;
         if (!VanillaUi.buttonBody(self, xPosition, yPosition, width, height, enabled, h)) return;
         hovered = h;
-        VanillaUi.knobStart(xPosition);
+        VanillaUi.knobStart(self, xPosition);
         try {
             mouseDragged(mc, mouseX, mouseY);
         } finally {

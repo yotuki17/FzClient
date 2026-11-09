@@ -7,7 +7,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiOptionSlider;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.opengl.GL11;
@@ -43,8 +42,14 @@ public final class VanillaUi {
     private static boolean knobOn;
     private static int knobX0;
 
+    private static final java.util.HashMap<Class<?>, Boolean> SLIDERS = new java.util.HashMap<>();
+
+    /** Sliders of the game and of other mods (by class name), looked up once per class. */
     public static boolean slider(GuiButton b) {
-        return b instanceof GuiOptionSlider || b.getClass().getSimpleName().contains("Slider");
+        if (b instanceof GuiOptionSlider) return true;
+        Boolean s = SLIDERS.get(b.getClass());
+        if (s == null) SLIDERS.put(b.getClass(), s = b.getClass().getSimpleName().contains("Slider"));
+        return s;
     }
 
     /** Before the label: the button's body. False = draw it the vanilla way. */
@@ -52,8 +57,12 @@ public final class VanillaUi {
         if (!styledNow()) return false;
         Ui.refreshRaw();
         float[] a = hover.get(b);
-        if (a == null) hover.put(b, a = new float[1]);
-        a[0] += ((hovered && enabled ? 1f : 0f) - a[0]) * 0.3f;
+        long now = System.nanoTime();
+        if (a == null) hover.put(b, a = new float[]{0f, Float.intBitsToFloat((int) (now / 1_000_000L))});
+        // the same speed at any FPS (the step used to be per frame: instant at 500 FPS, slow at 30)
+        int ms = (int) (now / 1_000_000L), dt = Math.max(0, Math.min(100, ms - Float.floatToRawIntBits(a[1])));
+        a[1] = Float.intBitsToFloat(ms);
+        a[0] += ((hovered && enabled ? 1f : 0f) - a[0]) * (1f - (float) Math.exp(-dt / 45.0));
         float alpha = enabled ? 1f : 0.55f;
         if (slider(b)) {
             R.rounded(x, y, w, h, Ui.rad(4f), R.alpha(0xB0060A0C, alpha));
@@ -73,8 +82,9 @@ public final class VanillaUi {
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
-    public static void knobStart(int buttonX) {
-        knobOn = true;
+    public static void knobStart(GuiButton b, int buttonX) {
+        // only sliders: another mod's button may draw something of its own in there
+        knobOn = slider(b);
         knobX0 = buttonX;
     }
 
@@ -197,7 +207,7 @@ public final class VanillaUi {
         if (!styledNow()) return;
         listClipWorks = true;
         Minecraft mc = Minecraft.getMinecraft();
-        int f = new ScaledResolution(mc).getScaleFactor();
+        int f = Ui.scaleFactor();
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(left * f, mc.displayHeight - bottom * f, Math.max(0, (right - left) * f), Math.max(0, (bottom - top) * f));
     }

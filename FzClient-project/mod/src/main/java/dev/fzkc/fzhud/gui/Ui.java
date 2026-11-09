@@ -513,9 +513,29 @@ public final class Ui {
         return s + "…";
     }
 
+    private static int sfW = -1, sfH, sfSetting, sfValue = 1;
+    private static boolean sfUnicode;
+
+    /**
+     * The GUI scale factor (what ScaledResolution works out), remembered until the window size or the GUI scale
+     * setting changes: clipping asks for it many times per frame.
+     */
+    public static int scaleFactor() {
+        Minecraft mc = Minecraft.getMinecraft();
+        boolean uni = mc.isUnicode();
+        if (mc.displayWidth != sfW || mc.displayHeight != sfH || mc.gameSettings.guiScale != sfSetting || uni != sfUnicode) {
+            sfW = mc.displayWidth;
+            sfH = mc.displayHeight;
+            sfSetting = mc.gameSettings.guiScale;
+            sfUnicode = uni;
+            sfValue = new ScaledResolution(mc).getScaleFactor();
+        }
+        return sfValue;
+    }
+
     public static void scissor(float x, float y, float w, float h) {
         Minecraft mc = Minecraft.getMinecraft();
-        float f = new ScaledResolution(mc).getScaleFactor() * k;
+        float f = scaleFactor() * k;
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor((int) (x * f), (int) (mc.displayHeight - (y + h) * f), (int) Math.max(0, w * f), (int) Math.max(0, h * f));
     }
