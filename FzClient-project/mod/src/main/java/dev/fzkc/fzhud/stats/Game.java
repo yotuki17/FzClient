@@ -24,7 +24,7 @@ public enum Game {
             "star", "ws") {
         @Override String prefix(Map<String, Long> c) {
             Long s = c.get("star");
-            return s == null ? "" : starColor(s) + "[" + s + "✫]";
+            return s == null ? "" : star(s, true);
         }
 
         @Override Stat[] define() {
@@ -40,7 +40,7 @@ public enum Game {
                     s("BBLR", "BBLR（ベッド破壊÷ベッドロスト）", c -> ratio(c, "bb", "bl", BW_RATIO)),
                     s("K", "キル", c -> n(c, "k")),
                     s("KDR", "KDR（キル÷デス）", c -> ratio(c, "k", "d", D_RATIO)),
-                    s("★", "星（数字だけ）", c -> c.get("star") == null ? "§8?" : starColor(c.get("star")) + c.get("star")),
+                    s("★", "星（数字だけ）", c -> c.get("star") == null ? "§8?" : star(c.get("star"), false)),
                     s("Index", "Index（星×FKDR²）", Game::index),
             };
         }
@@ -538,12 +538,51 @@ public enum Game {
     static String gained(Map<String, Long> diffOrNow, Map<String, Long> now, String k, String unit) {
         Long cur = now.get(k), up = diffOrNow.get(k + "+");
         if (cur == null) return "§8?";
-        return starColor(cur) + "[" + cur + unit + "]" + (up == null ? "" : (up > 0 ? " §a+" : " §7+") + up + unit);
+        return ("star".equals(k) ? star(cur, true) : "§7[" + cur + unit + "]") + (up == null ? "" : (up > 0 ? " §a+" : " §7+") + up + unit);
     }
 
-    static String starColor(long star) {
-        String[] c = {"§7", "§f", "§6", "§b", "§2", "§3", "§4", "§d", "§9", "§5"};
-        return star >= 1000 ? "§e§l" : c[(int) Math.max(0, star / 100)];
+    /** Under 1000: one colour per prestige (bracket, number and star alike). */
+    private static final String[] STAR_LOW = {"7", "f", "6", "b", "2", "3", "4", "d", "9", "5"};
+    /**
+     * 1000 and up, as Hypixel shows them: the colours of "[", the four digits, the star and "]" for each prestige
+     * (1000 rainbow, 1100-1900 primes, 2000 mirror ... 5000).
+     */
+    private static final String[][] STAR_HIGH = {
+            {"c", "6", "e", "a", "b", "d", "5"},
+            {"7", "f", "f", "f", "f", "7", "7"}, {"7", "e", "e", "e", "e", "6", "7"}, {"7", "b", "b", "b", "b", "3", "7"},
+            {"7", "a", "a", "a", "a", "2", "7"}, {"7", "3", "3", "3", "3", "9", "7"}, {"7", "c", "c", "c", "c", "4", "7"},
+            {"7", "d", "d", "d", "d", "5", "7"}, {"7", "9", "9", "9", "9", "1", "7"}, {"7", "5", "5", "5", "5", "8", "7"},
+            {"8", "7", "f", "f", "7", "7", "8"}, {"f", "f", "e", "e", "6", "6", "6"}, {"6", "6", "f", "f", "b", "3", "3"},
+            {"5", "5", "d", "d", "6", "e", "e"}, {"b", "b", "f", "f", "7", "7", "8"}, {"f", "f", "a", "a", "2", "2", "2"},
+            {"4", "4", "c", "c", "d", "d", "d"}, {"e", "e", "f", "f", "8", "8", "8"}, {"a", "a", "2", "2", "6", "6", "e"},
+            {"b", "b", "3", "3", "9", "9", "1"}, {"e", "e", "6", "6", "c", "c", "4"}, {"9", "9", "3", "3", "6", "6", "e"},
+            {"c", "4", "7", "7", "4", "c", "c"}, {"9", "9", "9", "d", "c", "c", "4"}, {"2", "a", "d", "d", "5", "5", "2"},
+            {"c", "c", "4", "4", "2", "a", "a"}, {"a", "a", "a", "b", "9", "9", "1"}, {"4", "4", "c", "c", "b", "3", "3"},
+            {"1", "1", "9", "5", "5", "d", "1"}, {"c", "c", "a", "a", "3", "9", "9"}, {"5", "5", "c", "c", "6", "6", "e"},
+            {"e", "e", "6", "c", "d", "d", "5"}, {"1", "9", "3", "b", "f", "7", "7"}, {"0", "5", "8", "8", "5", "5", "0"},
+            {"2", "2", "a", "e", "6", "5", "d"}, {"f", "f", "b", "b", "3", "3", "3"}, {"3", "b", "e", "e", "6", "d", "5"},
+            {"f", "4", "c", "c", "9", "1", "9"}, {"5", "5", "c", "6", "e", "b", "3"}, {"2", "a", "f", "f", "a", "a", "2"},
+            {"4", "4", "5", "9", "9", "1", "0"},
+    };
+
+    /**
+     * A Bed Wars level in Hypixel's colours: "[1234✪]" with {@code frame}, else only the coloured number.
+     * Every place that shows the star (tab list, chat, overlay, session rows) goes through here, so they all match.
+     */
+    static String star(long star, boolean frame) {
+        String n = Long.toString(Math.max(0, star));
+        if (star < 1000) {
+            String c = "§" + STAR_LOW[(int) Math.max(0, star / 100)];
+            return frame ? c + "[" + n + "✫]" : c + n;
+        }
+        String[] c = STAR_HIGH[(int) Math.min(STAR_HIGH.length - 1, star / 100 - 10)];
+        StringBuilder sb = new StringBuilder();
+        if (frame) sb.append('§').append(c[0]).append('[');
+        // the last four digits get the digit colours (a 5-digit level gives its extra digits the first one)
+        for (int i = 0; i < n.length(); i++) sb.append('§').append(c[1 + Math.max(0, i - (n.length() - 4))]).append(n.charAt(i));
+        if (frame) sb.append('§').append(c[5]).append(star < 1100 ? "✫" : star < 2000 ? "✪" : star < 3000 ? "⚝" : "✥")
+                .append('§').append(c[6]).append(']');
+        return sb.toString();
     }
 
     static JsonObject obj(JsonObject o, String k) {
