@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '修正：パーティの消去法でのニック判定が、倒されて一瞬タブから消えたパーティメンバーを敵のニックに割り当てることがあった問題。自分のチームのニックだけ、野良がいない時だけ、3秒続いた時だけ割り当てるように': 'Fixed: party elimination denick could give a party member who briefly left the tab list after dying to an enemy nick. It now only matches nicks on your own team, only when no random players are on it, and only after 3 seconds',
   'NEW：Height Limit（Server）。高さ上限まであと何ブロックかを照準の下に表示し、近づくと上限の高さに面を表示（一度上限に当たるとマップごとに覚えます）': 'NEW: Height Limit (Server). Shows how many blocks are left to the build height limit under the crosshair and a plane at the limit when close (learned per map the first time you reach it)',
   'NEW：アニメーションに「殴られた時に色を付ける」。殴った時に相手が赤くなるのを消したり、色と濃さを変えたりできます（シェーダー使用時も）': 'NEW: Animations can now turn off the red flash on hit players, or change its color and strength (also with shaders)',
   '修正：Auto GG が Bed Wars 以外（Duels など）で動かなかった問題。2つ目のメッセージを送る設定（1つ目からの時間は 0.05 秒刻み）を追加': 'Fixed: Auto GG did not work outside Bed Wars (Duels and others). Added an optional second message with its own delay (in 0.05 s steps)',

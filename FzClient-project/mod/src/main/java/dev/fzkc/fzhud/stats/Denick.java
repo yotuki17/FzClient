@@ -294,21 +294,42 @@ public final class Denick {
     private static long partyAskedAt;
     private static Object partyAskedWorld;
     private static final List<String> partyReply = new ArrayList<>();
+    /** Real names seen in the tab list in this world: a party member seen here is not the nick (they only died or left a moment). */
+    private static final Set<String> seenHere = new HashSet<>();
+    private static Object seenWorld;
+    /** The nick = party member pair found last time, and for how many checks in a row (once a second). */
+    private static String pendingPair;
+    private static int pendingCount;
 
     /**
      * Your party moves into a game with you, and party members show their real names in party chat and /pl. So a
      * party member who is not in the tab list under that name is playing nicked: when exactly one nick on your team
      * is still unknown and exactly one party member is missing, they are the same person.
+     * Only teammates: without a known team of your own nothing is matched, a party member who was in the tab list under
+     * their real name at any time in this world is not missing (players drop out of the tab list for a moment when
+     * they die), a team bigger than the party (random players in it) is skipped, and the same pair has to hold for
+     * 3 seconds.
      */
     private static void byParty(Minecraft mc) {
         if (Stats.lobby || mc.thePlayer == null || mc.theWorld == null) return;
+        if (seenWorld != mc.theWorld) {
+            seenWorld = mc.theWorld;
+            seenHere.clear();
+            pendingPair = null;
+            pendingCount = 0;
+        }
         NetworkPlayerInfo meInfo = mc.thePlayer.sendQueue.getPlayerInfo(mc.thePlayer.getUniqueID());
         net.minecraft.scoreboard.ScorePlayerTeam myTeam = meInfo == null ? null : meInfo.getPlayerTeam();
         java.util.Collection<NetworkPlayerInfo> all = mc.thePlayer.sendQueue.getPlayerInfoMap();
+        for (NetworkPlayerInfo i : all) {
+            String n = i.getGameProfile().getName();
+            if (n != null && !isNick(i)) seenHere.add(n.toLowerCase(Locale.ROOT));
+        }
         int teamSize = 0;
         if (myTeam != null) for (NetworkPlayerInfo i : all) if (sameTeam(i, myTeam)) teamSize++;
         // a team that holds everyone (waiting lobby) says nothing: then every nick counts
         boolean useTeam = myTeam != null && teamSize > 1 && teamSize < all.size();
+        if (!useTeam) { pendingPair = null; return; }   // only your own team: an unknown team could match an enemy
         List<String> nicks = new ArrayList<>();
         Set<String> visible = new HashSet<>();
         for (NetworkPlayerInfo i : all) {
@@ -323,9 +344,9 @@ public final class Denick {
                 visible.add(r.name.toLowerCase(Locale.ROOT));   // already found: that party member is accounted for
                 continue;
             }
-            if (!useTeam || sameTeam(i, myTeam)) nicks.add(n);
+            if (sameTeam(i, myTeam)) nicks.add(n);
         }
-        if (nicks.isEmpty()) return;
+        if (nicks.isEmpty()) { pendingPair = null; return; }
         List<String> party = dev.fzkc.fzhud.chat.KnownNames.partyNames();
         if (party.isEmpty()) {
             // nothing known about your party yet: ask once per world, without showing the answer
@@ -339,11 +360,22 @@ public final class Denick {
         }
         List<String> missing = new ArrayList<>();
         String me = mc.thePlayer.getName();
+        // someone on your team who is not in the party (a random player) could be the nick: then nothing is matched
+        int partyCount = 1;
+        for (String p : party) if (!p.equalsIgnoreCase(me)) partyCount++;
+        if (teamSize > partyCount) { pendingPair = null; return; }
         for (String p : party) {
-            if (p.equalsIgnoreCase(me) || visible.contains(p.toLowerCase(Locale.ROOT))) continue;
+            String pk = p.toLowerCase(Locale.ROOT);
+            if (p.equalsIgnoreCase(me) || visible.contains(pk) || seenHere.contains(pk)) continue;
             missing.add(p);
         }
-        if (nicks.size() == 1 && missing.size() == 1) resolve(nicks.get(0), missing.get(0), Lang.t("パーティ・消去法"));
+        if (nicks.size() != 1 || missing.size() != 1) { pendingPair = null; return; }
+        String pair = nicks.get(0) + "=" + missing.get(0);
+        if (!pair.equals(pendingPair)) { pendingPair = pair; pendingCount = 0; }
+        if (++pendingCount >= 3) {
+            pendingPair = null;
+            resolve(nicks.get(0), missing.get(0), Lang.t("パーティ・消去法"));
+        }
     }
 
     private static boolean sameTeam(NetworkPlayerInfo i, net.minecraft.scoreboard.ScorePlayerTeam t) {
