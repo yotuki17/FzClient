@@ -1075,3 +1075,4 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 カジュアル	Casual
 クリックでコスメ・ドラッグで回す	Click for cosmetics, drag to turn
 パーティクルを完全に消す	Remove all particles
+マルチプレイ・設定・Esc メニューなどをバニラの表示にする	Show multiplayer, options, the Esc menu and so on the vanilla way

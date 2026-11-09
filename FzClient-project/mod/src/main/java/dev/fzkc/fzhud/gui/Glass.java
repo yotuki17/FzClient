@@ -35,6 +35,8 @@ public final class Glass {
     private static boolean wantOff;
     private static ShaderGroup ours;
     private static float appliedRadius = -1f;
+    /** The blur was started for one of the game's own screens (removed when no styled screen is open). */
+    private static boolean byVanilla;
 
     /** True while the glass style is selected in the module list. */
     public static boolean on() {
@@ -61,17 +63,19 @@ public final class Glass {
     public static void tick() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null || mc.entityRenderer == null) return;
-        boolean menuOpen = mc.currentScreen instanceof FzScreen;
+        boolean vanilla = VanillaUi.blurs(mc.currentScreen);
+        boolean menuOpen = mc.currentScreen instanceof FzScreen || vanilla;
         if (loaded) {
             if (mc.entityRenderer.getShaderGroup() != ours) {   // something else replaced it; don't touch theirs
                 loaded = false;
                 ours = null;
-            } else if ((wantOff && !menuOpen) || !on() || !Modules.glassBlur.get()) {
+            } else if (((wantOff || byVanilla) && !menuOpen) || !on() || !Modules.glassBlur.get()) {
                 stopBlur();
             } else {
                 applyRadius();
             }
-        } else if (menuOpen && !wantOff) {
+        } else if (menuOpen && (!wantOff || vanilla)) {
+            byVanilla = vanilla;
             startBlur();   // the blur switch was turned on while the menu is open
         }
     }
@@ -101,6 +105,7 @@ public final class Glass {
         } catch (Throwable ignored) { }
         loaded = false;
         ours = null;
+        byVanilla = false;
     }
 
     /** The blur shader reads "Radius"; set it from the module so the slider works live. */

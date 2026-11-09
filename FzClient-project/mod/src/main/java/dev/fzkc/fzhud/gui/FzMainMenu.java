@@ -690,7 +690,7 @@ public class FzMainMenu extends FzScreen {
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
-    private static final ResourceLocation[] PANO = new ResourceLocation[6];
+    static final ResourceLocation[] PANO = new ResourceLocation[6];
 
     static {
         for (int i = 0; i < 6; i++) PANO[i] = new ResourceLocation("fzclient", "textures/panorama/panorama_" + i + ".jpg");
@@ -747,9 +747,9 @@ public class FzMainMenu extends FzScreen {
     }
 
     /** Texture corners for the four points of every face. */
-    private static final float[] UV = {0, 0, 0, 1, 1, 1, 1, 0};
+    static final float[] UV = {0, 0, 0, 1, 1, 1, 1, 0};
     /** The four points of each face (x, y, z). */
-    private static final float[][] FACES = {
+    static final float[][] FACES = {
             {-1, -1, 1, -1, 1, 1, 1, 1, 1, 1, -1, 1},
             {1, -1, 1, 1, 1, 1, 1, 1, -1, 1, -1, -1},
             {1, -1, -1, 1, 1, -1, -1, 1, -1, -1, -1, -1},

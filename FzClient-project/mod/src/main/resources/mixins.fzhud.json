@@ -30,6 +30,11 @@
     "MixinGuiNewChat",
     "MixinBlockNewLeaf",
     "MixinBlockNewLog",
-    "MixinModelPlayer"
+    "MixinModelPlayer",
+    "MixinGuiButton",
+    "MixinGui",
+    "MixinGuiScreen",
+    "MixinGuiSlot",
+    "MixinGuiTextField"
   ]
 }

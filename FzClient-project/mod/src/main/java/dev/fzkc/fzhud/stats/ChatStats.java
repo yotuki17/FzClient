@@ -352,7 +352,7 @@ public class ChatStats {
         if (d == null) return StatsApi.pending(id) ? null : "";   // loading, or the lookup failed
         if (d.nicked) return "§8[§c§lNICK§8] ";
         Game g = Stats.current != null ? Stats.current : Game.BEDWARS;
-        java.util.Map<String, Long> c = d.of(g);
+        java.util.Map<String, Long> c = Stats.shown(d, g);
         if (c.isEmpty()) return "";
         StringBuilder sb = new StringBuilder("§8[");
         String star = g.tabPrefix(c);
@@ -386,7 +386,7 @@ public class ChatStats {
         if (d == null) return StatsApi.pending(id) ? null : "";
         if (d.nicked) return head + "§7" + name + " §7|§r §c§lNICK";
         Game g = Stats.current != null ? Stats.current : Game.BEDWARS;
-        java.util.Map<String, Long> c = d.of(g);
+        java.util.Map<String, Long> c = Stats.shown(d, g);
         if (c.isEmpty()) return "";
         StringBuilder sb = new StringBuilder(head);
         String star = g.tabPrefix(c);

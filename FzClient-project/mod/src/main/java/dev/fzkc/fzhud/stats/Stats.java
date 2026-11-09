@@ -33,6 +33,33 @@ public final class Stats {
     public static volatile boolean lobby = true;
     /** The map of the game you are in ("Lighthouse"), null in lobbies or when not known. */
     public static volatile String map;
+    /** The mode of the game you are in (Duels: Classic, UHC...), null for overall (lobbies, games without modes). */
+    public static volatile Game.Mode mode;
+
+    /**
+     * A player's numbers for the overlay: in a Duels game those of the mode being played (Classic shows Classic
+     * wins, WLR and streak), else the overall ones.
+     */
+    public static java.util.Map<String, Long> shown(PlayerData d, Game g) {
+        Game.Mode m = mode;
+        if (m != null && g == current && !lobby) {
+            java.util.Map<String, Long> c = d.of(g, m);
+            if (!c.isEmpty()) return c;
+        }
+        return d.of(g);
+    }
+
+    /** "DUELS_CLASSIC_DUEL" -> the Classic mode (by its queue names), null when none fits. */
+    private static Game.Mode modeOf(Game g, String raw) {
+        if (g == null || raw == null) return null;
+        String q = raw.toLowerCase(Locale.ROOT);
+        if (q.startsWith("duels_")) q = q.substring(6);
+        for (Game.Mode m : g.modes()) {
+            if (m.overall()) continue;
+            for (String p : m.prefixes) if (p.equals(q)) return m;
+        }
+        return null;
+    }
 
     private Object lastWorld, lastHandler;
     private int askIn = -1, ticks, retries;
@@ -135,6 +162,7 @@ public final class Stats {
             current = null;
             lobby = true;
             map = null;
+            mode = null;
             Denick.worldChanged();
             retries = 0;
             worldAt = System.currentTimeMillis();
@@ -148,6 +176,7 @@ public final class Stats {
             String type = ModApiLocation.type, mode = ModApiLocation.mode;
             lobby = ModApiLocation.lobbyName != null || mode == null || "lobby".equalsIgnoreCase(mode);
             current = game(type, mode);
+            Stats.mode = lobby ? null : modeOf(current, mode);
             map = ModApiLocation.map;
             answered = true;
             askIn = -1;   // no /locraw needed
@@ -203,6 +232,7 @@ public final class Stats {
             String type = PlayerData.str(o, "gametype"), mode = PlayerData.str(o, "mode");
             lobby = PlayerData.str(o, "lobbyname") != null || mode == null || "lobby".equalsIgnoreCase(mode);
             current = game(type, mode);
+            Stats.mode = lobby ? null : modeOf(current, mode);
             map = PlayerData.str(o, "map");
         } catch (Exception ignored) {
         }

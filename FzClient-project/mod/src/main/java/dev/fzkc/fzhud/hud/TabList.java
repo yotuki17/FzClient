@@ -228,7 +228,7 @@ public class TabList extends HudElement {
                                      java.util.List<dev.fzkc.fzhud.stats.Tags.Tag> tags, dev.fzkc.fzhud.stats.Game g) {
         StringBuilder sb = new StringBuilder();
         if (d != null && !d.nicked) {
-            String star = g.tabPrefix(d.of(g));
+            String star = g.tabPrefix(dev.fzkc.fzhud.stats.Stats.shown(d, g));
             if (!star.isEmpty()) sb.append(star).append(' ');
             ScorePlayerTeam team = info.getPlayerTeam();
             if (!dev.fzkc.fzhud.stats.Stats.lobby && dev.fzkc.fzhud.Modules.statsRankColors.get()
@@ -289,7 +289,7 @@ public class TabList extends HudElement {
             } else if (d.nicked) {
                 if (cols > 0) row[0] = "§c§lNICK";
             } else {
-                java.util.Map<String, Long> c = d.of(g);
+                java.util.Map<String, Long> c = dev.fzkc.fzhud.stats.Stats.shown(d, g);
                 if (c.isEmpty()) {
                     if (cols > 0) row[0] = "§8-";
                 } else {
