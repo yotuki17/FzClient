@@ -31,6 +31,8 @@ public final class Stats {
     public static volatile Game current;
     /** True in a lobby (the stats shown there are for the lobby's game). */
     public static volatile boolean lobby = true;
+    /** The map of the game you are in ("Lighthouse"), null in lobbies or when not known. */
+    public static volatile String map;
 
     private Object lastWorld, lastHandler;
     private int askIn = -1, ticks, retries;
@@ -132,6 +134,7 @@ public final class Stats {
             lastWorld = mc.theWorld;
             current = null;
             lobby = true;
+            map = null;
             Denick.worldChanged();
             retries = 0;
             worldAt = System.currentTimeMillis();
@@ -145,6 +148,7 @@ public final class Stats {
             String type = ModApiLocation.type, mode = ModApiLocation.mode;
             lobby = ModApiLocation.lobbyName != null || mode == null || "lobby".equalsIgnoreCase(mode);
             current = game(type, mode);
+            map = ModApiLocation.map;
             answered = true;
             askIn = -1;   // no /locraw needed
             if (mc.thePlayer != null && Modules.statsHistory.get()) StatsApi.get(mc.thePlayer.getUniqueID(), mc.thePlayer.getName());
@@ -199,6 +203,7 @@ public final class Stats {
             String type = PlayerData.str(o, "gametype"), mode = PlayerData.str(o, "mode");
             lobby = PlayerData.str(o, "lobbyname") != null || mode == null || "lobby".equalsIgnoreCase(mode);
             current = game(type, mode);
+            map = PlayerData.str(o, "map");
         } catch (Exception ignored) {
         }
         // your own numbers are snapshotted on every world change, so today's stats are as exact as possible

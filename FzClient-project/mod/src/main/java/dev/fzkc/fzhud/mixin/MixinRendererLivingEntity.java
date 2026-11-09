@@ -8,7 +8,11 @@ import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.lang.reflect.Method;
+import java.nio.FloatBuffer;
 
 /**
  * Optimization "ホログラムを軽く描く". Server holograms (the floating text in lobbies) are one invisible armor stand
@@ -28,5 +32,60 @@ public abstract class MixinRendererLivingEntity {
         for (ItemStack s : ((EntityArmorStand) entity).getInventory()) if (s != null) return;
         ci.cancel();
         ((RendererLivingEntity) (Object) this).renderName(entity, x, y, z);
+    }
+
+    // ------------------------------------------------------------------ the red flash when hit (Animations)
+
+    /** Our hit tint: null = vanilla (red, 0.3), else r, g, b, a (a = 0 when switched off). */
+    private static float[] fzhud$hitTint() {
+        if (!Modules.animations.enabled) return null;
+        if (!Modules.animHitColor.get()) return new float[]{0F, 0F, 0F, 0F};
+        int c = Modules.animHitColorRgb.get();
+        return new float[]{(c >> 16 & 255) / 255F, (c >> 8 & 255) / 255F, (c & 255) / 255F, Modules.animHitColorAlpha.get()};
+    }
+
+    /** Without shaders: the colour is handed to OpenGL here (the buffer holds the vanilla 1, 0, 0, 0.3 while hurt). */
+    @Redirect(require = 0, method = "setBrightness(Lnet/minecraft/entity/EntityLivingBase;FZ)Z",
+            at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glTexEnv(IILjava/nio/FloatBuffer;)V", remap = false))
+    private void fzhud$hitTintGl(int target, int pname, FloatBuffer buf, EntityLivingBase entity, float partialTicks, boolean combine) {
+        if (entity.hurtTime > 0 || entity.deathTime > 0) {
+            float[] t = fzhud$hitTint();
+            if (t != null) {
+                buf.clear();
+                buf.put(t[0]).put(t[1]).put(t[2]).put(t[3]);
+                buf.flip();
+            }
+        }
+        org.lwjgl.opengl.GL11.glTexEnv(target, pname, buf);
+    }
+
+    private static Method fzhud$setEntityColor;
+    private static boolean fzhud$looked;
+
+    /** With OptiFine shaders the colour goes to the shader instead (OptiFine adds this call next to the one above). */
+    @Redirect(require = 0, method = "setBrightness(Lnet/minecraft/entity/EntityLivingBase;FZ)Z",
+            at = @At(value = "INVOKE", target = "Lnet/optifine/shaders/Shaders;setEntityColor(FFFF)V", remap = false))
+    private void fzhud$hitTintShaders(float r, float g, float b, float a) {
+        fzhud$shaderColor("net.optifine.shaders.Shaders", r, g, b, a);
+    }
+
+    /** The same for older OptiFine builds, where the class has its old name. */
+    @Redirect(require = 0, method = "setBrightness(Lnet/minecraft/entity/EntityLivingBase;FZ)Z",
+            at = @At(value = "INVOKE", target = "Lshadersmod/client/Shaders;setEntityColor(FFFF)V", remap = false))
+    private void fzhud$hitTintShadersOld(float r, float g, float b, float a) {
+        fzhud$shaderColor("shadersmod.client.Shaders", r, g, b, a);
+    }
+
+    private static void fzhud$shaderColor(String cls, float r, float g, float b, float a) {
+        float[] t = r == 1F && g == 0F && b == 0F ? fzhud$hitTint() : null;
+        if (t != null) { r = t[0]; g = t[1]; b = t[2]; a = t[3]; }
+        try {
+            if (!fzhud$looked) {
+                fzhud$looked = true;
+                fzhud$setEntityColor = Class.forName(cls).getMethod("setEntityColor", float.class, float.class, float.class, float.class);
+            }
+            if (fzhud$setEntityColor != null) fzhud$setEntityColor.invoke(null, r, g, b, a);
+        } catch (Throwable ignored) {
+        }
     }
 }

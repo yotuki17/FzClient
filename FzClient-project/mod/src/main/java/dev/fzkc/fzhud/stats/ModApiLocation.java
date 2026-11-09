@@ -18,7 +18,7 @@ final class ModApiLocation {
     private static final Logger LOG = LogManager.getLogger("FzClient-Stats");
     static volatile boolean available;
     /** The latest location: game type ("BEDWARS"), mode, lobby name, and when it arrived (0 = none yet). */
-    static volatile String type, mode, lobbyName;
+    static volatile String type, mode, lobbyName, map;
     static volatile long at;
 
     static void init() {
@@ -28,6 +28,7 @@ final class ModApiLocation {
             Class<?> handler = Class.forName("net.hypixel.modapi.handler.ClientboundPacketHandler");
             Object inst = api.getMethod("getInstance").invoke(null);
             Method serverType = packet.getMethod("getServerType"), getMode = packet.getMethod("getMode"), getLobby = packet.getMethod("getLobbyName");
+            Method getMap = packet.getMethod("getMap");
             Object h = Proxy.newProxyInstance(handler.getClassLoader(), new Class<?>[]{handler}, (proxy, m, args) -> {
                 if (m.getDeclaringClass() == Object.class) {
                     switch (m.getName()) {
@@ -47,6 +48,8 @@ final class ModApiLocation {
                     type = t;
                     mode = md.isPresent() ? String.valueOf(md.get()) : null;
                     lobbyName = lb.isPresent() ? String.valueOf(lb.get()) : null;
+                    Optional<?> mp = (Optional<?>) getMap.invoke(p);
+                    map = mp.isPresent() ? String.valueOf(mp.get()) : null;
                     at = System.currentTimeMillis();
                 } catch (Throwable e) {
                 }

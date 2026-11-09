@@ -55,6 +55,9 @@ public final class Modules {
     public static final BoolSetting animBlockPose = animations.add(new BoolSetting("blockpose", "ガード中の腕の形を補正（三人称）", true));
     public static final SliderSetting animBlockDepth = animations.add(new SliderSetting("blockdepth", "ガードの深さ（三人称）", 0.0, 1.0, 0.05, 0.7, ""));
     public static final SliderSetting animOtherSwing = animations.add(new SliderSetting("otherswing", "他プレイヤーの腕振りの大きさ", 0.1, 1.0, 0.05, 0.3, "x"));
+    public static final BoolSetting animHitColor = animations.add(new BoolSetting("hitcolor", "殴られた時に色を付ける（オフで赤くならない）", true));
+    public static final ColorSetting animHitColorRgb = animations.add(new ColorSetting("hitcolorrgb", "殴られた時の色", 0xFFFF0000));
+    public static final SliderSetting animHitColorAlpha = animations.add(new SliderSetting("hitcoloralpha", "殴られた時の色の濃さ", 0.05, 1.0, 0.05, 0.3, ""));
     public static final BoolSetting animEat = animations.add(new BoolSetting("eat", "食べる・飲む時も腕を振る", true));
     public static final BoolSetting animBow = animations.add(new BoolSetting("bow", "弓を引く時も腕を振る", true));
     public static final SliderSetting animSwingSpeed = animations.add(new SliderSetting("swingspeed", "腕振りの速さ", 0.5, 2.0, 0.05, 1.0, "x"));
@@ -347,6 +350,15 @@ public final class Modules {
     public static final SliderSetting kbFov = overlays.add(new SliderSetting("kbfov", "被弾時のFOV（＋広げる/－狭める/0オフ）", -30, 30, 1, 10, "°"));
     public static final SliderSetting kbFovTime = overlays.add(new SliderSetting("kbfovtime", "広げている時間", 0.2, 1.5, 0.05, 0.5, "秒"));
 
+    // ---- Height Limit (learned per game and map from "Build height limit reached!")
+    public static final Module heightLimit = new Module("heightlimit", "Height Limit", Category.SERVER,
+            "高さ上限までのブロック数を表示（一度上限に当たるとマップごとに覚える）", true);
+    public static final BoolSetting heightLimitText = heightLimit.add(new BoolSetting("text", "照準の下に「上限まで」を表示", true));
+    public static final BoolSetting heightLimitAlways = heightLimit.add(new BoolSetting("always", "遠くてもいつも表示", false));
+    public static final BoolSetting heightLimitPlane = heightLimit.add(new BoolSetting("plane", "近づいたら上限の高さに面を表示", true));
+    public static final SliderSetting heightLimitWarn = heightLimit.add(new SliderSetting("warn", "表示し始める距離", 1, 30, 1, 8, " ブロック"));
+    public static final ColorSetting heightLimitColor = heightLimit.add(new ColorSetting("color", "面の色", 0xFFFF5555));
+
     // ---- Auto GG (Hypixel: every game with an end summary — Bed Wars, Duels, Sky Wars...)
     public static final Module autoGG = new Module("autogg", "Auto GG", Category.SERVER,
             "ゲーム終了時に自動でgg", false);
@@ -609,6 +621,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

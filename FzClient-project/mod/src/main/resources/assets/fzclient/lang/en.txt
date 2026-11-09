@@ -1057,3 +1057,15 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 2つ目も送る	Also send a second message
 2つ目の言葉	Second message
 1つ目から2つ目までの時間	Time from the first to the second
+殴られた時に色を付ける（オフで赤くならない）	Tint players when hit (off: no red flash)
+殴られた時の色	Hit tint color
+殴られた時の色の濃さ	Hit tint strength
+高さ上限までのブロック数を表示（一度上限に当たるとマップごとに覚える）	Shows how many blocks are left to the build height limit (learned per map the first time you reach it)
+照準の下に「上限まで」を表示	Show blocks left under the crosshair
+遠くてもいつも表示	Always show, even when far
+近づいたら上限の高さに面を表示	Show a plane at the limit when close
+表示し始める距離	Show from
+面の色	Plane color
+高さ上限を覚えました	Learned the height limit
+高さ上限	HEIGHT LIMIT
+上限まで	To limit
