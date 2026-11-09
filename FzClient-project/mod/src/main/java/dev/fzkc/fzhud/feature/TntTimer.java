@@ -42,7 +42,6 @@ public final class TntTimer {
         boolean byTime = Modules.tntColorByTime.get();
         int fixedColor = Modules.tntColor.get();
         boolean shadow = Modules.tntShadow.get();
-        boolean through = Modules.tntThrough.get();
         double range = Modules.tntRange.get();
         double rangeSq = range * range;
         int bg = (Math.round(Modules.tntBgOpacity.get() * 2.55f) << 24) | 0x101A1E;
@@ -53,15 +52,11 @@ public final class TntTimer {
         boolean wasLighting = GL11.glIsEnabled(GL11.GL_LIGHTING);
         GlStateManager.disableLighting();
         GlStateManager.depthMask(false);
-        if (through) {
-            GlStateManager.disableDepth(); // drawn on top of everything
-        } else {
-            // hidden behind blocks like the TNT itself (raw GL too, in case something switched it off behind
-            // GlStateManager's back)
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-            GlStateManager.enableDepth();
-            GlStateManager.depthFunc(515); // GL_LEQUAL
-        }
+        // hidden behind blocks like the TNT itself, never through walls (raw GL too, in case something switched
+        // it off behind GlStateManager's back)
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GlStateManager.enableDepth();
+        GlStateManager.depthFunc(515); // GL_LEQUAL
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
 

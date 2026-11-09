@@ -484,11 +484,17 @@ public final class Presets {
     }
 
     /**
-     * Saves the current setup under a date-time name (newest first).
+     * Saves the current setup under a date-time name (newest first): the backup taken before a preset is loaded.
+     * Nothing is added when the current setup is already one of the saved ones (loading a saved preset and then
+     * another one made a copy of the first every time), and there is only ever one backup: a new one replaces it.
      */
     public static void saveCurrent(String label) {
-        String name = (label == null ? "" : label + " ") + new SimpleDateFormat("MM/dd HH:mm").format(new Date());
-        Saved s = new Saved(name.trim(), export());
+        String code = export();
+        for (Saved x : saved()) if (x.code.equals(code)) return;   // nothing would be lost
+        String prefix = label == null || label.isEmpty() ? null : label + " ";
+        if (prefix != null) saved().removeIf(x -> x.name.startsWith(prefix));
+        String name = (prefix == null ? "" : prefix) + new SimpleDateFormat("MM/dd HH:mm").format(new Date());
+        Saved s = new Saved(name.trim(), code);
         saved().add(0, s);
         while (saved().size() > 20) saved().remove(saved().size() - 1);
         write();

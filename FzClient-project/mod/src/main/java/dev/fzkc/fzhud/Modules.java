@@ -44,7 +44,6 @@ public final class Modules {
     public static final SliderSetting tntBgOpacity = tnt.add(new SliderSetting("bgopacity", "背景の濃さ", 0, 100, 5, 50, "%"));
     public static final BoolSetting tntShadow = tnt.add(new BoolSetting("shadow", "文字に影をつける", true));
     public static final SliderSetting tntRange = tnt.add(new SliderSetting("range", "表示する距離", 8, 128, 8, 64, "m"));
-    public static final BoolSetting tntThrough = tnt.add(new BoolSetting("through", "壁越しにも表示", true));
 
     // ---- Animations
     public static final Module animations = new Module("animations", "Animations", Category.PVP,
