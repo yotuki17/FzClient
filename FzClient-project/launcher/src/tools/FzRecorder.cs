@@ -171,6 +171,9 @@ static class FzRecorder {
             psi.RedirectStandardInput = true;
             psi.RedirectStandardError = true;
             ffmpeg = Process.Start(psi);
+            // the game runs at high priority; below normal for ffmpeg means Windows hands the CPU and the GPU to the
+            // game first when both want them (with shaders on, recording at normal priority made the game hitch)
+            try { ffmpeg.PriorityClass = ProcessPriorityClass.BelowNormal; } catch { }
             ffmpeg.ErrorDataReceived += (sender, e) => { if (e.Data != null) Log(e.Data); };
             ffmpeg.BeginErrorReadLine();
 

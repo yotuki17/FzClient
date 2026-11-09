@@ -22,7 +22,9 @@ const { spawn } = require('child_process');
 // GPU encoders first; each: encoder, video filter (null = take the GPU frames as they are), options
 const ENCODERS = [
   // (forced-idr: every 2 s a picture that needs nothing from before it, so a clip can start at any piece)
-  { name: 'NVENC', codec: 'h264_nvenc', vf: null, opts: ['-preset', 'p4', '-rc', 'vbr', '-cq', '23', '-b:v', '0', '-maxrate', '60M', '-bufsize', '120M', '-forced-idr', '1'] },
+  // (p1 and no B-frames / lookahead / AQ: the lightest NVENC work, so it takes as little GPU time from the game as
+  // it can; the higher bitrate cap keeps the picture good)
+  { name: 'NVENC', codec: 'h264_nvenc', vf: null, opts: ['-preset', 'p1', '-tune', 'll', '-bf', '0', '-rc-lookahead', '0', '-spatial-aq', '0', '-temporal-aq', '0', '-multipass', 'disabled', '-rc', 'vbr', '-cq', '23', '-b:v', '0', '-maxrate', '80M', '-bufsize', '160M', '-forced-idr', '1'] },
   { name: 'AMF', codec: 'h264_amf', vf: null, opts: ['-quality', 'speed', '-rc', 'cqp', '-qp_i', '22', '-qp_p', '24'] },
   { name: 'Media Foundation', codec: 'h264_mf', vf: 'hwdownload,format=bgra,format=nv12', opts: ['-b:v', '20M'] },
 ];
