@@ -48,20 +48,16 @@ final class ModApiLocation {
                     mode = md.isPresent() ? String.valueOf(md.get()) : null;
                     lobbyName = lb.isPresent() ? String.valueOf(lb.get()) : null;
                     at = System.currentTimeMillis();
-                    LOG.info("Hypixel location: " + t + " mode=" + mode + " lobby=" + lobbyName);
                 } catch (Throwable e) {
-                    LOG.warn("Hypixel location packet could not be read: " + e);
                 }
                 return null;
             });
             api.getMethod("createHandler", Class.class, handler).invoke(inst, packet, h);
             api.getMethod("subscribeToEventPacket", Class.class).invoke(inst, packet);
             available = true;
-            LOG.info("Using the Hypixel Mod API for the current game");
         } catch (ClassNotFoundException e) {
             // the Hypixel Mod API is not installed: /locraw only
         } catch (Throwable e) {
-            LOG.warn("Hypixel Mod API could not be used: " + e);
         }
     }
 }

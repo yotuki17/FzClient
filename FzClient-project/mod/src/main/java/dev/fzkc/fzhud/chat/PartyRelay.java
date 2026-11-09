@@ -91,7 +91,6 @@ public class PartyRelay {
             } catch (InterruptedException e) {
                 return;
             } catch (Throwable t) {
-                System.out.println("[FzClient] Party Relay: " + t);
                 try {
                     Thread.sleep(2000L);
                 } catch (InterruptedException e) {

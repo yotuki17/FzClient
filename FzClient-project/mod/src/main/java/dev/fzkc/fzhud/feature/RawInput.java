@@ -69,10 +69,8 @@ public final class RawInput {
                         mice.addAll(found);
                     }
                     ready = true;
-                    System.out.println("[FzClient] Raw mouse input ready (" + found.size() + " device(s))");
                 } catch (Throwable e) {
                     failed = true;
-                    System.err.println("[FzClient] Raw mouse input unavailable: " + e);
                 }
             }
         };

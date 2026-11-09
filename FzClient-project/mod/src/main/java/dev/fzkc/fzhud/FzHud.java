@@ -189,7 +189,6 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.AuraFx());      // aura sprites, drawn after the world
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.HaloFx());      // halos, drawn after the world
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.stats.Denick());   // real names for found nicks (nametags)
-        FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.HitchWatch());   // logs what a stutter was
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.gui.PauseButtons());     // FzClient Settings / Cosmetics in the game menu
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new PartyRelay.TestCommand());
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new DiscordVoice.CodeCommand());

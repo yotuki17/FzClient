@@ -49,7 +49,6 @@ public final class LaunchGuard {
             if (linkAnswers()) return true;
         } catch (Throwable ignored) {
         }
-        System.out.println("[FzClient] Not started by the FzClient Launcher: FzClient stays off.");
         return false;
     }
 

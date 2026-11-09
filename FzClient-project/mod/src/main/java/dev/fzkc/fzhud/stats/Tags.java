@@ -59,7 +59,6 @@ public final class Tags {
         Long last = LOGGED.get(msg);
         if (last != null && now - last < 5 * 60_000L) return;
         LOGGED.put(msg, now);
-        LOG.warn("Tag lookup failed: " + msg);
     }
     private static final ExecutorService POOL = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "FzClient-Tags");
@@ -209,9 +208,6 @@ public final class Tags {
                 }
             }
             if (verbose.remove(id)) {
-                // the answer has no key in it; keep the log line short
-                String shortBody = body.length() > 400 ? body.substring(0, 400) + "…" : body;
-                LOG.info("Watcher answered for " + id + ": " + tags.size() + " tag(s) " + shortBody.replaceAll("[\r\n]+", " "));
             }
             e.watcher = tags;
             e.watcherAt = System.currentTimeMillis();

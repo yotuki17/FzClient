@@ -130,7 +130,6 @@ public final class Sessions {
                 } catch (Exception ex) {
                     urchinWhy = "Urchin: " + (ex.getMessage() == null ? "error" : ex.getMessage());
                 }
-                LOG.info("Urchin session " + period.key + " for " + id + " failed: " + urchinWhy);
             }
             if (!auroraKey().isEmpty()) {
                 try {
@@ -144,7 +143,6 @@ public final class Sessions {
                 } catch (Exception ex) {
                     auroraWhy = "Aurora: " + (ex.getMessage() == null ? "error" : ex.getMessage());
                 }
-                LOG.info("Aurora session " + period.key + " for " + id + " failed: " + auroraWhy);
             }
             e.result = null;
             e.error = urchinWhy != null ? urchinWhy : auroraWhy;
@@ -167,8 +165,6 @@ public final class Sessions {
         if (d != null && d.isJsonObject()) flatten("", d.getAsJsonObject(), delta);
         long from = o.has("from") && o.get("from").isJsonPrimitive() ? o.get("from").getAsLong() : 0;
         if (from > 0 && from < 100_000_000_000L) from *= 1000;
-        String sample = body.length() > 300 ? body.substring(0, 300) + "…" : body;
-        LOG.info("Urchin session " + period.key + " for " + id + ": " + delta.size() + " Bed Wars field(s) " + sample.replaceAll("[\\r\\n]+", " "));
         return new Result(delta, from, System.currentTimeMillis(), "Urchin");
     }
 

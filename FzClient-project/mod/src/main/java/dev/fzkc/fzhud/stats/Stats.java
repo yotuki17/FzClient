@@ -159,7 +159,6 @@ public final class Stats {
         if (askIn > 0 && --askIn == 0 && mc.thePlayer != null) {
             askedAt = System.currentTimeMillis();
             answered = false;
-            LOG.info("Asking /locraw");
             mc.thePlayer.sendChatMessage("/locraw");
         }
         // no answer (the server was busy or said "too fast"): ask again, twice at most
@@ -192,7 +191,6 @@ public final class Stats {
         if (event.type == 2) return;
         String s = event.message.getUnformattedText();
         if (s == null || !s.startsWith("{\"server\":")) return;
-        LOG.info("locraw answer: " + s + (System.currentTimeMillis() - askedAt > 15_000L ? " (not ours)" : ""));
         if (System.currentTimeMillis() - askedAt > 15_000L) return;   // someone typed /locraw themselves: show it
         event.setCanceled(true);
         answered = true;

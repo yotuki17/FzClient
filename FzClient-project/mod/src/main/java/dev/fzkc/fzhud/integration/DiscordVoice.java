@@ -174,7 +174,6 @@ public final class DiscordVoice {
     private static void log(String msg) {
         if (msg.equals(lastLog)) return;
         lastLog = msg;
-        System.out.println("[FzClient] Discord VC: " + msg);
     }
 
     private static void chat(final net.minecraft.util.IChatComponent c) {

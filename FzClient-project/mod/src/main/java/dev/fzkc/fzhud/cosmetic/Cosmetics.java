@@ -221,7 +221,6 @@ public final class Cosmetics {
     private static void note(String s) {
         if (s.equals(lastNote)) return;
         lastNote = s;
-        org.apache.logging.log4j.LogManager.getLogger("FzClient").info(s);
     }
 
     private static UUID uuid(String hex) {

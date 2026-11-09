@@ -2,6 +2,26 @@
 const { app, BrowserWindow, ipcMain, shell, globalShortcut, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+// Every process the launcher starts (recorder helper, ffmpeg, PowerShell...) is kept here, so closing the launcher
+// can end them all instead of leaving them running in the background. Done before the modules below load, as they
+// take spawn from child_process when they load. The game itself is not ended (see shutdown).
+const children = new Set();
+{
+  const cp = require('child_process');
+  const spawn0 = cp.spawn;
+  cp.spawn = function (...args) {
+    const p = spawn0.apply(this, args);
+    // detached = meant to outlive the launcher (the update installer): never ended here
+    const opts = args.find(a => a && typeof a === 'object' && !Array.isArray(a));
+    if (opts && opts.detached) return p;
+    children.add(p);
+    p.once('exit', () => children.delete(p));
+    p.once('error', () => children.delete(p));
+    return p;
+  };
+}
+
 const { settings, accounts, dirs } = require('./src/core/store');
 const auth = require('./src/core/auth');
 const { Game, MC_VERSION } = require('./src/core/game');
@@ -136,6 +156,8 @@ function createWindow() {
     win.show();
   });
   win.on('close', rememberSize);
+  // the hidden overlay / recording-mark windows would otherwise keep the launcher running in the background
+  win.on('closed', () => app.quit());
   // links open in the normal browser, never inside the launcher
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
@@ -168,8 +190,36 @@ if (!app.requestSingleInstanceLock()) {
     // look for a new FzClient right away, so pressing Play does not have to wait for it
     win.webContents.once('did-finish-load', () => updater.checkMod(bundledJar(), log, send));
   });
+  // the overlay and the recording mark are hidden windows too: closing the launcher's window quits everything
   app.on('window-all-closed', () => app.quit());
+  app.on('before-quit', shutdown);
   app.on('will-quit', () => globalShortcut.unregisterAll());
+}
+
+/**
+ * Closing the launcher: a recording that was running is saved, then every window, timer and process the launcher
+ * started ends, so nothing stays behind in the background. A running Minecraft keeps running.
+ */
+let shuttingDown = false;
+function shutdown(event) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  event.preventDefault();
+  try { endPlay(); } catch { /* already gone */ }
+  if (badgeTimer) { clearInterval(badgeTimer); badgeTimer = null; }
+  for (const w of BrowserWindow.getAllWindows()) { try { w.destroy(); } catch { /* gone */ } }
+  // the recorder needs about 2 seconds to finish the file; anything still running after that is ended
+  const game = running;
+  const waitMs = [...children].some(p => p !== game && p.exitCode === null) ? 3000 : 0;
+  setTimeout(() => {
+    for (const p of children) {
+      if (p === game || p.exitCode !== null) continue;
+      try { require('child_process').spawnSync('taskkill', ['/PID', String(p.pid), '/T', '/F'], { windowsHide: true }); } catch { /* gone */ }
+    }
+    // the normal quit now (a downloaded launcher update installs on it); if anything still holds it, exit anyway
+    setTimeout(() => app.exit(0), 3000);
+    app.quit();
+  }, waitMs);
 }
 
 // ---------------------------------------------------------------- window controls
