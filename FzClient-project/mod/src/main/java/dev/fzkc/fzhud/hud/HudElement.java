@@ -36,7 +36,7 @@ public abstract class HudElement extends Module {
     }
 
     protected HudElement(String id, String name, String description, float defX, float defY, int defAnchor) {
-        this(id, name, description, defX, defY, defAnchor, true);
+        this(id, name, description, defX, defY, defAnchor, false);   // every HUD element starts off: players switch on what they want
     }
 
     protected HudElement(String id, String name, String description, float defX, float defY, int defAnchor, boolean enabledByDefault) {

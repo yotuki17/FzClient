@@ -14,7 +14,7 @@ public class StatPanel extends HudElement {
     private final ColorSetting textColor;
 
     public StatPanel(String id, String name, String description, float defX, float defY, float minWidth, Supplier<String> value) {
-        this(id, name, description, defX, defY, minWidth, value, true);
+        this(id, name, description, defX, defY, minWidth, value, false);
     }
 
     public StatPanel(String id, String name, String description, float defX, float defY, float minWidth, Supplier<String> value, boolean enabledByDefault) {

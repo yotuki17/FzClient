@@ -282,6 +282,9 @@ public final class Modules {
     // ---- Menu look & layout (id stays "glassui" so saved settings keep working)
     public static final Module glassUi = new Module("glassui", "UI", Category.UTILITY,
             "メニューの見た目・色・配置を調整する", true).alwaysOn();
+    /** One choice that sets the style, colours and roundness together; changing a single setting afterwards is fine. */
+    public static final ChoiceSetting uiTheme = glassUi.add(new ChoiceSetting("theme", "テーマ", 0,
+            "カスタム", "ダーク", "ホワイト", "カジュアル", "ネオン", "サクラ", "オーシャン", "ミッドナイト"));
     public static final HeaderSetting uiHeadStyle = glassUi.add(new HeaderSetting("h_style", "スタイル"));
     /** 0 = liquid glass, 1 = classic (dark flat), 2 = dashboard (light, coloured tiles). */
     public static final ChoiceSetting uiStyle = glassUi.add(new ChoiceSetting("style", "スタイル", 0, "リキッドグラス", "クラシック", "ダッシュボード"));

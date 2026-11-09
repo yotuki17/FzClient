@@ -584,6 +584,7 @@ public class SettingsScreen extends FzScreen {
                 c.next();
             }
             else if (button == 1) c.index = (c.index - 1 + c.options.length) % c.options.length;
+            if (c == dev.fzkc.fzhud.Modules.uiTheme) Themes.apply(c.index);
         } else if (s instanceof TextSetting) {
             TextSetting ts = (TextSetting) s;
             if (button == 1) {

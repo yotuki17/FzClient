@@ -1069,3 +1069,7 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 高さ上限を覚えました	Learned the height limit
 高さ上限	HEIGHT LIMIT
 上限まで	To limit
+テーマ	Theme
+カスタム	Custom
+ホワイト	White
+カジュアル	Casual
