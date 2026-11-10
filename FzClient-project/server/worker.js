@@ -21,6 +21,9 @@
 //        else the lowest one (a single wrong report is outvoted as soon as two players agree on another).
 //   GET  /cf/v1/...                             -> CurseForge API for the launcher (Minecraft mods only).
 //        The CurseForge API key stays here as the secret CF_API_KEY, so it is never inside the launcher.
+//   POST /dvc/id {}                             -> {id} the Discord application of the voice chat HUD
+//   POST /dvc/token {grant_type, code | refresh_token} -> Discord's OAuth2 token answer. The application's
+//        secrets DISCORD_CLIENT_ID and DISCORD_SECRET stay here, so they are never inside the game.
 
 const ONLINE_MS = 15 * 60 * 1000;
 
@@ -354,12 +357,53 @@ async function heightLimits(req, env, url) {
   return json({ error: 'not found' }, 404);
 }
 
+// ------------------------------------------------------------------ Discord voice chat HUD
+
+const DVC_REDIRECT = 'http://localhost';
+const DVC_LAST = new Map();   // per IP: last token request (a light brake, per worker instance)
+
+async function discordVc(req, env, url) {
+  if (req.method !== 'POST') return json({ error: 'post' }, 405);
+  const id = String(env.DISCORD_CLIENT_ID || '');
+  if (!/^\d{17,20}$/.test(id) || !env.DISCORD_SECRET) return json({ error: 'not set up' }, 503);
+  if (url.pathname === '/dvc/id') return json({ id });
+  if (url.pathname !== '/dvc/token') return json({ error: 'not found' }, 404);
+  const ip = req.headers.get('cf-connecting-ip') || '';
+  const now = Date.now();
+  if (now - (DVC_LAST.get(ip) || 0) < 2000) return json({ error: 'slow down' }, 429);
+  DVC_LAST.set(ip, now);
+  if (DVC_LAST.size > 5000) DVC_LAST.clear();
+  let body;
+  try { body = await req.json(); } catch { return json({ error: 'bad json' }, 400); }
+  const p = new URLSearchParams();
+  p.set('client_id', id);
+  p.set('client_secret', env.DISCORD_SECRET);
+  if (body.grant_type === 'authorization_code' && typeof body.code === 'string' && /^[\w-]{10,100}$/.test(body.code)) {
+    p.set('grant_type', 'authorization_code');
+    p.set('code', body.code);
+    p.set('redirect_uri', DVC_REDIRECT);
+  } else if (body.grant_type === 'refresh_token' && typeof body.refresh_token === 'string' && /^[\w-]{10,200}$/.test(body.refresh_token)) {
+    p.set('grant_type', 'refresh_token');
+    p.set('refresh_token', body.refresh_token);
+  } else {
+    return json({ error: 'bad request' }, 400);
+  }
+  const r = await fetch('https://discord.com/api/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'FzClient (voice hud)' },
+    body: p.toString(),
+  });
+  const text = await r.text();
+  return new Response(text, { status: r.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (url.pathname.startsWith('/cf/')) return curseforge(req, env, ctx, url);
     if (url.pathname.startsWith('/cos/')) return cosmetics(req, env, url);
     if (url.pathname.startsWith('/hl/')) return heightLimits(req, env, url);
+    if (url.pathname.startsWith('/dvc/')) return discordVc(req, env, url);
     if (req.method !== 'POST') return new Response('FzClient users', { status: 200 });
     let body;
     try {

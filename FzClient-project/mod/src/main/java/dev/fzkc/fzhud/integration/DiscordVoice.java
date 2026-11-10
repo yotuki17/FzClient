@@ -62,7 +62,9 @@ public final class DiscordVoice {
     public static final class Member {
         public final String id;
         public volatile String name;
-        public volatile boolean mute, deaf, speaking;
+        public volatile boolean mute, deaf, speaking, stream;
+        /** The avatar picture's hash (null = Discord's default picture). */
+        public volatile String avatar;
 
         public Member(String id, String name) {
             this.id = id;
@@ -136,12 +138,8 @@ public final class DiscordVoice {
         String cid = "", secret = "";
         boolean on = hud != null && hud.enabled
                 && System.getProperty("os.name", "").toLowerCase().startsWith("windows");
-        if (on) {
-            cid = hud.clientId();
-            secret = hud.clientSecret();
-            if (cid.isEmpty() || secret.isEmpty()) log("Client ID と Client Secret を設定してください（Discord VC の設定）");
-        }
-        String key = cid.isEmpty() || secret.isEmpty() ? "" : cid + "|" + secret;
+        if (on) cid = sharedId();
+        String key = cid.isEmpty() ? "" : cid;
 
         if (key.equals(runningFor)) {
             if (!key.isEmpty() && !key.equals(halted) && (worker == null || !worker.isAlive())) start(cid, secret, key);
@@ -153,6 +151,34 @@ public final class DiscordVoice {
         runningFor = key;
         halted = "";
         if (!key.isEmpty()) start(cid, secret, key);
+    }
+
+    private static volatile String sharedId;
+    private static volatile boolean idLoading;
+    private static volatile long idFailedAt;
+
+    /** FzClient's Discord application ID, from the FzClient server ("" until it is known). */
+    private static String sharedId() {
+        String id = sharedId;
+        if (id != null) return id;
+        if (!idLoading && System.currentTimeMillis() - idFailedAt > 60000L) {
+            idLoading = true;
+            Thread t = new Thread(() -> {
+                try {
+                    JsonObject r = FzUsers.post("/dvc/id", new JsonObject());
+                    String v = r == null ? null : str(r, "id");
+                    if (v != null && v.matches("\\d{17,20}")) sharedId = v;
+                    else idFailedAt = System.currentTimeMillis();
+                } catch (Exception e) {
+                    idFailedAt = System.currentTimeMillis();
+                } finally {
+                    idLoading = false;
+                }
+            }, "FzClient-DiscordVC-Id");
+            t.setDaemon(true);
+            t.start();
+        }
+        return "";
     }
 
     private static void start(final String cid, final String secret, final String key) {
@@ -381,18 +407,17 @@ public final class DiscordVoice {
 
         /** Exchange a code (or refresh token) for an access token. */
         JsonObject tokenRequest(Map<String, String> params) throws Exception {
-            StringBuilder body = new StringBuilder();
-            body.append("client_id=").append(URLEncoder.encode(cid, "UTF-8"));
-            body.append("&client_secret=").append(URLEncoder.encode(secret, "UTF-8"));
+            // FzClient's server adds the application's secret (it never comes to the game) and asks Discord
+            JsonObject body = new JsonObject();
             for (Map.Entry<String, String> e : params.entrySet()) {
-                body.append('&').append(e.getKey()).append('=').append(URLEncoder.encode(e.getValue(), "UTF-8"));
+                if (!"redirect_uri".equals(e.getKey())) body.addProperty(e.getKey(), e.getValue());
             }
-            HttpURLConnection c = (HttpURLConnection) new URL("https://discord.com/api/oauth2/token").openConnection();
+            HttpURLConnection c = (HttpURLConnection) new URL(FzUsers.ENDPOINT_URL + "/dvc/token").openConnection();
             c.setConnectTimeout(8000);
-            c.setReadTimeout(10000);
+            c.setReadTimeout(15000);
             c.setRequestMethod("POST");
             c.setDoOutput(true);
-            c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            c.setRequestProperty("Content-Type", "application/json");
             c.setRequestProperty("User-Agent", "FzClient/1.0 (voice hud)");
             OutputStream out = c.getOutputStream();
             try {
@@ -406,7 +431,7 @@ public final class DiscordVoice {
             if (code != 200) {
                 throw new IllegalStateException(dev.fzkc.fzhud.util.Lang.f("トークンの取得に失敗 (HTTP {0}): ", code)
                         + (text.length() > 200 ? text.substring(0, 200) : text)
-                        + dev.fzkc.fzhud.util.Lang.t(" （Client Secret と、OAuth2のRedirectsの http://localhost を確認）"));
+                        );
             }
             JsonObject t = new JsonParser().parse(text).getAsJsonObject();
             long expiresIn = t.has("expires_in") ? t.get("expires_in").getAsLong() : 604800L;
@@ -680,6 +705,9 @@ public final class DiscordVoice {
         JsonObject vs = obj(o, "voice_state");
         boolean mute = bool(o, "mute") || bool(vs, "mute") || bool(vs, "self_mute");
         boolean deaf = bool(vs, "deaf") || bool(vs, "self_deaf");
+        // Discord only sometimes tells whether someone streams (Go Live) here; shown when it does
+        boolean stream = bool(vs, "self_stream") || bool(o, "self_stream") || bool(vs, "self_video");
+        String avatar = str(user, "avatar");
         synchronized (LOCK) {
             Member m = members.get(id);
             if (m == null) {
@@ -689,6 +717,8 @@ public final class DiscordVoice {
             m.name = name;
             m.mute = mute;
             m.deaf = deaf;
+            m.stream = stream;
+            m.avatar = avatar;
         }
     }
 

@@ -1118,3 +1118,17 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 視点	View
 前から自分を見る（後ろを振り返る）	From the front (look behind you)
 後ろから自分を見る	From behind
+VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in your voice channel (like the Discord overlay)
+アバターのサイズ	Avatar size
+小	Small
+中	Medium
+大	Large
+表示名	Names
+常に表示	Always
+話している時だけ	Only while talking
+表示しない	Never
+ユーザーを表示	Show users
+話している人だけ	Only people talking
+表示するユーザー数の上限（0 = オフ）	Max users shown (0 = off)
+配信中の人に LIVE を表示	Show LIVE for people streaming
+ボイスチャンネル	Voice channel
