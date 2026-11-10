@@ -193,6 +193,11 @@ public final class Modules {
             "キューで入れなかったパーティメンバーを、数秒後に /p warp で入れ直す（リーダーの時だけ）", true);
     public static final SliderSetting partyWarpDelay = partyWarp.add(new SliderSetting("delay", "入ってから確認するまでの時間", 1, 6, 0.5, 2.5, "秒"));
 
+    // ---- Requeue: one key joins the same game again
+    public static final Module requeue = new Module("requeue", "Requeue", Category.SERVER,
+            "キーを押すと、同じゲームにもう一度入る（Hypixel。キーは操作設定の FzClient で変更）", true);
+    public static final BoolSetting requeueConfirm = requeue.add(new BoolSetting("confirm", "試合がまだ終わっていない時は、2回押す", true));
+
     // ---- Overlay: player stats in the tab list and chat, /fzstats, tags, denick (id kept as "playerstats" for saved settings)
     public static final Module stats = new Module("playerstats", "Overlay", Category.PVP,
             "タブとチャットに統計とタグを表示・/pv で詳しい統計・デニック", true);
@@ -645,6 +650,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, rawInput, dropLock, partyDetect, partyWarp, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, rawInput, dropLock, partyDetect, partyWarp, requeue, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

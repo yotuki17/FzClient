@@ -35,6 +35,8 @@ public final class Stats {
     public static volatile String map;
     /** The mode of the game you are in (Duels: Classic, UHC...), null for overall (lobbies, games without modes). */
     public static volatile Game.Mode mode;
+    /** The game's own name of what you are playing ("BEDWARS_EIGHT_TWO", any game), null in lobbies. */
+    public static volatile String rawMode;
 
     /**
      * A player's numbers for the overlay: in a Duels game those of the mode being played (Classic shows Classic
@@ -163,10 +165,11 @@ public final class Stats {
             lobby = true;
             map = null;
             mode = null;
+            rawMode = null;
             Denick.worldChanged();
             retries = 0;
             worldAt = System.currentTimeMillis();
-            askIn = mc.theWorld != null && Modules.stats.enabled && onHypixel() ? 25 : -1;
+            askIn = mc.theWorld != null && (Modules.stats.enabled || Modules.requeue.enabled) && onHypixel() ? 25 : -1;
             // the Hypixel Mod API's location can arrive just before the world does
             if (ModApiLocation.at > worldAt - 3000) appliedAt = 0;
         }
@@ -177,6 +180,7 @@ public final class Stats {
             lobby = ModApiLocation.lobbyName != null || mode == null || "lobby".equalsIgnoreCase(mode);
             current = game(type, mode);
             Stats.mode = lobby ? null : modeOf(current, mode);
+            rawMode = lobby ? null : mode;
             map = ModApiLocation.map;
             answered = true;
             askIn = -1;   // no /locraw needed
@@ -184,7 +188,7 @@ public final class Stats {
         }
         if (askAgain) {
             askAgain = false;
-            if (mc.theWorld != null && Modules.stats.enabled && onHypixel()) {
+            if (mc.theWorld != null && (Modules.stats.enabled || Modules.requeue.enabled) && onHypixel()) {
                 retries = 0;
                 if (askIn <= 0) askIn = 5;   // a world that just loaded asks by itself
             }
@@ -195,7 +199,7 @@ public final class Stats {
             mc.thePlayer.sendChatMessage("/locraw");
         }
         // no answer (the server was busy or said "too fast"): ask again, twice at most
-        if (askIn <= 0 && !answered && askedAt > 0 && retries < 2 && mc.thePlayer != null && Modules.stats.enabled && onHypixel()
+        if (askIn <= 0 && !answered && askedAt > 0 && retries < 2 && mc.thePlayer != null && (Modules.stats.enabled || Modules.requeue.enabled) && onHypixel()
                 && System.currentTimeMillis() - askedAt > 5000) {
             retries++;
             askIn = 1;
@@ -233,6 +237,7 @@ public final class Stats {
             lobby = PlayerData.str(o, "lobbyname") != null || mode == null || "lobby".equalsIgnoreCase(mode);
             current = game(type, mode);
             Stats.mode = lobby ? null : modeOf(current, mode);
+            rawMode = lobby ? null : mode;
             map = PlayerData.str(o, "map");
         } catch (Exception ignored) {
         }
