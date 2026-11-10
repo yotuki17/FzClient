@@ -35,7 +35,10 @@ public class CosmeticsScreen extends FzScreen {
             "エンダー", "ホタル", "落ち葉", "電撃", "ギャラクシー", "ラブ", "シャドウ", "エメラルド"};
     private static final String[] HALO_NAMES = {"なし", "ゴールド", "虹", "ダーク", "アイス"};
     private static final String[] PET_NAMES = {"なし", "子犬", "子猫", "ヒヨコ", "子ブタ", "子ヒツジ", "スライム", "ブレイズ", "ガスト", "スノーゴーレム", "クリーパー",
-            "ウーパールーパー", "金のウーパー", "青のウーパー", "オウム", "青いオウム"};
+            "ウーパールーパー", "金のウーパー", "青のウーパー", "オウム", "青いオウム",
+            "茶色のウーパー", "水色のウーパー", "緑のオウム", "黄色いオウム", "灰色のオウム"};
+    /** Pets in the order shown (the saved number stays the index into Equip.PETS): each kind together. */
+    private static final int[] PET_ORDER = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 14, 15, 18, 19, 20};
     private static final String[] TABS = {"マント", "オーラ", "ヘイロー", "ペット"};
     /** Sprite and tint for each aura tile (none has no icon). */
     private static final int[][] AURA_ICON = {{-1, 0}, {0, 0xFF4F7E}, {5, 0xFFA63C}, {2, 0xB07CFF}, {3, 0x5CE1E6}, {4, 0xEEF6FF}, {2, 0xFFD84A},
@@ -211,8 +214,9 @@ public class CosmeticsScreen extends FzScreen {
         if (tab == 3) {
         int petSel = Modules.cosPet.get();
         GlStateManager.clear(GL11.GL_DEPTH_BUFFER_BIT);
-        for (int i = 0; i < Equip.PETS.length; i++) {
-            float[] t = auraTile(i);
+        for (int s = 0; s < PET_ORDER.length; s++) {
+            int i = PET_ORDER[s];
+            float[] t = auraTile(s);
             boolean sel = i == petSel;
             float h = anim("p" + i).update(Ui.within(mx, my, t[0], t[1], t[2], t[3]) ? 1 : 0);
             tile(t, sel, h, o);
@@ -342,10 +346,10 @@ public class CosmeticsScreen extends FzScreen {
                 return;
             }
         }
-        for (int i = 0; tab == 3 && i < Equip.PETS.length; i++) {
-            float[] t = auraTile(i);
+        for (int s = 0; tab == 3 && s < PET_ORDER.length; s++) {
+            float[] t = auraTile(s);
             if (Ui.inside(mx, my, t[0], t[1], t[2], t[3])) {
-                Modules.cosPet.index = i;
+                Modules.cosPet.index = PET_ORDER[s];
                 return;
             }
         }

@@ -13,7 +13,8 @@ public final class Equip {
             "ender", "fireflies", "leaves", "electric", "galaxy", "love", "shadow", "emerald"};
     public static final String[] HALOS = {"", "gold", "rainbow", "dark", "ice"};
     public static final String[] PETS = {"", "dog", "cat", "chick", "pig", "sheep", "slime", "blaze", "ghast", "snowman", "creeper",
-            "axolotl", "axolotl_gold", "axolotl_blue", "parrot", "parrot_blue"};
+            "axolotl", "axolotl_gold", "axolotl_blue", "parrot", "parrot_blue",
+            "axolotl_wild", "axolotl_cyan", "parrot_green", "parrot_yellow", "parrot_grey"};
 
     public String cape = "", capeHash = "", aura = "", halo = "", pet = "";
 

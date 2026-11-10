@@ -56,9 +56,12 @@ public final class PetFx {
         final boolean shoulder;
         /** Extra size in the Cosmetics tiles (tiny pets). */
         final float guiMul;
+        /** Today's Minecraft texture to use once fetched (MobTextures), or null. */
+        final String mobTex;
 
-        /** A pet of our own (PetModels) on the shoulder. */
-        Kind(ModelBase model, ResourceLocation tex, float scale, float guiMul) {
+        /** A pet of our own (PetModels) on the shoulder: tex = painted stand-in until the real texture is here. */
+        Kind(ModelBase model, String mobTex, ResourceLocation tex, float scale, float guiMul) {
+            this.mobTex = mobTex;
             this.model = model;
             this.tex = tex;
             this.scale = scale;
@@ -82,6 +85,7 @@ public final class PetFx {
             this.layerBlend = layerBlend;
             this.shoulder = false;
             this.guiMul = 1f;
+            this.mobTex = null;
         }
     }
 
@@ -103,15 +107,28 @@ public final class PetFx {
                     new Kind(new ModelGhast(), "ghast/ghast.png", 0.26f, false, null, null, null, false),
                     new Kind(new ModelSnowMan(), "snowman.png", 0.32f, false, null, null, null, false),
                     new Kind(new ModelCreeper(), "creeper/creeper.png", 0.34f, false, null, null, null, false),
-                    new Kind(new PetModels.Axolotl(), PetModels.axolotlSkin("axolotl", 0xFFF4A9CB, 0xFFDD4C8E), 0.42f, 1.6f),
-                    new Kind(new PetModels.Axolotl(), PetModels.axolotlSkin("axolotl_gold", 0xFFF5CF52, 0xFFE58A26), 0.42f, 1.6f),
-                    new Kind(new PetModels.Axolotl(), PetModels.axolotlSkin("axolotl_blue", 0xFF6577E2, 0xFF3E4CC0), 0.42f, 1.6f),
-                    new Kind(new PetModels.Parrot(), PetModels.parrotSkin("parrot", 0xFFE5281F, 0xFF2D5AD4, 0xFFF2C12E, 0), 0.95f, 0.85f),
-                    new Kind(new PetModels.Parrot(), PetModels.parrotSkin("parrot_blue", 0xFF2E73E0, 0xFF1E3E9E, 0xFF30B8C8, 0xFFF2C230), 0.95f, 0.85f),
+                    axolotl("axolotl_lucy", PetModels.axolotlSkin("axolotl", 0xFFF4A9CB, 0xFFDD4C8E)),
+                    axolotl("axolotl_gold", PetModels.axolotlSkin("axolotl_gold", 0xFFF5CF52, 0xFFE58A26)),
+                    axolotl("axolotl_blue", PetModels.axolotlSkin("axolotl_blue", 0xFF6577E2, 0xFF3E4CC0)),
+                    parrot("parrot_red_blue", PetModels.parrotSkin("parrot", 0xFFE5281F, 0xFF2D5AD4, 0xFFF2C12E, 0)),
+                    parrot("parrot_blue", PetModels.parrotSkin("parrot_blue", 0xFF2E73E0, 0xFF1E3E9E, 0xFF30B8C8, 0xFFF2C230)),
+                    axolotl("axolotl_wild", PetModels.axolotlSkin("axolotl_wild", 0xFF7A5A3C, 0xFF5A3E28)),
+                    axolotl("axolotl_cyan", PetModels.axolotlSkin("axolotl_cyan", 0xFFDDF1F4, 0xFFE9A5C8)),
+                    parrot("parrot_green", PetModels.parrotSkin("parrot_green", 0xFF5DBB2F, 0xFF2F6E1A, 0xFFF2C12E, 0)),
+                    parrot("parrot_yellow_blue", PetModels.parrotSkin("parrot_yellow", 0xFF3FA9E8, 0xFF2D5AD4, 0xFFF2C12E, 0xFFF2C12E)),
+                    parrot("parrot_grey", PetModels.parrotSkin("parrot_grey", 0xFFA8A8A8, 0xFF6E6E6E, 0xFFE8E8E8, 0)),
             };
         }
         for (int i = 1; i < Equip.PETS.length && i < kinds.length; i++) if (Equip.PETS[i].equals(id)) return kinds[i];
         return null;
+    }
+
+    private static Kind axolotl(String tex, ResourceLocation painted) {
+        return new Kind(new PetModels.Axolotl(), "axolotl/" + tex, painted, 0.42f, 1.6f);
+    }
+
+    private static Kind parrot(String tex, ResourceLocation painted) {
+        return new Kind(new PetModels.Parrot(), "parrot/" + tex, painted, 1f, 0.8f);
     }
 
     /** A pet that rides on the shoulder (axolotl, parrot) rather than floating. */
@@ -143,7 +160,8 @@ public final class PetFx {
             k.model.isChild = k.child;
             if (k.model instanceof ModelWolf) poseWolf((ModelWolf) k.model);
             if (k.layer instanceof ModelWolf) poseWolf((ModelWolf) k.layer);
-            mc.getTextureManager().bindTexture(k.tex);
+            ResourceLocation real = k.mobTex == null ? null : MobTextures.get(k.mobTex);
+            mc.getTextureManager().bindTexture(real != null ? real : k.tex);
             k.model.render(null, 0f, 0f, anim, look, 0f, 0.0625f);
             if (k.layer != null) {
                 k.layer.isChild = k.child;
@@ -334,6 +352,9 @@ public final class PetFx {
     static void drawOnShoulder(String id, boolean sneaking, float age) {
         GlStateManager.pushMatrix();
         GlStateManager.translate(0.4f, sneaking ? 0.2f : 0f, 0f);
+        Kind k = kind(id);
+        // the axolotl's long tail: moved forward so it lies across the shoulder instead of hanging off the back
+        if (k != null && k.model instanceof PetModels.Axolotl) GlStateManager.translate(0f, 0f, -0.18f);
         drawModel(id, age);
         GlStateManager.popMatrix();
     }

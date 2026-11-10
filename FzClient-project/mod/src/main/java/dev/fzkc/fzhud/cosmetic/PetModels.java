@@ -15,64 +15,84 @@ import net.minecraft.util.ResourceLocation;
 final class PetModels {
     private PetModels() {}
 
-    /** Axolotl: body, head with three frilly gills, a flat swaying tail and four little legs (feet at y = 24). */
+    /**
+     * Axolotl, built exactly like today's Minecraft (AxolotlModel): body with a back fin, head with three gills,
+     * four flat legs, flat tail; posed like an axolotl lying still on land (feet at y = 24).
+     */
     static final class Axolotl extends ModelBase {
-        final ModelRenderer body, head, gillTop, gillLeft, gillRight, tail;
-        final ModelRenderer[] legs = new ModelRenderer[4];
+        final ModelRenderer body, head, topGills, leftGills, rightGills, tail, leftHind, rightHind, leftFront, rightFront;
 
         Axolotl() {
             textureWidth = 64;
             textureHeight = 64;
+            final float d = 0.001f;
             body = new ModelRenderer(this, 0, 11);
-            body.addBox(-4f, -2f, -5f, 8, 4, 10);
-            body.setRotationPoint(0f, 20f, 0f);
-            ModelRenderer fin = new ModelRenderer(this, 40, 12);
-            fin.addBox(0f, -4f, -3f, 0, 2, 9);
-            body.addChild(fin);
-            head = new ModelRenderer(this, 0, 0);
-            head.addBox(-4f, -3f, -5f, 8, 5, 5);
-            head.setRotationPoint(0f, 20f, -5f);
-            gillTop = new ModelRenderer(this, 28, 0);
-            gillTop.addBox(-4f, -6f, -1f, 8, 3, 0);
-            gillLeft = new ModelRenderer(this, 28, 4);
-            gillLeft.addBox(0f, -5f, -1f, 3, 7, 0);
-            gillLeft.setRotationPoint(4f, 0f, 0f);
-            gillRight = new ModelRenderer(this, 36, 4);
-            gillRight.addBox(-3f, -5f, -1f, 3, 7, 0);
-            gillRight.setRotationPoint(-4f, 0f, 0f);
-            head.addChild(gillTop);
-            head.addChild(gillLeft);
-            head.addChild(gillRight);
-            tail = new ModelRenderer(this, 0, 26);
+            body.addBox(-4f, -2f, -9f, 8, 4, 10);
+            body.setTextureOffset(2, 17);
+            body.addBox(0f, -3f, -8f, 0, 5, 9);
+            body.setRotationPoint(0f, 20f, 5f);
+            head = new ModelRenderer(this, 0, 1);
+            head.addBox(-4f, -3f, -5f, 8, 5, 5, d);
+            head.setRotationPoint(0f, 0f, -9f);
+            body.addChild(head);
+            topGills = new ModelRenderer(this, 3, 37);
+            topGills.addBox(-4f, -3f, 0f, 8, 3, 0, d);
+            topGills.setRotationPoint(0f, -3f, -1f);
+            leftGills = new ModelRenderer(this, 0, 40);
+            leftGills.addBox(-3f, -5f, 0f, 3, 7, 0, d);
+            leftGills.setRotationPoint(-4f, 0f, -1f);
+            rightGills = new ModelRenderer(this, 11, 40);
+            rightGills.addBox(0f, -5f, 0f, 3, 7, 0, d);
+            rightGills.setRotationPoint(4f, 0f, -1f);
+            head.addChild(topGills);
+            head.addChild(leftGills);
+            head.addChild(rightGills);
+            rightHind = leg(-2f, -3.5f, 1f, -1f);
+            leftHind = leg(-1f, 3.5f, 1f, -1f);
+            rightFront = leg(-2f, -3.5f, 1f, -8f);
+            leftFront = leg(-1f, 3.5f, 1f, -8f);
+            tail = new ModelRenderer(this, 2, 19);
             tail.addBox(0f, -3f, 0f, 0, 5, 12);
-            tail.setRotationPoint(0f, 20f, 5f);
-            for (int i = 0; i < 4; i++) {
-                legs[i] = new ModelRenderer(this, 48 + (i / 2) * 8, (i % 2) * 6);
-                legs[i].addBox(-1.5f, 0f, 0f, 3, 5, 0);
-                boolean left = i < 2;
-                legs[i].setRotationPoint(left ? 4f : -4f, 20.5f, i % 2 == 0 ? -3f : 3f);
-                legs[i].rotateAngleZ = left ? -0.8f : 0.8f;
-            }
+            tail.setRotationPoint(0f, 0f, 1f);
+            body.addChild(tail);
         }
 
-        /** age = ticks (sway), look = degrees the head turns. */
+        private ModelRenderer leg(float x0, float px, float py, float pz) {
+            ModelRenderer r = new ModelRenderer(this, 2, 13);
+            r.addBox(x0, 0f, 0f, 3, 5, 0, 0.001f);
+            r.setRotationPoint(px, py, pz);
+            body.addChild(r);
+            return r;
+        }
+
+        private static void rot(ModelRenderer r, float x, float y, float z) {
+            r.rotateAngleX = x;
+            r.rotateAngleY = y;
+            r.rotateAngleZ = z;
+        }
+
+        /** age = ticks (breathing, gills, tail), look = degrees the head turns. */
         @Override
         public void render(Entity e, float f0, float f1, float age, float look, float pitch, float scale) {
-            head.rotateAngleY = look * (float) Math.PI / 180f;
-            tail.rotateAngleY = MathHelper.sin(age * 0.16f) * 0.35f;
-            float g = MathHelper.sin(age * 0.11f) * 0.18f;
-            gillLeft.rotateAngleY = 0.35f + g;
-            gillRight.rotateAngleY = -0.35f - g;
-            gillTop.rotateAngleX = -0.2f - g * 0.6f;
-            for (int i = 0; i < 4; i++) legs[i].rotateAngleX = MathHelper.sin(age * 0.09f + i * 1.7f) * 0.15f;
+            // the game's "lying still on the ground" animation
+            float f = age * 0.09f;
+            float s = MathHelper.sin(f), c = MathHelper.cos(f);
+            float a = s * s - 2f * s;
+            float b = c * c - 3f * s;
+            rot(head, -0.09f * a, look * (float) Math.PI / 180f * 0.5f, -0.2f);
+            rot(tail, 0f, -0.1f + 0.1f * a, 0f);
+            rot(topGills, 0.6f + 0.05f * b, 0f, 0f);
+            rot(leftGills, 0f, -0.6f - 0.05f * b, 0f);
+            rot(rightGills, 0f, 0.6f + 0.05f * b, 0f);
+            rot(leftHind, 1.1f, 1.0f, 0f);
+            rot(leftFront, 0.8f, 2.3f, -0.5f);
+            rot(rightHind, 1.1f, -1.0f, 0f);
+            rot(rightFront, 0.8f, -2.3f, 0.5f);
             body.render(scale);
-            head.render(scale);
-            tail.render(scale);
-            for (ModelRenderer l : legs) l.render(scale);
         }
     }
 
-    /** Parrot (as in 1.12): slanted body, crest feather, hooked beak, folded wings, tail (feet at y = 24). */
+    /** Parrot, built exactly like today's Minecraft (ParrotModel): slanted body, crest feather, hooked beak, folded wings, tail (feet at y = 24). */
     static final class Parrot extends ModelBase {
         final ModelRenderer body, tail, wingLeft, wingRight, head, legLeft, legRight;
 
@@ -91,10 +111,12 @@ final class PetModels {
             wingLeft.addBox(-0.5f, 0f, -1.5f, 1, 5, 3);
             wingLeft.setRotationPoint(1.5f, 16.94f, -2.76f);
             wingLeft.rotateAngleX = -0.6981f;
+            wingLeft.rotateAngleY = (float) -Math.PI;
             wingRight = new ModelRenderer(this, 19, 8);
             wingRight.addBox(-0.5f, 0f, -1.5f, 1, 5, 3);
             wingRight.setRotationPoint(-1.5f, 16.94f, -2.76f);
             wingRight.rotateAngleX = -0.6981f;
+            wingRight.rotateAngleY = (float) -Math.PI;
             head = new ModelRenderer(this, 2, 2);
             head.addBox(-1f, -1.5f, -1f, 2, 3, 2);
             head.setRotationPoint(0f, 15.69f, -2.76f);
