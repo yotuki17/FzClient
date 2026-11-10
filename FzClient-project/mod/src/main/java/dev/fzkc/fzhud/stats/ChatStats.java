@@ -107,8 +107,11 @@ public class ChatStats {
     private long startAt, startUntil;
     private boolean startDone;
 
+    private static final org.apache.logging.log4j.Logger LOG = org.apache.logging.log4j.LogManager.getLogger("FzClient-Stats");
+
     private void gameStarting(String plain) {
-        if (!Modules.stats.enabled || !Modules.statsChatStart.get() || !Stats.onHypixel() || Stats.lobby) return;
+        // the countdown only comes in a game, so no lobby check (the lobby flag can be stale right after a world change)
+        if (!Modules.stats.enabled || !Modules.statsChatStart.get() || !Stats.onHypixel()) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.theWorld != startWorld) {
             startWorld = mc.theWorld;
@@ -118,23 +121,25 @@ public class ChatStats {
         if (startDone) return;
         long now = System.currentTimeMillis();
         long at = 0;
+        String t = plain.trim();
         // teams are filled in the tab list right when the game starts: look a moment later
-        if (COUNTDOWN.matcher(plain.trim()).find()) at = now + 2000;
-        else if (plain.trim().equals("Protect your bed and destroy the enemy beds.")) at = now + 1000;
+        if (COUNTDOWN.matcher(t).find()) at = now + 1500;
+        else if (t.equals("Protect your bed and destroy the enemy beds.")) at = now + 500;
         if (at > 0 && (startAt == 0 || at < startAt)) {
             startAt = at;
-            startUntil = at + 6000;
+            startUntil = at + 8000;
+            starters = null;
+            LOG.info("game start seen: \"" + t + "\"");
         }
     }
 
     /** One player in the start list. */
     private static final class Starter {
-        final String name, team;
+        final String name;
         final UUID id;
 
-        Starter(String name, String team, UUID id) {
+        Starter(String name, UUID id) {
             this.name = name;
-            this.team = team;
             this.id = id;
         }
     }
@@ -145,54 +150,85 @@ public class ChatStats {
         Minecraft mc = Minecraft.getMinecraft();
         if (startAt == 0 || now < startAt || mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
         if (mc.theWorld != startWorld) {
-            startAt = 0;
+            // the game moved you to another world as it started: the list is for the new one
+            startWorld = mc.theWorld;
             starters = null;
-            return;
         }
+        net.minecraft.client.network.NetworkPlayerInfo meInfo = mc.thePlayer.sendQueue.getPlayerInfo(mc.thePlayer.getUniqueID());
+        String myTeam = Denick.teamKey(meInfo);
         if (starters == null) {
             starters = new ArrayList<>();
             List<UUID> ids = new ArrayList<>();
             List<String> names = new ArrayList<>();
-            String myTeam = mc.thePlayer.getTeam() == null ? "" : mc.thePlayer.getTeam().getRegisteredName();
             for (net.minecraft.client.network.NetworkPlayerInfo info : mc.thePlayer.sendQueue.getPlayerInfoMap()) {
                 UUID pid = info.getGameProfile().getId();
                 String nm = info.getGameProfile().getName();
                 if (pid == null || nm == null || !nm.matches("[A-Za-z0-9_]{1,16}") || nm.equalsIgnoreCase(mc.thePlayer.getName())) continue;
                 if (pid.version() != 4 && !Denick.isNick(info)) continue;   // NPCs and server-made entries
-                String team = info.getPlayerTeam() == null ? "~" : info.getPlayerTeam().getRegisteredName();
-                // your own team first, then the others by name
-                starters.add(new Starter(nm, team.equals(myTeam) ? "" : team, pid));
+                starters.add(new Starter(nm, pid));
                 if (pid.version() == 4) {
                     ids.add(pid);
                     names.add(nm);
                 }
-                if (starters.size() >= 24) break;
             }
-            starters.sort((a, b) -> a.team.equals(b.team) ? a.name.compareToIgnoreCase(b.name) : a.team.compareTo(b.team));
             StatsApi.prefetch(ids, names);
             if (Tags.watcherOn() || Tags.xadiaOn() || Tags.coralOn()) Tags.prefetch(ids);
             if (starters.isEmpty()) {
+                if (now < startUntil) return;   // the tab list can fill a moment later
+                LOG.info("game start: nobody in the tab list");
                 startAt = 0;
                 starters = null;
                 return;
             }
         }
-        // wait until everyone is loaded (or a few seconds), then print the whole list at once
+        // the teams as the tab list shows them now (colour and letter; Hypixel gives everyone a scoreboard team of
+        // their own, so the team's name says nothing): wait a little while everyone still has the waiting lobby's grey
+        java.util.Map<String, String> teamOf = new java.util.HashMap<>();
+        java.util.Set<String> teams = new HashSet<>();
+        for (Starter st : starters) {
+            String k = Denick.teamKey(mc.thePlayer.sendQueue.getPlayerInfo(st.name));
+            teamOf.put(st.name, k == null ? "~" : k);
+            teams.add(k == null ? "~" : k);
+        }
+        boolean noTeams = teams.size() <= 1 && (myTeam == null || teams.contains(myTeam) || teams.contains("~"));
+        // wait until everyone (and their tags) is loaded, or a few seconds, then print the whole list at once
+        boolean waiting = noTeams && now < startAt + 3000;
         List<String> lines = new ArrayList<>();
-        boolean waiting = false;
-        for (Starter s : starters) {
-            UUID id = idOf(s.name);
-            String l = line(s.name, id, 2, "§8▪ ");
-            if (l == null) waiting = true;
+        for (Starter st : starters) {
+            UUID id = idOf(st.name);
+            String l = line(st.name, id, 2, "§8▪ ");
+            if (l == null || id != null && Tags.loading(id)) waiting = true;
             lines.add(l);
         }
         if (waiting && now < startUntil) return;
+        // your own team first, then the others team by team, by name inside a team
+        List<Integer> order = new ArrayList<>();
+        for (int i = 0; i < starters.size(); i++) order.add(i);
+        final String mine = myTeam == null ? "" : myTeam;
+        order.sort((x, y) -> {
+            String tx = teamOf.get(starters.get(x).name), ty = teamOf.get(starters.get(y).name);
+            boolean mx = tx.equals(mine), my = ty.equals(mine);
+            if (mx != my) return mx ? -1 : 1;
+            int c = tx.compareTo(ty);
+            return c != 0 ? c : starters.get(x).name.compareToIgnoreCase(starters.get(y).name);
+        });
         mc.thePlayer.addChatMessage(new ChatComponentText("§8[§bFzClient§8]§r §7" + Lang.t("試合開始 — 参加者の統計")));
-        for (int i = 0; i < starters.size(); i++) {
+        int unknown = 0, shown = 0;
+        String lastTeam = null;
+        for (int i : order) {
+            if (shown >= 24) break;
+            String team = teamOf.get(starters.get(i).name);
+            if (!noTeams && lastTeam != null && !team.equals(lastTeam)) mc.thePlayer.addChatMessage(new ChatComponentText("§8 "));
+            lastTeam = team;
             String l = lines.get(i);
-            if (l == null || l.isEmpty()) l = "§8▪ §7" + starters.get(i).name + " §7|§r §8?";
+            if (l == null || l.isEmpty()) {
+                l = "§8▪ §7" + starters.get(i).name + " §7|§r §8?";
+                unknown++;
+            }
             mc.thePlayer.addChatMessage(new ChatComponentText(l));
+            shown++;
         }
+        LOG.info("game start list: " + shown + " players, " + unknown + " without stats, " + teams.size() + " teams, my team " + myTeam);
         startDone = true;
         startAt = 0;
         starters = null;
