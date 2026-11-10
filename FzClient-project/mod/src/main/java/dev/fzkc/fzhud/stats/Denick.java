@@ -319,7 +319,7 @@ public final class Denick {
             pendingCount = 0;
         }
         NetworkPlayerInfo meInfo = mc.thePlayer.sendQueue.getPlayerInfo(mc.thePlayer.getUniqueID());
-        net.minecraft.scoreboard.ScorePlayerTeam myTeam = meInfo == null ? null : meInfo.getPlayerTeam();
+        String myTeam = teamKey(meInfo);
         java.util.Collection<NetworkPlayerInfo> all = mc.thePlayer.sendQueue.getPlayerInfoMap();
         for (NetworkPlayerInfo i : all) {
             String n = i.getGameProfile().getName();
@@ -329,7 +329,7 @@ public final class Denick {
         if (myTeam != null) for (NetworkPlayerInfo i : all) if (sameTeam(i, myTeam)) teamSize++;
         // a team that holds everyone (waiting lobby) says nothing: then every nick counts
         boolean useTeam = myTeam != null && teamSize > 1 && teamSize < all.size();
-        if (!useTeam) { pendingPair = null; return; }   // only your own team: an unknown team could match an enemy
+        if (!useTeam) { pendingPair = null; why("no team (" + myTeam + ", " + teamSize + "/" + all.size() + ")"); return; }   // only your own team: an unknown team could match an enemy
         List<String> nicks = new ArrayList<>();
         Set<String> visible = new HashSet<>();
         for (NetworkPlayerInfo i : all) {
@@ -346,30 +346,32 @@ public final class Denick {
             }
             if (sameTeam(i, myTeam)) nicks.add(n);
         }
-        if (nicks.isEmpty()) { pendingPair = null; return; }
-        List<String> party = dev.fzkc.fzhud.chat.KnownNames.partyNames();
-        if (party.isEmpty()) {
-            // nothing known about your party yet: ask once per world, without showing the answer
-            if (Modules.denickAskParty.get() && partyAskedWorld != mc.theWorld) {
-                partyAskedWorld = mc.theWorld;
-                partyAskedAt = System.currentTimeMillis();
-                partyReply.clear();
-                mc.thePlayer.sendChatMessage("/pl");
-            }
+        if (nicks.isEmpty()) { pendingPair = null; why("no unknown nick on the team"); return; }
+        // the party list from chat can be old or partial (members who joined while you were away): ask once per game,
+        // without showing the answer, and wait for it
+        if (Modules.denickAskParty.get() && partyAskedWorld != mc.theWorld) {
+            partyAskedWorld = mc.theWorld;
+            partyAskedAt = System.currentTimeMillis();
+            partyReply.clear();
+            mc.thePlayer.sendChatMessage("/pl");
+            why("asked /pl");
             return;
         }
+        if (partyAskedAt != 0 && System.currentTimeMillis() - partyAskedAt < 2500L) return;   // the answer is still coming
+        List<String> party = dev.fzkc.fzhud.chat.KnownNames.partyNames();
+        if (party.isEmpty()) { why("party unknown"); return; }
         List<String> missing = new ArrayList<>();
         String me = mc.thePlayer.getName();
         // someone on your team who is not in the party (a random player) could be the nick: then nothing is matched
         int partyCount = 1;
         for (String p : party) if (!p.equalsIgnoreCase(me)) partyCount++;
-        if (teamSize > partyCount) { pendingPair = null; return; }
+        if (teamSize > partyCount) { pendingPair = null; why("team " + teamSize + " > party " + partyCount); return; }
         for (String p : party) {
             String pk = p.toLowerCase(Locale.ROOT);
             if (p.equalsIgnoreCase(me) || visible.contains(pk) || seenHere.contains(pk)) continue;
             missing.add(p);
         }
-        if (nicks.size() != 1 || missing.size() != 1) { pendingPair = null; return; }
+        if (nicks.size() != 1 || missing.size() != 1) { pendingPair = null; why("nicks " + nicks + ", missing " + missing + ", party " + party); return; }
         String pair = nicks.get(0) + "=" + missing.get(0);
         if (!pair.equals(pendingPair)) { pendingPair = pair; pendingCount = 0; }
         if (++pendingCount >= 3) {
@@ -378,9 +380,40 @@ public final class Denick {
         }
     }
 
-    private static boolean sameTeam(NetworkPlayerInfo i, net.minecraft.scoreboard.ScorePlayerTeam t) {
-        net.minecraft.scoreboard.ScorePlayerTeam it = i.getPlayerTeam();
-        return it != null && it.getRegisteredName().equals(t.getRegisteredName());
+    private static boolean sameTeam(NetworkPlayerInfo i, String team) {
+        return team != null && team.equals(teamKey(i));
+    }
+
+    /**
+     * Which team a player is on, as the tab list shows it: Hypixel often gives every player a scoreboard team of
+     * their own (for the name colour), so the team's name says nothing; the colour and letter in front ("§cR ") do.
+     * Falls back to the scoreboard team's name when the prefix has neither.
+     */
+    static String teamKey(NetworkPlayerInfo i) {
+        net.minecraft.scoreboard.ScorePlayerTeam t = i == null ? null : i.getPlayerTeam();
+        if (t == null) return null;
+        String p = t.getColorPrefix();
+        String color = "";
+        for (int c = p.length() - 2; c >= 0; c--) {
+            if (p.charAt(c) == '§' && "0123456789abcdef".indexOf(Character.toLowerCase(p.charAt(c + 1))) >= 0) {
+                color = p.substring(c + 1, c + 2).toLowerCase(Locale.ROOT);
+                break;
+            }
+        }
+        String text = net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(p).trim();
+        // a rank in front ("[MVP+]") is not a team
+        text = text.replaceAll("\\[[^\\]]*\\]", "").trim();
+        if (color.isEmpty() && text.isEmpty()) return "t:" + t.getRegisteredName();
+        return "p:" + color + ":" + text;
+    }
+
+    private static String lastWhy;
+
+    /** Why the party check found nothing, in the log once per change (to see why a nick was not matched). */
+    private static void why(String s) {
+        if (s.equals(lastWhy)) return;
+        lastWhy = s;
+        org.apache.logging.log4j.LogManager.getLogger("FzClient-Denick").info("party check: " + s);
     }
 
     private static final Pattern DOT = Pattern.compile("(?:\\[[^\\]]{1,24}\\] )?([A-Za-z0-9_]{1,16}) ?●");

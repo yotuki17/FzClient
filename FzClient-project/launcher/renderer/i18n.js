@@ -138,6 +138,7 @@ const EN = {
   'NEW：待機ロビーで発言した人の統計を Mellow と同じ形で下に表示（名前はチームの色）': 'NEW: in waiting lobbies, the stats of whoever talks follow on their own line like Mellow (name in the team colour)',
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
+  '改善：パーティの消去法 denick が動かなかったのを修正': 'Fixed: party elimination denick did not work',
   'NEW：高さ上限をみんなで共有、初めてのマップでもわかる': 'NEW: height limits shared by everyone, known even on new maps',
   'NEW：入れなかったメンバーを自動 /p warp、マウスでホットバー入替': 'NEW: auto /p warp for members left behind, mouse hotbar swap',
   '改善：肩に乗るペットの位置を修正、お知らせを短く整理': 'Improved: shoulder pet position, shorter news list',

@@ -29,6 +29,8 @@ public final class PartyWarp {
     private long askAt, askedAt;
     private String leader;
     private final List<String> online = new ArrayList<String>();
+    /** Everyone in the party (online or not), for the party list of the denick. */
+    private final List<String> everyone = new ArrayList<String>();
 
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public void onChat(ClientChatReceivedEvent event) {
@@ -68,6 +70,7 @@ public final class PartyWarp {
             askedAt = now;
             leader = null;
             online.clear();
+            everyone.clear();
             mc.thePlayer.sendChatMessage("/pl");
         }
         // the answer has stopped coming: decide
@@ -109,6 +112,7 @@ public final class PartyWarp {
                     char k = Character.toLowerCase(seg.charAt(c + 1));
                     if (seg.charAt(c) == '§' && "0123456789abcdef".indexOf(k) >= 0) { color = k; break; }
                 }
+                everyone.add(n.group(1));
                 if (isLeader) leader = n.group(1);
                 else if (color == 'a') online.add(n.group(1));
             }
@@ -119,6 +123,7 @@ public final class PartyWarp {
     /** The whole answer is here: warp the members who are missing, if you lead the party. */
     private void finish(Minecraft mc) {
         askedAt = 0;
+        if (!everyone.isEmpty()) KnownNames.setParty(new ArrayList<String>(everyone));
         if (leader == null || mc.thePlayer == null || mc.theWorld == null) return;
         if (!leader.equalsIgnoreCase(mc.thePlayer.getName())) return;   // only the leader can warp
         List<String> missing = new ArrayList<String>();
