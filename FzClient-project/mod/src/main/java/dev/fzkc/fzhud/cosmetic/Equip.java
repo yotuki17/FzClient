@@ -12,7 +12,8 @@ public final class Equip {
     public static final String[] AURAS = {"", "hearts", "flame", "magic", "notes", "snow", "rainbow", "stars", "petals", "bubbles", "souls",
             "ender", "fireflies", "leaves", "electric", "galaxy", "love", "shadow", "emerald"};
     public static final String[] HALOS = {"", "gold", "rainbow", "dark", "ice"};
-    public static final String[] PETS = {"", "dog", "cat", "chick", "pig", "sheep", "slime", "blaze", "ghast", "snowman", "creeper"};
+    public static final String[] PETS = {"", "dog", "cat", "chick", "pig", "sheep", "slime", "blaze", "ghast", "snowman", "creeper",
+            "axolotl", "axolotl_gold", "axolotl_blue", "parrot", "parrot_blue"};
 
     public String cape = "", capeHash = "", aura = "", halo = "", pet = "";
 

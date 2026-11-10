@@ -26,6 +26,8 @@ public final class PlayerPreview {
     private static volatile ResourceLocation ownCape;
     private static volatile boolean slim, asked;
     private static final CapeCloth.Sim PREVIEW_CAPE = new CapeCloth.Sim();
+    /** A shoulder pet to draw on the preview (set around a draw call by the Cosmetics page), or null. */
+    public static String shoulderPet;
 
     private PlayerPreview() {}
 
@@ -152,6 +154,7 @@ public final class PlayerPreview {
                 }
                 GlStateManager.popMatrix();
             }
+            if (shoulderPet != null) PetFx.drawOnShoulder(shoulderPet, false, age);
         } catch (Throwable ignored) {
         } finally {
             GlStateManager.enableCull();

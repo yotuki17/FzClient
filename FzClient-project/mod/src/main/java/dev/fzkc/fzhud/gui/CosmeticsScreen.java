@@ -34,7 +34,8 @@ public class CosmeticsScreen extends FzScreen {
     private static final String[] AURA_NAMES = {"なし", "ハート", "炎", "魔法", "音符", "雪", "虹", "星", "花びら", "泡", "ソウル",
             "エンダー", "ホタル", "落ち葉", "電撃", "ギャラクシー", "ラブ", "シャドウ", "エメラルド"};
     private static final String[] HALO_NAMES = {"なし", "ゴールド", "虹", "ダーク", "アイス"};
-    private static final String[] PET_NAMES = {"なし", "子犬", "子猫", "ヒヨコ", "子ブタ", "子ヒツジ", "スライム", "ブレイズ", "ガスト", "スノーゴーレム", "クリーパー"};
+    private static final String[] PET_NAMES = {"なし", "子犬", "子猫", "ヒヨコ", "子ブタ", "子ヒツジ", "スライム", "ブレイズ", "ガスト", "スノーゴーレム", "クリーパー",
+            "ウーパールーパー", "金のウーパー", "青のウーパー", "オウム", "青いオウム"};
     private static final String[] TABS = {"マント", "オーラ", "ヘイロー", "ペット"};
     /** Sprite and tint for each aura tile (none has no icon). */
     private static final int[][] AURA_ICON = {{-1, 0}, {0, 0xFF4F7E}, {5, 0xFFA63C}, {2, 0xB07CFF}, {3, 0x5CE1E6}, {4, 0xEEF6FF}, {2, 0xFFD84A},
@@ -127,10 +128,12 @@ public class CosmeticsScreen extends FzScreen {
         float age = (System.currentTimeMillis() % 1000000L) / 50f;
         // aura behind and in front of the player
         AuraFx.draw2D(fx, footX, footY, size, 0f);
+        PlayerPreview.shoulderPet = PetFx.shoulder(mine.pet) ? mine.pet : null;
         PlayerPreview.draw(footX, footY, size, yaw, cape, age);
+        PlayerPreview.shoulderPet = null;
         HaloFx.draw2D(mine.halo, footX, footY, size);
         // the pet floats by the right shoulder (on the left as you look at the player turned toward you)
-        if (!mine.pet.isEmpty()) {
+        if (!mine.pet.isEmpty() && !PetFx.shoulder(mine.pet)) {
             double yr = Math.toRadians(yaw);
             float side = (float) Math.cos(yr);
             PetFx.drawGui(mine.pet, footX - side * size * 0.85f, footY - size * 1.3f + (float) Math.sin(age * 0.12f) * size * 0.05f,

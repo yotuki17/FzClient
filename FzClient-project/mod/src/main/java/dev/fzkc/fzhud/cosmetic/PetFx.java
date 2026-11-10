@@ -1,6 +1,9 @@
 package dev.fzkc.fzhud.cosmetic;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelBlaze;
 import net.minecraft.client.model.ModelChicken;
@@ -35,6 +38,8 @@ import java.util.WeakHashMap;
  * Pets: a small animal floating next to your shoulder that follows you around (a puppy, a kitten, a chick, a mini
  * blaze...). They are Minecraft's own models and textures drawn smaller, not entities: the server never knows about
  * them, they can't be hit and nothing else (hitboxes, mob counters) sees them. Other FzClient users see yours.
+ * Small ones (axolotls, parrots) ride on your shoulder instead, drawn as part of the player.
+ * Your own floating pet is hidden in first person (it only got in the way of the view).
  */
 public final class PetFx {
     /** One kind of pet: its model(s), texture(s), size and how high it floats. */
@@ -47,6 +52,24 @@ public final class PetFx {
         final float[] layerRgb;
         /** Translucent second layer (the slime's outer gel). */
         final boolean layerBlend;
+        /** Rides on the shoulder instead of floating beside you. */
+        final boolean shoulder;
+        /** Extra size in the Cosmetics tiles (tiny pets). */
+        final float guiMul;
+
+        /** A pet of our own (PetModels) on the shoulder. */
+        Kind(ModelBase model, ResourceLocation tex, float scale, float guiMul) {
+            this.model = model;
+            this.tex = tex;
+            this.scale = scale;
+            this.child = false;
+            this.layer = null;
+            this.layerTex = null;
+            this.layerRgb = null;
+            this.layerBlend = false;
+            this.shoulder = true;
+            this.guiMul = guiMul;
+        }
 
         Kind(ModelBase model, String tex, float scale, boolean child, ModelBase layer, String layerTex, float[] layerRgb, boolean layerBlend) {
             this.model = model;
@@ -57,6 +80,8 @@ public final class PetFx {
             this.layerTex = layerTex == null ? null : new ResourceLocation("textures/entity/" + layerTex);
             this.layerRgb = layerRgb;
             this.layerBlend = layerBlend;
+            this.shoulder = false;
+            this.guiMul = 1f;
         }
     }
 
@@ -78,10 +103,21 @@ public final class PetFx {
                     new Kind(new ModelGhast(), "ghast/ghast.png", 0.26f, false, null, null, null, false),
                     new Kind(new ModelSnowMan(), "snowman.png", 0.32f, false, null, null, null, false),
                     new Kind(new ModelCreeper(), "creeper/creeper.png", 0.34f, false, null, null, null, false),
+                    new Kind(new PetModels.Axolotl(), PetModels.axolotlSkin("axolotl", 0xFFF4A9CB, 0xFFDD4C8E), 0.42f, 1.6f),
+                    new Kind(new PetModels.Axolotl(), PetModels.axolotlSkin("axolotl_gold", 0xFFF5CF52, 0xFFE58A26), 0.42f, 1.6f),
+                    new Kind(new PetModels.Axolotl(), PetModels.axolotlSkin("axolotl_blue", 0xFF6577E2, 0xFF3E4CC0), 0.42f, 1.6f),
+                    new Kind(new PetModels.Parrot(), PetModels.parrotSkin("parrot", 0xFFE5281F, 0xFF2D5AD4, 0xFFF2C12E, 0), 0.95f, 0.85f),
+                    new Kind(new PetModels.Parrot(), PetModels.parrotSkin("parrot_blue", 0xFF2E73E0, 0xFF1E3E9E, 0xFF30B8C8, 0xFFF2C230), 0.95f, 0.85f),
             };
         }
         for (int i = 1; i < Equip.PETS.length && i < kinds.length; i++) if (Equip.PETS[i].equals(id)) return kinds[i];
         return null;
+    }
+
+    /** A pet that rides on the shoulder (axolotl, parrot) rather than floating. */
+    public static boolean shoulder(String id) {
+        Kind k = id == null || id.isEmpty() ? null : kind(id);
+        return k != null && k.shoulder;
     }
 
     /**
@@ -181,12 +217,13 @@ public final class PetFx {
             return;
         }
         if (mc.isGamePaused()) return;
+        addLayers(mc);
         ticks++;
         List<EntityPlayer> all = mc.theWorld.playerEntities;
         for (int i = 0; i < all.size(); i++) {
             EntityPlayer p = all.get(i);
             Equip e = Cosmetics.of(p);
-            if (e == null || e.pet.isEmpty()) {
+            if (e == null || e.pet.isEmpty() || shoulder(e.pet)) {
                 SIMS.remove(p);
                 continue;
             }
@@ -245,6 +282,8 @@ public final class PetFx {
             Equip e = Cosmetics.of(p);
             if (e == null || e.pet.isEmpty()) continue;
             if (p.getDistanceSqToEntity(v) > 48 * 48) continue;
+            // your own pet in first person: right next to the camera it only blocked the view
+            if (p == v && mc.gameSettings.thirdPersonView == 0) continue;
             double x = s.px + (s.x - s.px) * pt, y = s.py + (s.y - s.py) * pt, z = s.pz + (s.z - s.pz) * pt;
             float bob = MathHelper.sin((age + p.getEntityId() * 7) * 0.12f) * 0.06f;
             if (!begun) {
@@ -274,6 +313,51 @@ public final class PetFx {
         }
     }
 
+    // ------------------------------------------------------------------ on the shoulder
+
+    private static boolean layersAdded;
+
+    /** Once: shoulder pets become a layer of the player (both skin models), like the cape. */
+    private static void addLayers(Minecraft mc) {
+        if (layersAdded) return;
+        layersAdded = true;
+        try {
+            for (RenderPlayer r : mc.getRenderManager().getSkinMap().values()) r.addLayer(new Shoulder());
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * Draws a shoulder pet on the left shoulder. GL must be in the player model's space (where the game draws the
+     * cape: 1 = a block, y down, origin at the neck).
+     */
+    static void drawOnShoulder(String id, boolean sneaking, float age) {
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(0.4f, sneaking ? 0.2f : 0f, 0f);
+        drawModel(id, age);
+        GlStateManager.popMatrix();
+    }
+
+    private static final class Shoulder implements LayerRenderer<AbstractClientPlayer> {
+        @Override
+        public void doRenderLayer(AbstractClientPlayer p, float limbSwing, float limbAmount, float pt, float age,
+                                  float headYaw, float headPitch, float scale) {
+            try {
+                if (p.isInvisible()) return;
+                Equip e = Cosmetics.of(p);
+                if (e == null || !shoulder(e.pet)) return;
+                drawOnShoulder(e.pet, p.isSneaking(), age + p.getEntityId() * 13);
+                GlStateManager.enableRescaleNormal();   // the player renderer still needs it
+            } catch (Throwable ignored) {
+            }
+        }
+
+        @Override
+        public boolean shouldCombineTextures() {
+            return false;
+        }
+    }
+
     // ------------------------------------------------------------------ screens
 
     /**
@@ -288,6 +372,7 @@ public final class PetFx {
         GlStateManager.enableDepth();
         GlStateManager.depthMask(true);
         GlStateManager.translate(x, footY, 120f);
+        size *= kind(id).guiMul;
         GlStateManager.scale(-size, size, size);
         GlStateManager.rotate(135f, 0f, 1f, 0f);
         RenderHelper.enableStandardItemLighting();

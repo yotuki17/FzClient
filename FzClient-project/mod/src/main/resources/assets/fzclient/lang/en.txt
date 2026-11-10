@@ -1095,3 +1095,8 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 クリーパー	Creeper
 マントを滑らかに揺らす	Smooth waving capes
 マント・オーラ・ヘイロー・ペット。ほかの FzClient ユーザーにも見えます	Capes, auras, halos and pets. Other FzClient users see them too
+ウーパールーパー	Axolotl
+金のウーパー	Gold axolotl
+青のウーパー	Blue axolotl
+オウム	Parrot
+青いオウム	Blue parrot
