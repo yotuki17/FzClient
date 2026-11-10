@@ -164,8 +164,12 @@ public final class Modules {
             "マント・オーラ・ヘイロー。ほかの FzClient ユーザーにも見えます", true).alwaysOn();
     public static final ChoiceSetting cosCape = cosmetics.add(new ChoiceSetting("cape", "マント", 0,
             "なし", "FzClient", "オーロラ", "ミッドナイト", "サクラ", "オーシャン", "エンバー", "ギャラクシー", "ネオン", "ロイヤル"));
-    public static final ChoiceSetting cosAura = cosmetics.add(new ChoiceSetting("aura", "オーラ", 0, "なし", "ハート", "炎", "魔法", "音符", "雪", "虹", "星", "花びら", "泡", "ソウル"));
+    public static final ChoiceSetting cosAura = cosmetics.add(new ChoiceSetting("aura", "オーラ", 0, "なし", "ハート", "炎", "魔法", "音符", "雪", "虹", "星", "花びら", "泡", "ソウル",
+            "エンダー", "ホタル", "落ち葉", "電撃", "ギャラクシー", "ラブ", "シャドウ", "エメラルド"));
     public static final ChoiceSetting cosHalo = cosmetics.add(new ChoiceSetting("halo", "ヘイロー", 0, "なし", "ゴールド", "虹", "ダーク", "アイス"));
+    public static final ChoiceSetting cosPet = cosmetics.add(new ChoiceSetting("pet", "ペット", 0, "なし", "子犬", "子猫", "ヒヨコ", "子ブタ", "子ヒツジ", "スライム", "ブレイズ", "ガスト", "スノーゴーレム", "クリーパー"));
+    /** Every cape (Mojang, OptiFine, FzClient) as soft cloth that waves, see CapeCloth. */
+    public static final BoolSetting cosCapeSmooth = cosmetics.add(new BoolSetting("capesmooth", "マントを滑らかに揺らす", true));
     public static final BoolSetting cosOthers = cosmetics.add(new BoolSetting("others", "ほかの FzClient ユーザーのコスメを表示", true));
 
     // ---- Party detector (waiting lobbies)

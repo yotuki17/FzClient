@@ -188,6 +188,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.Cosmetics());   // capes and auras (sync)
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.AuraFx());      // aura sprites, drawn after the world
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.HaloFx());      // halos, drawn after the world
+        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.PetFx());       // pets floating next to the player
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.stats.Denick());   // real names for found nicks (nametags)
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.gui.PauseButtons());     // FzClient Settings / Cosmetics in the game menu
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new PartyRelay.TestCommand());

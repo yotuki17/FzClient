@@ -25,6 +25,7 @@ public final class PlayerPreview {
     /** The account's own Mojang cape, shown when no FzClient cape is worn. */
     private static volatile ResourceLocation ownCape;
     private static volatile boolean slim, asked;
+    private static final CapeCloth.Sim PREVIEW_CAPE = new CapeCloth.Sim();
 
     private PlayerPreview() {}
 
@@ -140,9 +141,15 @@ public final class PlayerPreview {
                 mc.getTextureManager().bindTexture(cape);
                 GlStateManager.pushMatrix();
                 GlStateManager.translate(0f, 0f, 0.125f);
-                GlStateManager.rotate(6f + MathHelper.sin(age * 0.05f) * 3f, 1f, 0f, 0f);
-                GlStateManager.rotate(180f, 0f, 1f, 0f);
-                m.renderCape(sc);
+                if (CapeCloth.on()) {
+                    // the same soft cloth as in the game, swaying gently
+                    CapeCloth.step(PREVIEW_CAPE, 8f + MathHelper.sin(age * 0.05f) * 4f, 0f, 0.15f);
+                    CapeCloth.draw(PREVIEW_CAPE, 0f);
+                } else {
+                    GlStateManager.rotate(6f + MathHelper.sin(age * 0.05f) * 3f, 1f, 0f, 0f);
+                    GlStateManager.rotate(180f, 0f, 1f, 0f);
+                    m.renderCape(sc);
+                }
                 GlStateManager.popMatrix();
             }
         } catch (Throwable ignored) {

@@ -1076,3 +1076,22 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 クリックでコスメ・ドラッグで回す	Click for cosmetics, drag to turn
 パーティクルを完全に消す	Remove all particles
 マルチプレイ・設定・Esc メニューなどをバニラの表示にする	Show multiplayer, options, the Esc menu and so on the vanilla way
+エンダー	Ender
+ホタル	Fireflies
+落ち葉	Autumn leaves
+電撃	Electric
+ラブ	Love
+シャドウ	Shadow
+ペット	Pet
+子犬	Puppy
+子猫	Kitten
+ヒヨコ	Chick
+子ブタ	Piglet
+子ヒツジ	Lamb
+スライム	Slime
+ブレイズ	Blaze
+ガスト	Ghast
+スノーゴーレム	Snow golem
+クリーパー	Creeper
+マントを滑らかに揺らす	Smooth waving capes
+マント・オーラ・ヘイロー・ペット。ほかの FzClient ユーザーにも見えます	Capes, auras, halos and pets. Other FzClient users see them too

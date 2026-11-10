@@ -9,13 +9,15 @@ import com.google.gson.JsonObject;
  */
 public final class Equip {
     public static final String[] CAPES = {"", "fzclient", "aurora", "midnight", "sakura", "ocean", "ember", "galaxy", "neon", "royal"};
-    public static final String[] AURAS = {"", "hearts", "flame", "magic", "notes", "snow", "rainbow", "stars", "petals", "bubbles", "souls"};
+    public static final String[] AURAS = {"", "hearts", "flame", "magic", "notes", "snow", "rainbow", "stars", "petals", "bubbles", "souls",
+            "ender", "fireflies", "leaves", "electric", "galaxy", "love", "shadow", "emerald"};
     public static final String[] HALOS = {"", "gold", "rainbow", "dark", "ice"};
+    public static final String[] PETS = {"", "dog", "cat", "chick", "pig", "sheep", "slime", "blaze", "ghast", "snowman", "creeper"};
 
-    public String cape = "", capeHash = "", aura = "", halo = "";
+    public String cape = "", capeHash = "", aura = "", halo = "", pet = "";
 
     public boolean empty() {
-        return cape.isEmpty() && aura.isEmpty() && halo.isEmpty();
+        return cape.isEmpty() && aura.isEmpty() && halo.isEmpty() && pet.isEmpty();
     }
 
     public JsonObject toJson() {
@@ -24,6 +26,7 @@ public final class Equip {
         if (!capeHash.isEmpty()) o.addProperty("capeHash", capeHash);
         o.addProperty("aura", aura);
         if (!halo.isEmpty()) o.addProperty("halo", halo);
+        if (!pet.isEmpty()) o.addProperty("pet", pet);
         return o;
     }
 
@@ -34,6 +37,7 @@ public final class Equip {
         e.cape = pick(o, "cape", CAPES);
         e.aura = pick(o, "aura", AURAS);
         e.halo = pick(o, "halo", HALOS);
+        e.pet = pick(o, "pet", PETS);
         try { if (o.has("capeHash")) e.capeHash = o.get("capeHash").getAsString().replaceAll("[^0-9a-f]", ""); } catch (Exception ignored) { }
         return e;
     }

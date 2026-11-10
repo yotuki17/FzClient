@@ -71,6 +71,7 @@ public final class Cosmetics {
         e.cape = Equip.CAPES[clamp(Modules.cosCape.get(), Equip.CAPES.length)];
         e.aura = Equip.AURAS[clamp(Modules.cosAura.get(), Equip.AURAS.length)];
         e.halo = Equip.HALOS[clamp(Modules.cosHalo.get(), Equip.HALOS.length)];
+        e.pet = Equip.PETS[clamp(Modules.cosPet.get(), Equip.PETS.length)];
         return e;
     }
 
@@ -126,11 +127,61 @@ public final class Cosmetics {
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+        if (TEST != null) devTest();
         if (thread == null) {
             thread = new Thread(Cosmetics::loop, "FzClient-Cosmetics");
             thread.setDaemon(true);
             thread.start();
         }
+    }
+
+    // ------------------------------------------------------------------ developer check
+
+    /** -Dfzclient.costest=<world folder>: opens the Cosmetics page (each tab), then the world, and saves screenshots. */
+    private static final String TEST = System.getProperty("fzclient.costest");
+    private static int testTicks;
+
+    private static void devTest() {
+        Minecraft mc = Minecraft.getMinecraft();
+        int t = ++testTicks;
+        net.minecraft.client.settings.KeyBinding fwd = mc.gameSettings.keyBindForward;
+        if (t == 200) mc.displayGuiScreen(new dev.fzkc.fzhud.gui.CosmeticsScreen(null));
+        if (t == 240 || t == 300 || t == 360) shot(mc, "costest_tab" + t);
+        if (t == 250) dev.fzkc.fzhud.gui.CosmeticsScreen.devTab(1);
+        if (t == 310) dev.fzkc.fzhud.gui.CosmeticsScreen.devTab(3);
+        if (t == 370) {
+            mc.displayGuiScreen(null);
+            String folder = TEST;
+            File saves = new File(mc.mcDataDir, "saves");
+            File[] dirs = saves.listFiles();
+            if (!new File(saves, folder).isDirectory() && dirs != null) {
+                for (File d : dirs) if (new File(d, "level.dat").isFile()) folder = d.getName();
+            }
+            mc.launchIntegratedServer(folder, folder, null);
+        }
+        if (mc.thePlayer == null || t < 370) return;
+        if (testWorldAt == 0) testWorldAt = t;
+        int w = t - testWorldAt;
+        if (w == 100) {
+            mc.gameSettings.thirdPersonView = 1;
+            mc.thePlayer.rotationPitch = 10f;
+        }
+        if (w == 140) shot(mc, "costest_back");
+        if (w == 150) {
+            net.minecraft.client.settings.KeyBinding.setKeyBindState(fwd.getKeyCode(), true);
+            mc.thePlayer.setSprinting(true);
+        }
+        if (w > 150 && w < 200) mc.thePlayer.setSprinting(true);
+        if (w == 175) shot(mc, "costest_run");
+        if (w == 200) net.minecraft.client.settings.KeyBinding.setKeyBindState(fwd.getKeyCode(), false);
+        if (w == 230) mc.gameSettings.thirdPersonView = 2;
+        if (w == 260) shot(mc, "costest_front");
+    }
+
+    private static int testWorldAt;
+
+    private static void shot(Minecraft mc, String name) {
+        net.minecraft.util.ScreenShotHelper.saveScreenshot(mc.mcDataDir, name + ".png", mc.displayWidth, mc.displayHeight, mc.getFramebuffer());
     }
 
     // ------------------------------------------------------------------ server

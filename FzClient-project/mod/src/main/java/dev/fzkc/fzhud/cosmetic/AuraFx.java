@@ -130,6 +130,77 @@ public final class AuraFx {
                     16, .1f, cols[r.nextInt(cols.length)], FLAME, false));
             out.add(new P(x + Math.cos(a + Math.PI) * .45, y + h, z + Math.sin(a + Math.PI) * .45, 0, .01, 0,
                     16, .1f, cols[r.nextInt(cols.length)], FLAME, false));
+        } else if ("ender".equals(aura)) {
+            // purple sparks drawn in toward you from all around, like an End portal
+            if (t % 2 == 0) {
+                double a = r.nextDouble() * Math.PI * 2, d = .9 + r.nextDouble() * .3, h = r.nextDouble() * 1.8;
+                int[] cols = {0xC27BFF, 0x8A3CFF, 0xE8C8FF};
+                out.add(new P(x + Math.cos(a) * d, y + h, z + Math.sin(a) * d, -Math.cos(a) * d / 22, .004, -Math.sin(a) * d / 22,
+                        20, .09f, cols[r.nextInt(cols.length)], SPARK, true));
+            }
+        } else if ("fireflies".equals(aura)) {
+            // glowing dots drifting slowly around you
+            if (t % 5 == 0) {
+                double a = r.nextDouble() * Math.PI * 2, d = .4 + r.nextDouble() * .7;
+                P p = new P(x + Math.cos(a) * d, y + .3 + r.nextDouble() * 1.6, z + Math.sin(a) * d,
+                        (r.nextDouble() - .5) * .02, (r.nextDouble() - .5) * .01, (r.nextDouble() - .5) * .02,
+                        45, .06f, r.nextBoolean() ? 0xD8FF6A : 0xFFE36B, DOT, true);
+                p.sway = .006f;
+                out.add(p);
+            }
+        } else if ("leaves".equals(aura)) {
+            // autumn leaves falling around you
+            if (t % 4 == 0) {
+                int[] cols = {0xE0782A, 0xC9461E, 0xE8B33A, 0x8DB33A};
+                P p = new P(x + (r.nextDouble() - .5) * 1.5, y + 2.3, z + (r.nextDouble() - .5) * 1.5, 0, -.02, 0,
+                        60, .11f, cols[r.nextInt(cols.length)], PETAL, false);
+                p.sway = .016f;
+                out.add(p);
+            }
+        } else if ("electric".equals(aura)) {
+            // short electric crackles on the body
+            if (t % 3 == 0) {
+                double a = r.nextDouble() * Math.PI * 2, h = .2 + r.nextDouble() * 1.6;
+                double dx = (r.nextDouble() - .5) * .12, dy = (r.nextDouble() - .5) * .16, dz = (r.nextDouble() - .5) * .12;
+                for (int k = 0; k < 4; k++) {
+                    out.add(new P(x + Math.cos(a) * .38 + dx * k, y + h + dy * k, z + Math.sin(a) * .38 + dz * k, 0, 0, 0,
+                            4 + k, .07f, k % 2 == 0 ? 0x7FE8FF : 0xFFFFFF, SPARK, true));
+                }
+            }
+        } else if ("galaxy".equals(aura)) {
+            // two rings of stars turning around the waist, opposite ways
+            if (t % 2 == 0) {
+                int[] cols = {0x8A7CFF, 0x5CC8FF, 0xFF8AE0, 0xFFFFFF};
+                double a = t * .16;
+                out.add(new P(x + Math.cos(a) * .7, y + .95 + Math.sin(a * 2) * .1, z + Math.sin(a) * .7, 0, 0, 0,
+                        22, .08f, cols[r.nextInt(cols.length)], STAR, true));
+                out.add(new P(x + Math.cos(-a + 1) * .55, y + 1.25, z + Math.sin(-a + 1) * .55, 0, 0, 0,
+                        18, .05f, cols[r.nextInt(cols.length)], DOT, true));
+            }
+        } else if ("love".equals(aura)) {
+            // hearts circling you
+            if (t % 3 == 0) {
+                double a = t * .14;
+                out.add(new P(x + Math.cos(a) * .6, y + 1.1 + Math.sin(t * .07) * .25, z + Math.sin(a) * .6, 0, .004, 0,
+                        24, .12f, t % 2 == 0 ? 0xFF4F7E : 0xFF8FB5, HEART, false));
+            }
+        } else if ("shadow".equals(aura)) {
+            // dark smoke rising from your feet
+            if (t % 2 == 0) {
+                int[] cols = {0x1A1024, 0x2D1B3D, 0x47305C};
+                P p = new P(x + (r.nextDouble() - .5) * .8, y + .05, z + (r.nextDouble() - .5) * .8, 0, .025 + r.nextDouble() * .01, 0,
+                        34, .09f + r.nextFloat() * .05f, cols[r.nextInt(cols.length)], DOT, false);
+                p.sway = .006f;
+                out.add(p);
+            }
+        } else if ("emerald".equals(aura)) {
+            // green sparkles rising in a ring
+            if (t % 2 == 0) {
+                double a = t * .5 + r.nextDouble();
+                int[] cols = {0x3CFF7A, 0x9CFFB8, 0x17C95A};
+                out.add(new P(x + Math.cos(a) * .5, y + .1, z + Math.sin(a) * .5, 0, .045, 0,
+                        30, .09f, cols[r.nextInt(cols.length)], SPARK, false));
+            }
         } else if ("rainbow".equals(aura)) {
             double a = t * .3;
             double h = (t * .045) % 1.9;
@@ -260,7 +331,7 @@ public final class AuraFx {
     /** Fully visible, fading out only at the very end. */
     private static int alphaOf(P p, float pt) {
         float t = (p.age + pt) / p.life;
-        float out = t > .75f ? 1f - (t - .75f) / .25f : 1f;
+        float out = t > .75f ? 1f - (t - .75f) / .25f : t < .1f ? t / .1f : 1f;   // fades in and out, no popping
         return Math.max(0, Math.min(255, (int) (255 * out)));
     }
 

@@ -90,6 +90,8 @@ function cleanData(d) {
   const out = { cape: pick(d.cape), aura: pick(d.aura) };
   const halo = pick(d.halo);
   if (halo) out.halo = halo;
+  const pet = pick(d.pet);
+  if (pet) out.pet = pet;
   return out;
 }
 
