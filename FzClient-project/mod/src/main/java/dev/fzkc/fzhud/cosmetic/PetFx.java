@@ -149,6 +149,7 @@ public final class PetFx {
         GlStateManager.scale(k.scale, k.scale, k.scale);
         GlStateManager.translate(0f, -1.5078125f, 0f);   // the models stand 24 px below their origin
         GlStateManager.enableRescaleNormal();
+        boolean cull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
         GlStateManager.disableCull();
         GlStateManager.enableAlpha();
         GlStateManager.color(1f, 1f, 1f, 1f);
@@ -181,7 +182,7 @@ public final class PetFx {
         } catch (Throwable ignored) {
         }
         GlStateManager.color(1f, 1f, 1f, 1f);
-        GlStateManager.enableCull();
+        if (cull) GlStateManager.enableCull();
         GlStateManager.disableRescaleNormal();
         GlStateManager.popMatrix();
     }

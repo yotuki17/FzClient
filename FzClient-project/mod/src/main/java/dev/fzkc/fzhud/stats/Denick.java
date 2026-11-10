@@ -491,6 +491,49 @@ public final class Denick {
 
     // ------------------------------------------------------------------ result
 
+    /** /pdenick <nick> <party member>: you say who it is (replaces a guess); "reset" forgets it. */
+    public static class NameCommand extends net.minecraft.command.CommandBase {
+        @Override public String getCommandName() { return "pdenick"; }
+
+        @Override public String getCommandUsage(net.minecraft.command.ICommandSender sender) { return "/pdenick <nick> <party member | reset>"; }
+
+        @Override public int getRequiredPermissionLevel() { return 0; }
+
+        @Override public boolean canCommandSenderUseCommand(net.minecraft.command.ICommandSender sender) { return true; }
+
+        @Override
+        public void processCommand(net.minecraft.command.ICommandSender sender, String[] args) {
+            if (args.length != 2 || !args[0].matches("[A-Za-z0-9_]{1,16}") || !args[1].matches("[A-Za-z0-9_]{1,16}")) {
+                say("§d[Denick] §7" + Lang.t("使い方") + ": §f/pdenick <nick> <" + Lang.t("パーティメンバー") + ">");
+                return;
+            }
+            String k = args[0].toLowerCase(Locale.ROOT);
+            RESOLVED.remove(k);
+            if (args[1].equalsIgnoreCase("reset")) {
+                CHECKED.remove(k);
+                say("§d[Denick] §f" + args[0] + " §7" + Lang.t("の名前を消しました"));
+                refreshNames(args[0]);
+                return;
+            }
+            resolve(args[0], args[1], Lang.t("手動"));
+        }
+
+        @Override
+        public List<String> addTabCompletionOptions(net.minecraft.command.ICommandSender sender, String[] args, net.minecraft.util.BlockPos pos) {
+            List<String> names = new ArrayList<>();
+            Minecraft mc = Minecraft.getMinecraft();
+            if (args.length == 1 && mc.thePlayer != null && mc.thePlayer.sendQueue != null) {
+                for (NetworkPlayerInfo i : mc.thePlayer.sendQueue.getPlayerInfoMap()) {
+                    if (isNick(i)) names.add(i.getGameProfile().getName());
+                }
+            } else if (args.length == 2) {
+                names.addAll(dev.fzkc.fzhud.chat.KnownNames.partyNames());
+                names.add("reset");
+            }
+            return getListOfStringsMatchingLastWord(args, names.toArray(new String[0]));
+        }
+    }
+
     private static void resolve(String nick, String realName, String how) {
         String k = nick.toLowerCase(Locale.ROOT);
         if (RESOLVED.containsKey(k)) return;

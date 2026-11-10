@@ -65,10 +65,16 @@ public final class CapeCloth {
 
         GlStateManager.color(1f, 1f, 1f, 1f);
         Minecraft.getMinecraft().getTextureManager().bindTexture(tex);
+        boolean cull = GL11.glIsEnabled(GL11.GL_CULL_FACE);
+        GlStateManager.disableCull();
+        GlStateManager.enableDepth();
+        GlStateManager.depthFunc(GL11.GL_LEQUAL);
+        GlStateManager.depthMask(true);
         GlStateManager.pushMatrix();
         GlStateManager.translate(0f, 0f, 0.125f);
         draw(sim, p.isSneaking() ? 2f : 0f);
         GlStateManager.popMatrix();
+        if (cull) GlStateManager.enableCull();
     }
 
     /**

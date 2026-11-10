@@ -1110,3 +1110,7 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 入ってから確認するまでの時間	Check this long after joining
 {0} が入れなかったので /p warp しました	{0} did not get in: used /p warp
 高さ上限をほかの FzClient ユーザーと共有する（行ったことのないマップもわかる）	Share height limits with other FzClient users (know maps you have never played)
+使い方	Usage
+パーティメンバー	party member
+の名前を消しました	: name removed
+手動	by hand

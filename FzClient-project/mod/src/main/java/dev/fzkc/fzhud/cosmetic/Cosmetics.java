@@ -182,6 +182,18 @@ public final class Cosmetics {
             mc.thePlayer.rotationYaw += 72f;
         }
         if (w == 320) shot(mc, "costest_side");
+        if (w == 5 && mc.thePlayer.getHealth() <= 0f) {   // the test world was saved with the player dead
+            mc.thePlayer.respawnPlayer();
+            mc.displayGuiScreen(null);
+        }
+        if (w == 30) {   // armor (client side), so the armor HUD draws too
+            mc.thePlayer.inventory.armorInventory[3] = new net.minecraft.item.ItemStack(net.minecraft.init.Items.diamond_helmet);
+            mc.thePlayer.inventory.armorInventory[2] = new net.minecraft.item.ItemStack(net.minecraft.init.Items.leather_chestplate);
+            mc.thePlayer.inventory.armorInventory[1] = new net.minecraft.item.ItemStack(net.minecraft.init.Items.iron_leggings);
+        }
+        if (w == 40) mc.displayGuiScreen(new net.minecraft.client.gui.inventory.GuiInventory(mc.thePlayer));
+        if (w == 80) shot(mc, "costest_inv");
+        if (w == 90) mc.displayGuiScreen(null);
     }
 
     private static int testWorldAt;

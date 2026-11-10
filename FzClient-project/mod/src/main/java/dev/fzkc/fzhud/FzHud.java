@@ -206,6 +206,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(chatStats);
         FMLCommonHandler.instance().bus().register(chatStats);
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.stats.StatsCommand());
+        net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.stats.Denick.NameCommand());
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.stats.StatsCommand.RefreshCommand());
         Runtime.getRuntime().addShutdownHook(new Thread(dev.fzkc.fzhud.stats.Stats::saveHistory, "FzClient-StatsSave"));
         dev.fzkc.fzhud.feature.HeightLimit heightLimit = new dev.fzkc.fzhud.feature.HeightLimit();   // build height limit (learned per map)
