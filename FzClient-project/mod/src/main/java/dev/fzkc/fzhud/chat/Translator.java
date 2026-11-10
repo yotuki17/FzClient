@@ -205,7 +205,42 @@ public final class Translator {
         return google(text, lang);
     }
 
+    /**
+     * Google: the usual address first; Google often answers it with "Sorry..." (429) for some Java versions or after
+     * many requests, so then the address the Chrome extension uses, which still answers.
+     */
     private static String google(String text, String lang) throws Exception {
+        try {
+            return googleGtx(text, lang);
+        } catch (Exception first) {
+            try {
+                return googleDict(text, lang);
+            } catch (Exception second) {
+                throw first;
+            }
+        }
+    }
+
+    /** [["translation","en"]] (or ["translation"]) */
+    private static String googleDict(String text, String lang) throws Exception {
+        String url = "https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl="
+                + URLEncoder.encode(lang, "UTF-8") + "&q=" + URLEncoder.encode(text, "UTF-8");
+        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+        c.setConnectTimeout(5000);
+        c.setReadTimeout(8000);
+        c.setRequestProperty("User-Agent", "Mozilla/5.0");
+        JsonArray root = new JsonParser().parse(read(c)).getAsJsonArray();
+        if (root.size() == 0) throw new IllegalStateException("Google: empty");
+        JsonElement first = root.get(0);
+        if (first.isJsonArray()) {
+            JsonArray a = first.getAsJsonArray();
+            if (a.size() > 1 && a.get(1).isJsonPrimitive() && lang.toLowerCase().startsWith(a.get(1).getAsString().toLowerCase())) return null;
+            return a.get(0).getAsString().trim();
+        }
+        return first.getAsString().trim();
+    }
+
+    private static String googleGtx(String text, String lang) throws Exception {
         String url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&dt=t&tl="
                 + URLEncoder.encode(lang, "UTF-8") + "&q=" + URLEncoder.encode(text, "UTF-8");
         HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
