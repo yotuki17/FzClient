@@ -1105,3 +1105,7 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 緑のオウム	Green parrot
 黄色いオウム	Yellow parrot
 灰色のオウム	Grey parrot
+インベントリでマウスボタンのホットバーキーでも入れ替えできるようにする	Hotbar keys on mouse buttons also swap items in inventories
+キューで入れなかったパーティメンバーを、数秒後に /p warp で入れ直す（リーダーの時だけ）	A few seconds after queueing, /p warp party members who did not get in (leader only)
+入ってから確認するまでの時間	Check this long after joining
+{0} が入れなかったので /p warp しました	{0} did not get in: used /p warp

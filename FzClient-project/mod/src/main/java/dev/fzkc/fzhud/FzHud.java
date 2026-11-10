@@ -170,6 +170,10 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(popup);
         FMLCommonHandler.instance().bus().register(popup);
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatExtras());
+        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.HotbarMouse());   // hotbar keys on mouse buttons in inventories
+        Object partyWarp = new dev.fzkc.fzhud.chat.PartyWarp();   // /p warp for party members the queue left behind
+        MinecraftForge.EVENT_BUS.register(partyWarp);
+        FMLCommonHandler.instance().bus().register(partyWarp);
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.PartyDetector());   // groups joining a waiting lobby together   // FzClient chat box, tabs, shortcuts
         ChatHistory chatHistory = new ChatHistory();
         MinecraftForge.EVENT_BUS.register(chatHistory);

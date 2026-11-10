@@ -182,6 +182,11 @@ public final class Modules {
     public static final SliderSetting partyDetectMin = partyDetect.add(new SliderSetting("min", "知らせる人数", 2, 4, 1, 2, "人以上"));
     public static final BoolSetting partyDetectSound = partyDetect.add(new BoolSetting("sound", "見つけた時に音を鳴らす", true));
 
+    // ---- Party warp: brings in party members the queue left behind
+    public static final Module partyWarp = new Module("partywarp", "Party Warp", Category.SERVER,
+            "キューで入れなかったパーティメンバーを、数秒後に /p warp で入れ直す（リーダーの時だけ）", true);
+    public static final SliderSetting partyWarpDelay = partyWarp.add(new SliderSetting("delay", "入ってから確認するまでの時間", 1, 6, 0.5, 2.5, "秒"));
+
     // ---- Overlay: player stats in the tab list and chat, /fzstats, tags, denick (id kept as "playerstats" for saved settings)
     public static final Module stats = new Module("playerstats", "Overlay", Category.PVP,
             "タブとチャットに統計とタグを表示・/pv で詳しい統計・デニック", true);
@@ -414,6 +419,7 @@ public final class Modules {
     public static final BoolSetting fixInventory = fixes.add(new BoolSetting("inventory", "ポーション効果中にインベントリが右にずれるのを直す", true));
     public static final BoolSetting fixMouseDelay = fixes.add(new BoolSetting("mousedelay", "マウスの遅れを直す（狙った所にちゃんと当たる）", true));
     public static final BoolSetting fixResourcePack = fixes.add(new BoolSetting("resourcepack", "サーバーのリソースパックを使った攻撃を防ぐ", true));
+    public static final BoolSetting fixHotbarMouse = fixes.add(new BoolSetting("hotbarmouse", "インベントリでマウスボタンのホットバーキーでも入れ替えできるようにする", true));
 
     // ---- Branding (window title, icon, loading logo, main menu)
     public static final Module branding = new Module("branding", "FzClient Branding", Category.UTILITY,
@@ -632,6 +638,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, partyWarp, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

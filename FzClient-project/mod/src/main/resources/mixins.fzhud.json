@@ -37,6 +37,7 @@
     "MixinGuiSlot",
     "MixinGuiTextField",
     "MixinLayerCape",
-    "AccessorModelWolf"
+    "AccessorModelWolf",
+    "AccessorGuiContainer"
   ]
 }
