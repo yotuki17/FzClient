@@ -14,6 +14,11 @@
 //   POST /preset/get {id}                      -> {code}
 //   Identity check: Mojang refuses requests from Cloudflare (403), so with the secrets VERIFY_URL (the Val Town
 //        address of verify.ts) and VERIFY_SECRET set, the check is done there and its signed answer used.
+//   GET  /hl/all                                -> {"limits":{"BEDWARS:Lighthouse":105, ...}} build height limits
+//        that FzClient players found ("Build height limit reached!"), shared so everyone knows them.
+//   POST /hl/report {name, serverId, limits:{key:y}} -> stores what that player found (proven like /cos/set).
+//        Each player has one value per map; the shown value is the lowest one at least two players agree on,
+//        else the lowest one (a single wrong report is outvoted as soon as two players agree on another).
 //   GET  /cf/v1/...                             -> CurseForge API for the launcher (Minecraft mods only).
 //        The CurseForge API key stays here as the secret CF_API_KEY, so it is never inside the launcher.
 
@@ -295,11 +300,66 @@ async function presetGet(env, body) {
   return row ? json({ code: row.code }) : json({ error: 'not found' }, 404);
 }
 
+// ------------------------------------------------------------------ build height limits
+
+const HL_KEY = /^[A-Z_?]{1,24}:[^\u0000-\u001f"\\]{1,40}$/;
+let hlReady = false;
+async function hlTable(env) {
+  if (hlReady) return;
+  await env.DB.batch([
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS heightlimits (key TEXT NOT NULL, uuid TEXT NOT NULL, y INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (key, uuid))'),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS heightlimits_uuid ON heightlimits (uuid, at)'),
+  ]);
+  hlReady = true;
+}
+
+async function heightLimits(req, env, url) {
+  await hlTable(env);
+  if (url.pathname === '/hl/all') {
+    const r = await env.DB.prepare('SELECT key, y, COUNT(*) AS n FROM heightlimits GROUP BY key, y').all();
+    const best = {};
+    for (const row of r.results) {
+      const b = best[row.key];
+      // agreed on by two or more players beats a lone report; then the lower one
+      const agreed = row.n >= 2;
+      if (!b || (agreed && !b.agreed) || (agreed === b.agreed && row.y < b.y)) best[row.key] = { y: row.y, agreed };
+    }
+    const limits = {};
+    for (const k of Object.keys(best)) limits[k] = best[k].y;
+    return json({ limits });
+  }
+  if (url.pathname === '/hl/report' && req.method === 'POST') {
+    let body;
+    try { body = await req.json(); } catch { return json({ error: 'bad json' }, 400); }
+    const v = await verify(env, body.name, body.serverId);
+    const id = v.id;
+    if (!id) return json({ error: 'not verified', mojang: v.status }, 403);
+    const now = Date.now();
+    const recent = await env.DB.prepare('SELECT COUNT(*) AS n FROM heightlimits WHERE uuid = ?1 AND at > ?2').bind(id, now - 20000).first();
+    if (recent && recent.n > 0) return json({ error: 'too fast' }, 429);
+    const total = await env.DB.prepare('SELECT COUNT(*) AS n FROM heightlimits WHERE uuid = ?1').bind(id).first();
+    const room = Math.max(0, 1000 - (total ? total.n : 0));
+    const src = body.limits && typeof body.limits === 'object' ? body.limits : {};
+    const rows = [];
+    for (const k of Object.keys(src).slice(0, 50)) {
+      const y = src[k];
+      if (!HL_KEY.test(k) || !Number.isInteger(y) || y < 1 || y > 255) continue;
+      rows.push(env.DB.prepare('INSERT INTO heightlimits (key, uuid, y, at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(key, uuid) DO UPDATE SET y = ?3, at = ?4')
+        .bind(k, id, y, now));
+    }
+    if (rows.length > room) rows.length = room;
+    if (rows.length) await env.DB.batch(rows);
+    return json({ ok: true, saved: rows.length });
+  }
+  return json({ error: 'not found' }, 404);
+}
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     if (url.pathname.startsWith('/cf/')) return curseforge(req, env, ctx, url);
     if (url.pathname.startsWith('/cos/')) return cosmetics(req, env, url);
+    if (url.pathname.startsWith('/hl/')) return heightLimits(req, env, url);
     if (req.method !== 'POST') return new Response('FzClient users', { status: 200 });
     let body;
     try {

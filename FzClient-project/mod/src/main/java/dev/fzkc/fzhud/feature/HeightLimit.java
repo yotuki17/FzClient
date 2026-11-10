@@ -30,18 +30,33 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Height Limit: shows how far the build height limit is (text under the crosshair, and a see-through plane at the
  * limit when you get close). Hypixel does not say where the limit is, so it is learned: the first time
  * "Build height limit reached!" comes after you tried to place a block, the highest Y you may build at is saved
  * for that game and map (config/fzclient-heightlimits.json) and shown from then on, also in later games there.
+ * Shared: what FzClient players find is sent to the FzClient server (proven like the cosmetics, so nobody can send
+ * in someone else's name) and everyone gets the list, so a map is known even before you hit its limit yourself.
+ * Your own value comes first; the shared one is used where you have none.
  */
 public class HeightLimit {
-    private static final String FILE = "fzclient-heightlimits.json";
-    private static final Map<String, Integer> limits = new HashMap<>();
+    private static final String FILE = "fzclient-heightlimits.json", SHARED_FILE = "fzclient-heightlimits-shared.json";
+    /** What you found yourself. */
+    private static final Map<String, Integer> limits = new ConcurrentHashMap<>();
+    /** What FzClient players found (from the server, kept in SHARED_FILE for offline use). */
+    private static final Map<String, Integer> shared = new ConcurrentHashMap<>();
+    /** Values already sent in this session. */
+    private static final Map<String, Integer> reported = new ConcurrentHashMap<>();
+    private static final LinkedBlockingQueue<Boolean> poke = new LinkedBlockingQueue<>();
+    private static Thread sync;
+    private static long pokedAt;
     private static boolean loaded;
 
     /** Y of the last block you tried to place, and when. */
@@ -57,7 +72,16 @@ public class HeightLimit {
     public static Integer limit() {
         load();
         String k = key();
-        return k == null ? null : limits.get(k);
+        if (k == null) return null;
+        Integer own = limits.get(k);
+        if (own != null) return own;
+        Integer s = Modules.heightLimitShare.get() ? shared.get(k) : null;
+        long now = System.currentTimeMillis();
+        if (s == null && Modules.heightLimitShare.get() && now - pokedAt > 5 * 60_000L) {   // a map nobody had: maybe someone has found it since
+            pokedAt = now;
+            poke.offer(Boolean.TRUE);
+        }
+        return s;
     }
 
     @SubscribeEvent
@@ -86,6 +110,7 @@ public class HeightLimit {
         if (was != null && was <= y) return;
         limits.put(k, y);
         save();
+        poke.offer(Boolean.TRUE);   // share it
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer != null) {
             mc.thePlayer.addChatMessage(new ChatComponentText("§8[§bFzClient§8]§r §7"
@@ -168,9 +193,13 @@ public class HeightLimit {
         return new File(new File(Minecraft.getMinecraft().mcDataDir, "config"), FILE);
     }
 
-    private static void load() {
+    private static synchronized void load() {
         if (loaded) return;
         loaded = true;
+        read(new File(file().getParentFile(), SHARED_FILE), shared);
+        sync = new Thread(HeightLimit::syncLoop, "FzClient-HeightLimits");
+        sync.setDaemon(true);
+        sync.start();
         File f = file();
         if (!f.isFile()) return;
         try (Reader r = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8)) {
@@ -180,6 +209,79 @@ public class HeightLimit {
             }
         } catch (Exception ignored) {
         }
+    }
+
+    private static void read(File f, Map<String, Integer> into) {
+        if (!f.isFile()) return;
+        try (Reader r = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8)) {
+            JsonObject o = new JsonParser().parse(r).getAsJsonObject();
+            for (Map.Entry<String, com.google.gson.JsonElement> e : o.entrySet()) {
+                try { into.put(e.getKey(), e.getValue().getAsInt()); } catch (Exception ignored) { }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    // ------------------------------------------------------------------ sharing
+
+    /** Gets the shared list and sends what you found: at the start, when you find one, and every 30 minutes. */
+    private static void syncLoop() {
+        while (true) {
+            try {
+                if (Modules.heightLimit.enabled && Modules.heightLimitShare.get()) {
+                    fetch();
+                    report();
+                }
+            } catch (Throwable ignored) {
+            }
+            try {
+                poke.poll(30, TimeUnit.MINUTES);
+                Thread.sleep(3000);   // several pokes close together: one round
+                poke.clear();
+            } catch (InterruptedException e) {
+                return;
+            }
+        }
+    }
+
+    private static void fetch() throws Exception {
+        JsonObject r = dev.fzkc.fzhud.integration.FzUsers.post("/hl/all", new JsonObject());
+        if (r == null || !r.has("limits") || !r.get("limits").isJsonObject()) return;
+        JsonObject o = r.getAsJsonObject("limits");
+        for (Map.Entry<String, com.google.gson.JsonElement> e : o.entrySet()) {
+            try { shared.put(e.getKey(), e.getValue().getAsInt()); } catch (Exception ignored) { }
+        }
+        File f = new File(file().getParentFile(), SHARED_FILE);
+        try (Writer w = new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)) {
+            w.write(o.toString());
+        }
+    }
+
+    /** Sends your values the shared list does not have yet (proven with a Mojang session join, like the cosmetics). */
+    private static void report() throws Exception {
+        JsonObject send = new JsonObject();
+        int n = 0;
+        for (Map.Entry<String, Integer> e : limits.entrySet()) {
+            Integer v = e.getValue();
+            if (v.equals(shared.get(e.getKey())) || v.equals(reported.get(e.getKey()))) continue;
+            send.addProperty(e.getKey(), v);
+            if (++n >= 50) break;
+        }
+        if (n == 0) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        com.mojang.authlib.GameProfile profile = mc.getSession().getProfile();
+        String token = mc.getSession().getToken();
+        if (profile == null || profile.getId() == null || token == null || token.length() < 20) return;   // offline account
+        String serverId = new BigInteger(130, new SecureRandom()).toString(16);
+        mc.getSessionService().joinServer(profile, token, serverId);
+        JsonObject body = new JsonObject();
+        body.addProperty("name", profile.getName());
+        body.addProperty("serverId", serverId);
+        body.add("limits", send);
+        JsonObject r = dev.fzkc.fzhud.integration.FzUsers.post("/hl/report", body);
+        if (r == null || !r.has("ok")) return;
+        for (Map.Entry<String, com.google.gson.JsonElement> e : send.entrySet()) reported.put(e.getKey(), e.getValue().getAsInt());
+        fetch();   // the list with yours in it
     }
 
     private static void save() {

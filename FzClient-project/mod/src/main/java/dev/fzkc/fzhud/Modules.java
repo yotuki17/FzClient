@@ -373,6 +373,7 @@ public final class Modules {
     public static final BoolSetting heightLimitPlane = heightLimit.add(new BoolSetting("plane", "近づいたら上限の高さに面を表示", true));
     public static final SliderSetting heightLimitWarn = heightLimit.add(new SliderSetting("warn", "表示し始める距離", 1, 30, 1, 8, " ブロック"));
     public static final ColorSetting heightLimitColor = heightLimit.add(new ColorSetting("color", "面の色", 0xFFFF5555));
+    public static final BoolSetting heightLimitShare = heightLimit.add(new BoolSetting("share", "高さ上限をほかの FzClient ユーザーと共有する（行ったことのないマップもわかる）", true));
 
     // ---- Auto GG (Hypixel: every game with an end summary — Bed Wars, Duels, Sky Wars...)
     public static final Module autoGG = new Module("autogg", "Auto GG", Category.SERVER,

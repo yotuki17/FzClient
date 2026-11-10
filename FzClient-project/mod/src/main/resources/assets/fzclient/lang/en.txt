@@ -1109,3 +1109,4 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 キューで入れなかったパーティメンバーを、数秒後に /p warp で入れ直す（リーダーの時だけ）	A few seconds after queueing, /p warp party members who did not get in (leader only)
 入ってから確認するまでの時間	Check this long after joining
 {0} が入れなかったので /p warp しました	{0} did not get in: used /p warp
+高さ上限をほかの FzClient ユーザーと共有する（行ったことのないマップもわかる）	Share height limits with other FzClient users (know maps you have never played)
