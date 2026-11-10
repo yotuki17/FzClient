@@ -154,6 +154,7 @@ public class FzHud {
         ClientRegistry.registerKeyBinding(toggleSneakKey);
         ClientRegistry.registerKeyBinding(imeKey);
         ClientRegistry.registerKeyBinding(Extras.zoomKey);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.Snaplook.KEY);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_OVERLAY);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_RECORD);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_SAVE);
@@ -170,6 +171,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(popup);
         FMLCommonHandler.instance().bus().register(popup);
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatExtras());
+        FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Snaplook());   // hold a key to look behind you
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.HotbarMouse());   // hotbar keys on mouse buttons in inventories
         Object partyWarp = new dev.fzkc.fzhud.chat.PartyWarp();   // /p warp for party members the queue left behind
         MinecraftForge.EVENT_BUS.register(partyWarp);

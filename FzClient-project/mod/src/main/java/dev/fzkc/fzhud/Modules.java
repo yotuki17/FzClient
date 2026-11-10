@@ -136,6 +136,12 @@ public final class Modules {
     public static final BoolSetting zoomCinematic = zoom.add(new BoolSetting("cinematic", "ズーム中はシネマティックカメラ", false));
     public static final BoolSetting zoomToggle = zoom.add(new BoolSetting("toggle", "押すたびにON/OFF（トグル）", false));
 
+    // ---- Snaplook (hold a key to look at yourself / behind you)
+    public static final Module snaplook = new Module("snaplook", "Snaplook", Category.PVP,
+            "キーを押している間だけ後ろを振り返る（離すと元の視点に戻る。キーは操作設定の FzClient で変更）", true);
+    public static final ChoiceSetting snaplookView = snaplook.add(new ChoiceSetting("view", "視点", 0, "前から自分を見る（後ろを振り返る）", "後ろから自分を見る"));
+    public static final BoolSetting snaplookToggle = snaplook.add(new BoolSetting("toggle", "押すたびにON/OFF（トグル）", false));
+
     // ---- 3D skin layers (the outer layer of skins as little cubes)
     public static final Module skinLayers = new Module("skinlayers", "3D Skin Layers", Category.VISUAL,
             "スキンの上のレイヤー（帽子・上着・袖・ズボン）を立体にする", true);
@@ -639,6 +645,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, rawInput, dropLock, partyDetect, partyWarp, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, rawInput, dropLock, partyDetect, partyWarp, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
 
 }

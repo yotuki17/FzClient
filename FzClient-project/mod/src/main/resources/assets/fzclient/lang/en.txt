@@ -1114,3 +1114,7 @@ Bordic のデータが30分より古い時は Hypixel API / Urchin のキーで�
 パーティメンバー	party member
 の名前を消しました	: name removed
 手動	by hand
+キーを押している間だけ後ろを振り返る（離すと元の視点に戻る。キーは操作設定の FzClient で変更）	Look behind you while the key is held (back to your view when let go; change the key in Controls > FzClient)
+視点	View
+前から自分を見る（後ろを振り返る）	From the front (look behind you)
+後ろから自分を見る	From behind
