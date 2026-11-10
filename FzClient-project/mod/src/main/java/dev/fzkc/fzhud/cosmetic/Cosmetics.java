@@ -176,6 +176,12 @@ public final class Cosmetics {
         if (w == 200) net.minecraft.client.settings.KeyBinding.setKeyBindState(fwd.getKeyCode(), false);
         if (w == 230) mc.gameSettings.thirdPersonView = 2;
         if (w == 260) shot(mc, "costest_front");
+        if (w == 280) {
+            mc.gameSettings.thirdPersonView = 1;
+            mc.thePlayer.rotationPitch = 5f;
+            mc.thePlayer.rotationYaw += 72f;
+        }
+        if (w == 320) shot(mc, "costest_side");
     }
 
     private static int testWorldAt;

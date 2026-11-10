@@ -350,11 +350,12 @@ public final class PetFx {
      * cape: 1 = a block, y down, origin at the neck).
      */
     static void drawOnShoulder(String id, boolean sneaking, float age) {
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(0.4f, sneaking ? 0.2f : 0f, 0f);
         Kind k = kind(id);
-        // the axolotl's long tail: moved forward so it lies across the shoulder instead of hanging off the back
-        if (k != null && k.model instanceof PetModels.Axolotl) GlStateManager.translate(0f, 0f, -0.18f);
+        if (k == null) return;
+        boolean axolotl = k.model instanceof PetModels.Axolotl;
+        GlStateManager.pushMatrix();
+        // on top of the shoulder (x 0.4 = the left arm), the axolotl lying along it, the parrot standing on it
+        GlStateManager.translate(0.4f, (sneaking ? 0.2f : 0f) + (axolotl ? 0.05f : 0f), axolotl ? 0.04f : 0.08f);
         drawModel(id, age);
         GlStateManager.popMatrix();
     }
