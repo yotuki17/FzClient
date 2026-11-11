@@ -193,10 +193,9 @@ public final class Modules {
             "キューで入れなかったパーティメンバーを、数秒後に /p warp で入れ直す（リーダーの時だけ）", true);
     public static final SliderSetting partyWarpDelay = partyWarp.add(new SliderSetting("delay", "入ってから確認するまでの時間", 1, 6, 0.5, 2.5, "秒"));
 
-    // ---- Requeue: one key joins the same game again
+    // ---- Requeue: /rq joins the same game again
     public static final Module requeue = new Module("requeue", "Requeue", Category.SERVER,
-            "キーを押すと、同じゲームにもう一度入る（Hypixel。キーは操作設定の FzClient で変更）", true);
-    public static final BoolSetting requeueConfirm = requeue.add(new BoolSetting("confirm", "試合がまだ終わっていない時は、2回押す", true));
+            "/rq と打つと、同じゲームにもう一度入る（Hypixel）", true);
 
     // ---- Overlay: player stats in the tab list and chat, /fzstats, tags, denick (id kept as "playerstats" for saved settings)
     public static final Module stats = new Module("playerstats", "Overlay", Category.PVP,

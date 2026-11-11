@@ -325,7 +325,7 @@ public final class Extras {
 
     // ============================================================ Auto GG
 
-    static final String[] GAME_END = {
+    private static final String[] GAME_END = {
             "1st Killer - ", "1st Place - ", "Winner: ", "Winners: ", " won the game!", "Winning Team: ",
             "Top Survivors", "Reward Summary", "1st - ", "YOUR STATS",
             // Duels ("[MVP++] Fzkc WINNER!  [VIP] Name"), team Duels and others

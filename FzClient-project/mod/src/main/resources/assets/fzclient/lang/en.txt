@@ -1132,7 +1132,5 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 表示するユーザー数の上限（0 = オフ）	Max users shown (0 = off)
 配信中の人に LIVE を表示	Show LIVE for people streaming
 ボイスチャンネル	Voice channel
-キーを押すと、同じゲームにもう一度入る（Hypixel。キーは操作設定の FzClient で変更）	One key joins the same game again (Hypixel; change the key in Controls > FzClient)
-試合がまだ終わっていない時は、2回押す	Press twice while the game is still running
 まだ入り直せるゲームがありません（一度ゲームに入ると使えます）	No game to join again yet (play one game first)
-試合中です。もう一度押すと、抜けて次の試合に入ります	The game is still running. Press again to leave and join the next one
+/rq と打つと、同じゲームにもう一度入る（Hypixel）	Type /rq to join the same game again (Hypixel)

@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：リキュー（/rq で同じゲームにもう一度入る）': 'NEW: Requeue (type /rq to join the same game again)',
   'NEW：VC 表示を Discord オーバーレイ風に、設定なしで使える': 'NEW: Discord overlay style voice HUD, no setup needed',
   'NEW：Snaplook（キーを押している間だけ後ろを振り返る）': 'NEW: Snaplook (look behind you while a key is held)',
   '改善：Google 翻訳が使えないことがあったのを修正': 'Fixed: Google translation sometimes did not work',
