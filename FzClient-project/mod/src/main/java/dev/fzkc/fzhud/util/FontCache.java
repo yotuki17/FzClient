@@ -45,9 +45,38 @@ public final class FontCache {
         return !otherMod;
     }
 
+    private static java.lang.reflect.Field shaderPack, shaderWorld;
+    private static boolean shadersLooked;
+
+    /**
+     * True while OptiFine draws the world through a shader pack. Binding a texture then also binds its normal
+     * and specular pictures on other texture units and sets shader values; a replayed list would do that behind
+     * the game's back (wrong pictures on blocks afterwards), so texts in the world (name tags, signs) are drawn
+     * the normal way then. The HUD and menus are not affected.
+     */
+    public static boolean shadersWorld() {
+        if (!shadersLooked) {
+            shadersLooked = true;
+            try {
+                Class<?> c = Class.forName("net.optifine.shaders.Shaders");
+                shaderPack = c.getField("shaderPackLoaded");
+                shaderWorld = c.getField("isRenderingWorld");
+            } catch (Throwable noOptiFine) {
+                shaderPack = null;
+                shaderWorld = null;
+            }
+        }
+        if (shaderPack == null || shaderWorld == null) return false;
+        try {
+            return shaderPack.getBoolean(null) && shaderWorld.getBoolean(null);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /** Buckets by the text's hash; the few entries of one text (colours, shadow) hang in a chain. */
     private final Map<String, Entry> map = new HashMap<String, Entry>();
-    private int purgedAt, size;
+    private int purgedAt, fullAt = -1, size;
 
     /** The entry of this text and look, or null when it was never drawn. */
     public Entry find(String text, boolean shadow, boolean unicode, float r, float g, float b, float a) {
@@ -64,8 +93,14 @@ public final class FontCache {
 
     /** Remembers that this text was drawn once. */
     public void note(String text, boolean shadow, boolean unicode, float r, float g, float b, float a) {
-        if (size > 6000) purge(Stamp.ticks, 100);
-        if (size > 6000) return;
+        if (size > 6000) {
+            // full (rainbow or fading texts are new in every frame): clean up once a tick at most, not for every text
+            int now = Stamp.ticks;
+            if (now == fullAt) return;
+            fullAt = now;
+            purge(now, 20);
+            if (size > 6000) return;
+        }
         Entry e = new Entry();
         e.text = text;
         e.shadow = shadow;

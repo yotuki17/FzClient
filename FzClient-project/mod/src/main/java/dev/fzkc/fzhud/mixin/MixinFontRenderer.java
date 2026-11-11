@@ -38,6 +38,7 @@ public abstract class MixinFontRenderer {
     private void fzhud$cached(String text, boolean shadow, CallbackInfo ci) {
         if (fzhud$inside || text == null || text.isEmpty() || !FontCache.on()) return;
         if (!Minecraft.getMinecraft().isCallingFromMinecraftThread()) return;   // the loading screen draws on its own thread
+        if (FontCache.shadersWorld()) return;   // OptiFine shaders: world texts the normal way
         FontCache c = fzhud$cache;
         FontCache.Entry e = c.find(text, shadow, unicodeFlag, red, green, blue, alpha);
         float x = posX, y = posY;
