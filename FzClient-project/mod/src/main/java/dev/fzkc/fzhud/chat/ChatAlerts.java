@@ -38,7 +38,7 @@ public final class ChatAlerts {
         if (event.isCanceled() || event.type == 2 || event.message == null || !Modules.chat.enabled) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null) return;
-        String plain = EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
+        String plain = dev.fzkc.fzhud.stats.ChatStats.unprefixed(EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText()));
         if (plain == null) return;
         String me = mc.thePlayer.getName();
 

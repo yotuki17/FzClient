@@ -129,7 +129,7 @@ public final class KnownNames {
         String plain = EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
         if (plain == null) return;
         // multi-line messages (the /f list and /g list pages come as one message with line breaks)
-        for (String line : plain.split("\n")) read(line.trim());
+        for (String line : plain.split("\n")) read(dev.fzkc.fzhud.stats.ChatStats.unprefixed(line.trim()));
     }
 
     private void read(String line) {

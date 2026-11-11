@@ -455,6 +455,19 @@ public class ChatStats {
         return null;
     }
 
+    /** Our own "[367✫ FKDR 4.91] " in front of a party / guild / private message. Hypixel never starts those with a bracket. */
+    private static final Pattern OURS = Pattern.compile("^\\[[^\\]]{1,60}\\] (?=(?:Party|Guild|Officer) > |From )");
+
+    /**
+     * The chat line without the stats this class put in front of it, so the chat tabs, the party sound and the
+     * party relay still see "Party > Name: text".
+     */
+    public static String unprefixed(String plain) {
+        if (plain == null || plain.isEmpty() || plain.charAt(0) != '[') return plain;
+        Matcher m = OURS.matcher(plain);
+        return m.find() ? plain.substring(m.end()) : plain;
+    }
+
     private static IChatComponent withPrefix(String prefix, IChatComponent msg) {
         ChatComponentText out = new ChatComponentText(prefix);
         out.appendSibling(msg);

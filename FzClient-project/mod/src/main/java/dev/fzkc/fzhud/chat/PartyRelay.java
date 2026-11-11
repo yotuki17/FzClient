@@ -48,7 +48,7 @@ public class PartyRelay {
         if (!Modules.partyRelayEnabled() || event.type == 2) return;
         String plain = EnumChatFormatting.getTextWithoutFormattingCodes(event.message.getUnformattedText());
         if (plain == null) return;
-        Matcher m = PARTY.matcher(plain.trim());
+        Matcher m = PARTY.matcher(dev.fzkc.fzhud.stats.ChatStats.unprefixed(plain.trim()));
         if (!m.matches()) return;
         String name = m.group(1), text = m.group(2);
         if (!Modules.relaySelf.get()) {

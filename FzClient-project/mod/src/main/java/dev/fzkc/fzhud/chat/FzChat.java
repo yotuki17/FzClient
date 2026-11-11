@@ -234,7 +234,7 @@ public class FzChat extends GuiNewChat {
     private Msg msgOf(ChatLine full) {
         Msg m = msgs.get(full);
         if (m == null) {
-            String plain = EnumChatFormatting.getTextWithoutFormattingCodes(full.getChatComponent().getUnformattedText());
+            String plain = dev.fzkc.fzhud.stats.ChatStats.unprefixed(EnumChatFormatting.getTextWithoutFormattingCodes(full.getChatComponent().getUnformattedText()));
             m = new Msg(full, classify(plain), sender(plain));
             if (mapped && m.cat != ALL && m.cat != tab) unread[m.cat] = true;
         }
