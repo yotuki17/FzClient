@@ -263,6 +263,7 @@ public final class R {
     /** Rainbow text: each character gets a slightly different hue so the colours flow along the text. */
     private static void chromaText(String s, float x, float y, int alpha) {
         FontRenderer fr = font();
+        s = dev.fzkc.fzhud.feature.NameHider.apply(s);   // letter by letter below: the name is swapped first
         // only text with colour codes needs them stripped (the regex is the slow part)
         String plain = s.indexOf('§') < 0 ? s : net.minecraft.util.EnumChatFormatting.getTextWithoutFormattingCodes(s);
         if (plain == null) plain = s;
@@ -301,6 +302,7 @@ public final class R {
     private static final java.util.HashMap<String, Integer> WIDTHS = new java.util.HashMap<String, Integer>(1024);
     private static int widthsResources = Integer.MIN_VALUE, widthsEpoch = Integer.MIN_VALUE;
     private static boolean widthsUnicode;
+    private static int widthsHider;
     private static FontRenderer widthsFont;
     /** Changes whenever the remembered widths are thrown away (layouts built from widths follow it). */
     public static int widthGen;
@@ -308,19 +310,22 @@ public final class R {
     /**
      * Font width of text as it is (no translation). The font measures every character with a slow table search
      * and the HUD asks for the same few strings every frame, so the results are remembered. The memory is cleared
-     * when resources reload, when the unicode font is switched, and every 5 seconds anyway (so it stays small and
-     * catches any other kind of font change).
+     * when resources reload, when the unicode font is switched, when the Name Hider changes what a text looks
+     * like, and every 5 seconds anyway (so it stays small and catches any other kind of font change).
      */
     public static int measure(String s) {
         FontRenderer fr = font();
         int epoch = dev.fzkc.fzhud.util.Stamp.ticks / 100;
         boolean unicode = fr.getUnicodeFlag();
-        if (widthsResources != dev.fzkc.fzhud.util.Stamp.resources || widthsEpoch != epoch
+        if (dev.fzkc.fzhud.feature.NameHider.rawNow()) return fr.getStringWidth(s);   // shown as typed just now: not remembered
+        int hider = dev.fzkc.fzhud.feature.NameHider.stamp();
+        if (widthsResources != dev.fzkc.fzhud.util.Stamp.resources || widthsEpoch != epoch || widthsHider != hider
                 || widthsUnicode != unicode || widthsFont != fr || WIDTHS.size() > 4096) {
             WIDTHS.clear();
             widthsResources = dev.fzkc.fzhud.util.Stamp.resources;
             widthsEpoch = epoch;
             widthsUnicode = unicode;
+            widthsHider = hider;
             widthsFont = fr;
             widthGen++;
         }

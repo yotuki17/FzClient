@@ -1138,3 +1138,12 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 水・溶岩・炎などのテクスチャのアニメーションを止める	Stop texture animations (water, lava, fire...)
 文字の描画を使い回す（同じ文字を毎フレーム作り直さない）	Reuse drawn text (the same text is not rebuilt every frame)
 空の色を毎フレーム計算し直さない（Forge の不具合を直す）	Do not work out the sky colour again every frame (fixes a Forge bug)
+手に持ったアイテムの位置と大きさを変える（一人称）	Move and resize the item in your hand (first person)
+左右（＋で右）	Left / right (+ = right)
+上下（＋で上）	Up / down (+ = up)
+前後（＋で奥）	Near / far (+ = farther)
+画面全体	Whole screen
+自分の名前を画面の上だけ別の名前にする（録画・スクショ用）	Shows another name instead of yours, only on your screen (for recordings)
+表示する名前	Name to show
+ほかにも隠す名前（ニックなど・カンマ区切り）	More names to hide (comma separated)
+自分のスキンもデフォルト（Steve）にする	Show the default skin (Steve) instead of yours too

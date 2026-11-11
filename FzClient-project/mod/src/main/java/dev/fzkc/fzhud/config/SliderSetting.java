@@ -23,7 +23,8 @@ public class SliderSetting extends Setting {
     public void set(double v) {
         v = Math.max(min, Math.min(max, v));
         if (step > 0) v = min + Math.round((v - min) / step) * step;
-        value = Math.max(min, Math.min(max, v));
+        v = Math.max(min, Math.min(max, v));
+        value = Math.abs(v) < 1e-9 ? 0 : v;
     }
 
     /** 0..1 position of the knob. */

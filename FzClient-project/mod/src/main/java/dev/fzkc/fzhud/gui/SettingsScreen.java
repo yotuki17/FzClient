@@ -401,8 +401,14 @@ public class SettingsScreen extends FzScreen {
             if (ts.secret && !focused && !text.isEmpty()) text = dev.fzkc.fzhud.util.Lang.t("●●●●●●●● 設定済み");
             // not editing: show the end of a long text (as before); editing: follow the caret
             int caret = focused ? clampCursor(text) : text.length();
-            Ui.textBox(rx - textW(), y + 5, textW(), 18, text,
-                    "クリックして入力（右クリックで消去）", focused, caret, o);
+            boolean asTyped = ts == dev.fzkc.fzhud.Modules.nameHiderExtra;   // the names to hide, not hidden here
+            if (asTyped) dev.fzkc.fzhud.feature.NameHider.raw(true);
+            try {
+                Ui.textBox(rx - textW(), y + 5, textW(), 18, text,
+                        "クリックして入力（右クリックで消去）", focused, caret, o);
+            } finally {
+                if (asTyped) dev.fzkc.fzhud.feature.NameHider.raw(false);
+            }
         } else if (s instanceof ColorSetting) {
             drawColorRow((ColorSetting) s, y, rx, mx, my, o);
         }

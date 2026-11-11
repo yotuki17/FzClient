@@ -171,6 +171,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(popup);
         FMLCommonHandler.instance().bus().register(popup);
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatExtras());
+        if (dev.fzkc.fzhud.util.DevTest.MODE != null) FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.util.DevTest());
         if (dev.fzkc.fzhud.util.Perf.ON) { Object probe = new dev.fzkc.fzhud.util.PerfProbe(); FMLCommonHandler.instance().bus().register(probe); MinecraftForge.EVENT_BUS.register(probe); }
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Requeue());   // /rq joins the same game again
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.feature.Requeue.Command());

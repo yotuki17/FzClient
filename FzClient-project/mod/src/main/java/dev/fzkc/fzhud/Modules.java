@@ -142,6 +142,14 @@ public final class Modules {
     public static final ChoiceSetting snaplookView = snaplook.add(new ChoiceSetting("view", "視点", 0, "前から自分を見る（後ろを振り返る）", "後ろから自分を見る"));
     public static final BoolSetting snaplookToggle = snaplook.add(new BoolSetting("toggle", "押すたびにON/OFF（トグル）", false));
 
+    // ---- Item Position (where the item in your hand sits in first person, and how big it is)
+    public static final Module itemPos = new Module("itempos", "Item Position", Category.PVP,
+            "手に持ったアイテムの位置と大きさを変える（一人称）", false);
+    public static final SliderSetting itemPosX = itemPos.add(new SliderSetting("x", "左右（＋で右）", -0.6, 0.6, 0.02, 0.0, ""));
+    public static final SliderSetting itemPosY = itemPos.add(new SliderSetting("y", "上下（＋で上）", -0.6, 0.6, 0.02, 0.0, ""));
+    public static final SliderSetting itemPosZ = itemPos.add(new SliderSetting("z", "前後（＋で奥）", -0.5, 1.0, 0.02, 0.0, ""));
+    public static final SliderSetting itemPosScale = itemPos.add(new SliderSetting("scale", "大きさ", 30, 150, 5, 100, "%"));
+
     // ---- 3D skin layers (the outer layer of skins as little cubes)
     public static final Module skinLayers = new Module("skinlayers", "3D Skin Layers", Category.VISUAL,
             "スキンの上のレイヤー（帽子・上着・袖・ズボン）を立体にする", true);
@@ -480,6 +488,13 @@ public final class Modules {
     public static final Module deathCoords = new Module("deathcoords", "Death Coordinates", Category.UTILITY,
             "死亡座標をチャットに表示", true);
 
+    // ---- Name Hider (your own name is drawn as another name, on your screen only)
+    public static final Module nameHider = new Module("namehider", "Name Hider", Category.UTILITY,
+            "自分の名前を画面の上だけ別の名前にする（録画・スクショ用）", false);
+    public static final TextSetting nameHiderName = nameHider.add(new TextSetting("name", "表示する名前", "You", 16));
+    public static final TextSetting nameHiderExtra = nameHider.add(new TextSetting("extra", "ほかにも隠す名前（ニックなど・カンマ区切り）", "", 80).secret());
+    public static final BoolSetting nameHiderSkin = nameHider.add(new BoolSetting("skin", "自分のスキンもデフォルト（Steve）にする", false));
+
     // ---- Discord Rich Presence
     public static final Module discord = new Module("discord", "Discord", Category.UTILITY,
             "Discordにプレイ中表示", true);
@@ -653,6 +668,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, rawInput, dropLock, partyDetect, partyWarp, requeue, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, itemPos, rawInput, dropLock, partyDetect, partyWarp, requeue, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, nameHider, branding, menuSound, language, glassUi, theme));
 
 }

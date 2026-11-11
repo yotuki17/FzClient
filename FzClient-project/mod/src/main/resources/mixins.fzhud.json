@@ -42,6 +42,7 @@
     "MixinGuiInventory",
     "MixinForgeHooksClient",
     "MixinTextureMap",
-    "MixinFontRenderer"
+    "MixinFontRenderer",
+    "MixinNetworkPlayerInfo"
   ]
 }

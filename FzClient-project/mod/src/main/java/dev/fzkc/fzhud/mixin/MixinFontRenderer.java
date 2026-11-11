@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -18,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * from the pen position; here that drawing is recorded once (with the pen at 0,0) and replayed moved to where the
  * pen is. The game's own memory of the colour and the bound texture is put right after each replay, because a
  * display list changes them behind its back.
+ * <p>
+ * Name Hider (see NameHider): a text with your name in it is drawn, and measured, with the other name.
  */
 @Mixin(FontRenderer.class)
 public abstract class MixinFontRenderer {
@@ -33,10 +36,26 @@ public abstract class MixinFontRenderer {
 
     @Unique private final FontCache fzhud$cache = new FontCache();
     @Unique private boolean fzhud$inside;
+    @Unique private boolean fzhud$renamed;
 
     @Inject(require = 0, method = "renderStringAtPos", at = @At("HEAD"), cancellable = true)
     private void fzhud$cached(String text, boolean shadow, CallbackInfo ci) {
-        if (fzhud$inside || text == null || text.isEmpty() || !FontCache.on()) return;
+        if (fzhud$inside || text == null || text.isEmpty()) return;
+        if (!fzhud$renamed) {
+            String shown = dev.fzkc.fzhud.feature.NameHider.apply(text);
+            if (shown != text) {
+                // Name Hider: draw the text with the other name instead (what is kept below is that text then)
+                fzhud$renamed = true;
+                try {
+                    renderStringAtPos(shown, shadow);
+                } finally {
+                    fzhud$renamed = false;
+                }
+                ci.cancel();
+                return;
+            }
+        }
+        if (!FontCache.on()) return;
         if (!Minecraft.getMinecraft().isCallingFromMinecraftThread()) return;   // the loading screen draws on its own thread
         if (FontCache.shadersWorld()) return;   // OptiFine shaders: world texts the normal way
         FontCache c = fzhud$cache;
@@ -91,6 +110,12 @@ public abstract class MixinFontRenderer {
         e.width = w;
         e.list = list;
         ci.cancel();
+    }
+
+    /** Name Hider: the width is that of the text as it is drawn. */
+    @ModifyVariable(require = 0, method = "getStringWidth", at = @At("HEAD"), argsOnly = true)
+    private String fzhud$hiddenNameWidth(String text) {
+        return dev.fzkc.fzhud.feature.NameHider.apply(text);
     }
 
     @Inject(require = 0, method = "onResourceManagerReload", at = @At("HEAD"))

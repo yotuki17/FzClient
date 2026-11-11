@@ -32,6 +32,7 @@ import java.util.Random;
  *   <li>HUD elements: the element itself, drawn by its own code over a small game-like background.</li>
  *   <li>Player things (cosmetics, 3D skin layers, hitbox, nametags): your player model with it on.</li>
  *   <li>Block outline: a block with the outline and fill.</li>
+ *   <li>Item Position: the item in your hand as the game draws it, on a small picture of the whole screen.</li>
  *   <li>Everything else: the icon, what it does and its settings at a glance.</li>
  * </ul>
  */
@@ -56,6 +57,7 @@ final class ModulePreview {
             if (m instanceof HudElement && ((HudElement) m).width() > 0) hud((HudElement) m, x, iy, w, ih, o);
             else if (m == Modules.cosmetics || m == Modules.skinLayers || m == Modules.hitbox || m == Modules.nametags) player(m, x, iy, w, ih, o);
             else if (m == Modules.blockOutline) block(x, iy, w, ih, o);
+            else if (m == Modules.itemPos && Minecraft.getMinecraft().thePlayer != null) heldItem(x, iy, w, ih, o);
             else card(m, x, iy, w, ih, o);
         } catch (Throwable t) {
             card(m, x, iy, w, ih, o);
@@ -225,6 +227,88 @@ final class ModulePreview {
         if (len < .01f) return;
         float nx = -dy / len * lw / 2f, ny = dx / len * lw / 2f;
         quad(new float[]{x1 + nx, y1 + ny, x2 + nx, y2 + ny, x2 - nx, y2 - ny, x1 - nx, y1 - ny}, argb);
+    }
+
+    // ------------------------------------------------------------------ the item in your hand
+
+    private static final java.nio.IntBuffer VIEWPORT = org.lwjgl.BufferUtils.createIntBuffer(16);
+    private static net.minecraft.item.ItemStack previewSword;
+
+    /**
+     * Item Position: the item as the game draws it in first person, with the position and size that are set now,
+     * on a small picture of the whole screen (the cross in the middle is the crosshair). Shows what you hold, or
+     * a diamond sword with an empty hand. Only in a world: the game draws the item for a player.
+     */
+    private static void heldItem(float x, float y, float w, float h, float o) {
+        Minecraft mc = Minecraft.getMinecraft();
+        net.minecraft.item.ItemStack stack = mc.thePlayer.getHeldItem();
+        if (stack == null || stack.getItem() == net.minecraft.init.Items.filled_map) {
+            if (previewSword == null) previewSword = new net.minecraft.item.ItemStack(net.minecraft.init.Items.diamond_sword);
+            stack = previewSword;
+        }
+        // the screen's shape, as wide as the box allows
+        float aspect = (float) mc.displayWidth / Math.max(1, mc.displayHeight);
+        float bw = w - 16, bh = bw / aspect;
+        if (bh > h - 30) {
+            bh = h - 30;
+            bw = bh * aspect;
+        }
+        float bx = x + (w - bw) / 2f, by = y + 6;
+        R.rect(bx, by, bw, bh, R.alpha(0x48000000, o));
+        float cx = bx + bw / 2f, cy = by + bh / 2f;
+        R.rect(cx - 3, cy, 7, 1, R.alpha(0xD0FFFFFF, o));
+        R.rect(cx, cy - 3, 1, 7, R.alpha(0xD0FFFFFF, o));
+        R.textCentered(Lang.t("画面全体"), x + w / 2f, by + bh + 5, R.alpha(0xE0FFFFFF, o));
+        if (o < 0.75f) return;   // the menu is still fading in, and the item cannot fade with it
+
+        float f = Ui.scaleFactor() * Ui.k;
+        int vx = Math.round(bx * f), vy = Math.round(mc.displayHeight - (by + bh) * f);
+        int vw = Math.max(1, Math.round(bw * f)), vh = Math.max(1, Math.round(bh * f));
+        boolean depth = org.lwjgl.opengl.GL11.glIsEnabled(org.lwjgl.opengl.GL11.GL_DEPTH_TEST);
+        VIEWPORT.clear();
+        org.lwjgl.opengl.GL11.glGetInteger(org.lwjgl.opengl.GL11.GL_VIEWPORT, VIEWPORT);
+        Ui.scissor(bx, by, bw, bh);
+        // the game's first person camera (70 degrees, whatever the FOV setting says) looking at that picture only
+        GlStateManager.viewport(vx, vy, vw, vh);
+        GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_PROJECTION);
+        GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+        org.lwjgl.util.glu.Project.gluPerspective(70f, (float) vw / vh, 0.05f, 64f);
+        GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_MODELVIEW);
+        GlStateManager.pushMatrix();
+        GlStateManager.loadIdentity();
+        try {
+            GlStateManager.enableDepth();
+            GlStateManager.depthMask(true);
+            GlStateManager.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT);   // inside the scissor box only
+            net.minecraft.client.renderer.RenderHelper.enableStandardItemLighting();
+            GlStateManager.enableRescaleNormal();
+            GlStateManager.enableTexture2D();
+            GlStateManager.enableAlpha();
+            GlStateManager.color(1f, 1f, 1f, 1f);
+            GlStateManager.translate(Modules.itemPosX.get(), Modules.itemPosY.get(), -Modules.itemPosZ.get());
+            // where the game puts an item at rest (ItemRenderer.transformFirstPersonItem)
+            GlStateManager.translate(0.56f, -0.52f, -0.72f);
+            GlStateManager.rotate(45f, 0f, 1f, 0f);
+            GlStateManager.scale(0.4f, 0.4f, 0.4f);
+            float s = Modules.itemPosScale.get() / 100f;
+            GlStateManager.scale(s, s, s);
+            mc.getItemRenderer().renderItem(mc.thePlayer, stack,
+                    net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType.FIRST_PERSON);
+        } finally {
+            net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting();
+            GlStateManager.disableRescaleNormal();
+            GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_PROJECTION);
+            GlStateManager.popMatrix();
+            GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_MODELVIEW);
+            GlStateManager.popMatrix();
+            GlStateManager.viewport(VIEWPORT.get(0), VIEWPORT.get(1), VIEWPORT.get(2), VIEWPORT.get(3));
+            if (!depth) GlStateManager.disableDepth();
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.color(1f, 1f, 1f, 1f);
+            Ui.scissor(x, y, w, h);
+        }
     }
 
     // ------------------------------------------------------------------ everything else
