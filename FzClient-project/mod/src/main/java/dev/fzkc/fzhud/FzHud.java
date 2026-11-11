@@ -171,6 +171,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(popup);
         FMLCommonHandler.instance().bus().register(popup);
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatExtras());
+        if (dev.fzkc.fzhud.util.Perf.ON) { Object probe = new dev.fzkc.fzhud.util.PerfProbe(); FMLCommonHandler.instance().bus().register(probe); MinecraftForge.EVENT_BUS.register(probe); }
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Requeue());   // /rq joins the same game again
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.feature.Requeue.Command());
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Snaplook());   // hold a key to look behind you
@@ -473,6 +474,7 @@ public class FzHud {
         if (event.phase == TickEvent.Phase.END) {
             Performance.afterFrame();
             dev.fzkc.fzhud.util.FrameStats.frame();
+            dev.fzkc.fzhud.util.Perf.frame();
             dev.fzkc.fzhud.util.Win32Window.update(org.lwjgl.opengl.Display.isActive());
             dev.fzkc.fzhud.feature.LauncherLink.frame();
             return;

@@ -411,6 +411,8 @@ public final class Modules {
     public static final BoolSetting perfCull = performance.add(new BoolSetting("cull", "壁の向こうのモブ・アイテムを描かない", false));
     public static final BoolSetting perfNoWeather = performance.add(new BoolSetting("noweather", "雨・雪を描かない", false));
     public static final BoolSetting perfNoClouds = performance.add(new BoolSetting("noclouds", "雲を描かない", false));
+    public static final SliderSetting perfLobbyPlayers = performance.add(new SliderSetting("lobbyplayers", "ロビーで描くプレイヤーの数（近い順・100 = 全員）", 0, 100, 5, 30, "人"));
+    public static final BoolSetting perfNoAnim = performance.add(new BoolSetting("noanim", "水・溶岩・炎などのテクスチャのアニメーションを止める", false));
     public static final SliderSetting perfMenuFps = performance.add(new SliderSetting("menufps", "メニュー中のFPS上限（240で無制限）", 15, 240, 5, 240, " FPS"));
 
     // ---- Optimization in the style of Patcher: small things OptiFine and FzClientOpt don't touch, so all three
@@ -419,6 +421,8 @@ public final class Modules {
             "見た目を変えずに軽くする（OptiFine と一緒に使える）", true);
     public static final BoolSetting optHolograms = optimize.add(new BoolSetting("holograms", "ホログラム（浮いている文字）を軽く描く", true));
     public static final BoolSetting optGlErrors = optimize.add(new BoolSetting("glerrors", "GL エラーの確認を省く（毎フレームの待ちが減る）", true));
+    public static final BoolSetting optFont = optimize.add(new BoolSetting("font", "文字の描画を使い回す（同じ文字を毎フレーム作り直さない）", true));
+    public static final BoolSetting optSky = optimize.add(new BoolSetting("sky", "空の色を毎フレーム計算し直さない（Forge の不具合を直す）", true));
     public static final SliderSetting optTileDist = optimize.add(new SliderSetting("tiledist", "チェスト・看板・頭などの描画距離（64 = いつも通り）", 8, 64, 4, 64, "m"));
     public static final SliderSetting optParticles = optimize.add(new SliderSetting("maxparticles", "パーティクルの上限（4000 = いつも通り）", 200, 4000, 200, 4000, ""));
     public static final BoolSetting optNoParticles = optimize.add(new BoolSetting("noparticles", "パーティクルを完全に消す", false));

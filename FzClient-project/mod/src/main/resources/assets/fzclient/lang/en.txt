@@ -1134,3 +1134,7 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 ボイスチャンネル	Voice channel
 まだ入り直せるゲームがありません（一度ゲームに入ると使えます）	No game to join again yet (play one game first)
 /rq と打つと、同じゲームにもう一度入る（Hypixel）	Type /rq to join the same game again (Hypixel)
+ロビーで描くプレイヤーの数（近い順・100 = 全員）	Players drawn in lobbies (nearest first, 100 = everyone)
+水・溶岩・炎などのテクスチャのアニメーションを止める	Stop texture animations (water, lava, fire...)
+文字の描画を使い回す（同じ文字を毎フレーム作り直さない）	Reuse drawn text (the same text is not rebuilt every frame)
+空の色を毎フレーム計算し直さない（Forge の不具合を直す）	Do not work out the sky colour again every frame (fixes a Forge bug)

@@ -31,6 +31,8 @@ public final class Stats {
     public static volatile Game current;
     /** True in a lobby (the stats shown there are for the lobby's game). */
     public static volatile boolean lobby = true;
+    /** True once the server said this is a lobby (lobby alone is also true while nothing is known yet). */
+    public static volatile boolean inLobby;
     /** The map of the game you are in ("Lighthouse"), null in lobbies or when not known. */
     public static volatile String map;
     /** The mode of the game you are in (Duels: Classic, UHC...), null for overall (lobbies, games without modes). */
@@ -82,6 +84,11 @@ public final class Stats {
         Sessions.refresh();
         PingHistory.refresh();
         askAgain = true;
+    }
+
+    /** Something that is switched on needs to know which game this is. */
+    private static boolean wantLocation() {
+        return Modules.stats.enabled || Modules.requeue.enabled || Modules.performance.enabled && Modules.perfLobbyPlayers.get() < 100;
     }
 
     public static void init() {
@@ -166,10 +173,11 @@ public final class Stats {
             map = null;
             mode = null;
             rawMode = null;
+            inLobby = false;
             Denick.worldChanged();
             retries = 0;
             worldAt = System.currentTimeMillis();
-            askIn = mc.theWorld != null && (Modules.stats.enabled || Modules.requeue.enabled) && onHypixel() ? 25 : -1;
+            askIn = mc.theWorld != null && wantLocation() && onHypixel() ? 25 : -1;
             // the Hypixel Mod API's location can arrive just before the world does
             if (ModApiLocation.at > worldAt - 3000) appliedAt = 0;
         }
@@ -181,6 +189,7 @@ public final class Stats {
             current = game(type, mode);
             Stats.mode = lobby ? null : modeOf(current, mode);
             rawMode = lobby ? null : mode;
+            inLobby = lobby;
             map = ModApiLocation.map;
             answered = true;
             askIn = -1;   // no /locraw needed
@@ -188,7 +197,7 @@ public final class Stats {
         }
         if (askAgain) {
             askAgain = false;
-            if (mc.theWorld != null && (Modules.stats.enabled || Modules.requeue.enabled) && onHypixel()) {
+            if (mc.theWorld != null && wantLocation() && onHypixel()) {
                 retries = 0;
                 if (askIn <= 0) askIn = 5;   // a world that just loaded asks by itself
             }
@@ -199,7 +208,7 @@ public final class Stats {
             mc.thePlayer.sendChatMessage("/locraw");
         }
         // no answer (the server was busy or said "too fast"): ask again, twice at most
-        if (askIn <= 0 && !answered && askedAt > 0 && retries < 2 && mc.thePlayer != null && (Modules.stats.enabled || Modules.requeue.enabled) && onHypixel()
+        if (askIn <= 0 && !answered && askedAt > 0 && retries < 2 && mc.thePlayer != null && wantLocation() && onHypixel()
                 && System.currentTimeMillis() - askedAt > 5000) {
             retries++;
             askIn = 1;
@@ -238,6 +247,7 @@ public final class Stats {
             current = game(type, mode);
             Stats.mode = lobby ? null : modeOf(current, mode);
             rawMode = lobby ? null : mode;
+            inLobby = lobby;
             map = PlayerData.str(o, "map");
         } catch (Exception ignored) {
         }

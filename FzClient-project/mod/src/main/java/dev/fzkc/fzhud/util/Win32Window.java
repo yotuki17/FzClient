@@ -27,6 +27,10 @@ public final class Win32Window {
     private static final int SWP_NOSIZE = 0x1, SWP_NOMOVE = 0x2, SWP_NOACTIVATE = 0x10, SWP_FRAMECHANGED = 0x20;
     private static final Pointer TOPMOST = new Pointer(-1), NOTOPMOST = new Pointer(-2);
 
+    private static java.lang.reflect.Field implField, hwndField;
+    private static long hwndValue, updatedAt;
+    private static Pointer hwndPointer;
+
     private static U32 user32;
     private static boolean loaded;
 
@@ -45,13 +49,22 @@ public final class Win32Window {
     /** The game's window (LWJGL keeps it in Display.display_impl.hwnd), or null. */
     public static Pointer hwnd() {
         try {
-            java.lang.reflect.Field impl = org.lwjgl.opengl.Display.class.getDeclaredField("display_impl");
-            impl.setAccessible(true);
-            Object d = impl.get(null);
-            java.lang.reflect.Field h = d.getClass().getDeclaredField("hwnd");
-            h.setAccessible(true);
-            long v = h.getLong(d);
-            return v == 0 ? null : new Pointer(v);
+            if (implField == null) {
+                implField = org.lwjgl.opengl.Display.class.getDeclaredField("display_impl");
+                implField.setAccessible(true);
+            }
+            Object d = implField.get(null);
+            if (hwndField == null || hwndField.getDeclaringClass() != d.getClass()) {
+                hwndField = d.getClass().getDeclaredField("hwnd");
+                hwndField.setAccessible(true);
+            }
+            long v = hwndField.getLong(d);
+            if (v == 0) return null;
+            if (hwndPointer == null || v != hwndValue) {
+                hwndValue = v;
+                hwndPointer = new Pointer(v);
+            }
+            return hwndPointer;
         } catch (Throwable t) {
             return null;
         }
@@ -92,6 +105,10 @@ public final class Win32Window {
      */
     public static void update(boolean focused) {
         if (!active) return;
+        // asked every frame: 20 looks a second are plenty (each one is a call into Windows)
+        long now = System.currentTimeMillis();
+        if (now - updatedAt < 50L && now >= updatedAt) return;
+        updatedAt = now;
         U32 u = user32();
         Pointer hwnd = hwnd();
         if (u == null || hwnd == null) return;

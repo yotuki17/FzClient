@@ -25,7 +25,7 @@ import java.util.concurrent.locks.LockSupport;
 
 /**
  * Performance: draw less of what you can't use, so the FPS goes up. Everything here only changes what YOUR screen
- * draws; nothing is sent to the server and players are never hidden.*
+ * draws; nothing is sent to the server, and players are never hidden in a game.
  *  1. Far-away dropped items, XP orbs, mobs, armor stands (holograms) and item frames / paintings are not drawn.
  *     The game decides this with a per-entity "render distance" (box size x 64 x renderDistanceWeight), so
  *     changing that weight is enough - no hooks needed.
@@ -34,6 +34,7 @@ import java.util.concurrent.locks.LockSupport;
  *     and an entity only disappears after it stayed hidden for a moment (no flicker at corners).
  *  3. Rain / snow and clouds can be switched off through the renderer hooks Forge provides.
  *  4. Menus (inventory, pause screen...) can be capped to a lower FPS while the game is paused anyway.
+ *  5. In Hypixel lobbies only the nearest players are drawn (NPCs always are).
  * Turning the module off puts everything back.
  */
 public final class Performance {
@@ -63,17 +64,20 @@ public final class Performance {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.theWorld != lastWorld) {
             info.clear();
+            hiddenPlayers.clear();
             lastWorld = mc.theWorld;
         }
         if (mc.theWorld == null) return;
         WorldProvider provider = mc.theWorld.provider;
         if (!Modules.performance.enabled) {
+            restorePlayers();
             restoreEntities();
             restoreRenderers(provider);
             return;
         }
         ticks++;
         applyRenderers(provider);
+        lobbyPlayers(mc);
 
         double itemDist = Modules.perfItems.get(), mobDist = Modules.perfMobs.get(), frameDist = Modules.perfFrames.get();
         boolean cull = Modules.perfCull.get();
@@ -120,6 +124,58 @@ public final class Performance {
         if (ticks % 200 == 0) {
             info.keySet().removeIf(entity -> entity.isDead);
         }
+    }
+
+    // ---------------------------------------------------------------- players in lobbies
+
+    /** Players that are not drawn right now, with the render-distance weight they had. */
+    private static final Map<EntityPlayer, Double> hiddenPlayers = new IdentityHashMap<>();
+    private static final java.util.List<EntityPlayer> others = new java.util.ArrayList<>();
+    private static double[] dist = new double[64];
+
+    /** Hypixel lobbies: only the nearest players are drawn. Never in a game, and NPCs always stay. */
+    private static void lobbyPlayers(Minecraft mc) {
+        int max = (int) Modules.perfLobbyPlayers.get();
+        if (max >= 100 || !dev.fzkc.fzhud.stats.Stats.inLobby || !dev.fzkc.fzhud.stats.Stats.onHypixel() || mc.thePlayer == null) {
+            restorePlayers();
+            return;
+        }
+        if (ticks % 5 != 0) return;
+        Entity view = mc.getRenderViewEntity() == null ? mc.thePlayer : mc.getRenderViewEntity();
+        others.clear();
+        for (EntityPlayer p : mc.theWorld.playerEntities) {
+            if (p == mc.thePlayer || p == view) continue;
+            java.util.UUID id = p.getUniqueID();
+            if (id == null || id.version() != 4) continue;   // NPCs (you click them) are not players
+            others.add(p);
+        }
+        int n = others.size();
+        double cut = Double.MAX_VALUE;
+        if (n > max) {
+            if (dist.length < n) dist = new double[n * 2];
+            for (int i = 0; i < n; i++) dist[i] = others.get(i).getDistanceSqToEntity(view);
+            java.util.Arrays.sort(dist, 0, n);
+            cut = max == 0 ? -1.0 : dist[max - 1];
+        }
+        for (int i = 0; i < n; i++) {
+            EntityPlayer p = others.get(i);
+            boolean hide = p.getDistanceSqToEntity(view) > cut;
+            if (hide) {
+                if (!hiddenPlayers.containsKey(p)) hiddenPlayers.put(p, p.renderDistanceWeight);
+                p.renderDistanceWeight = 0.0;
+            } else {
+                Double orig = hiddenPlayers.remove(p);
+                if (orig != null) p.renderDistanceWeight = orig;
+            }
+        }
+        others.clear();
+        if (ticks % 200 == 0) hiddenPlayers.keySet().removeIf(p -> p.isDead);
+    }
+
+    private static void restorePlayers() {
+        if (hiddenPlayers.isEmpty()) return;
+        for (Map.Entry<EntityPlayer, Double> en : hiddenPlayers.entrySet()) en.getKey().renderDistanceWeight = en.getValue();
+        hiddenPlayers.clear();
     }
 
     // ---------------------------------------------------------------- occlusion culling

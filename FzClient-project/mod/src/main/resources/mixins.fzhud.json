@@ -39,6 +39,9 @@
     "MixinLayerCape",
     "AccessorModelWolf",
     "AccessorGuiContainer",
-    "MixinGuiInventory"
+    "MixinGuiInventory",
+    "MixinForgeHooksClient",
+    "MixinTextureMap",
+    "MixinFontRenderer"
   ]
 }

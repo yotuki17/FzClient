@@ -209,8 +209,20 @@ public class DiscordVcHud extends HudElement {
         private static final Map<String, ResourceLocation> TEX = new ConcurrentHashMap<String, ResourceLocation>();
         private static final Map<String, Boolean> LOADING = new ConcurrentHashMap<String, Boolean>();
 
+        /** The picture found last for each person (game thread only): no checks and no key building every frame. */
+        private static final Map<String, Object[]> LAST = new java.util.HashMap<String, Object[]>();
+
         static ResourceLocation get(String id, String hash) {
-            if (id == null || !id.matches("\\d{1,20}")) return null;
+            if (id == null) return null;
+            Object[] last = LAST.get(id);
+            if (last != null && (hash == null ? last[0] == null : hash.equals(last[0]))) return (ResourceLocation) last[1];
+            ResourceLocation r = find(id, hash);
+            if (r != null) LAST.put(id, new Object[]{hash, r});
+            return r;
+        }
+
+        private static ResourceLocation find(String id, String hash) {
+            if (!id.matches("\\d{1,20}")) return null;
             final String key = id + ":" + (hash == null ? "" : hash);
             ResourceLocation r = TEX.get(key);
             if (r != null || LOADING.putIfAbsent(key, Boolean.TRUE) != null || TEX.size() > 200) return r;
