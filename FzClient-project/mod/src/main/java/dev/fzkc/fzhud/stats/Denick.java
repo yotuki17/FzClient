@@ -543,7 +543,27 @@ public final class Denick {
         say("§d[Denick] §f" + nick + " §7→ §a§l" + realName + " §8(" + how + ")");
         refreshNames(nick);
         // the real UUID, so the tab list and chat show the real player's stats
-        new Thread(() -> r.id = StatsApi.lookupName(realName), "FzClient-DenickName").start();
+        new Thread(() -> {
+            // one failed request used to leave the nick on "NICK" for the whole session: try again for a while
+            for (int i = 0; i < 8 && r.id == null; i++) {
+                try {
+                    UUID id = StatsApi.lookupNameOrThrow(realName);
+                    if (id == null) {
+                        why("real name " + realName + " of " + nick + ": Mojang does not know it");
+                        return;
+                    }
+                    r.id = id;
+                    why("real name " + realName + " of " + nick + ": found");
+                } catch (Exception e) {
+                    why("real name " + realName + " of " + nick + ": " + e.getMessage() + " (try " + (i + 1) + ")");
+                    try {
+                        Thread.sleep(Math.min(30_000L, 2000L << i));
+                    } catch (InterruptedException stop) {
+                        return;
+                    }
+                }
+            }
+        }, "FzClient-DenickName").start();
     }
 
     private static int parse(String s) {

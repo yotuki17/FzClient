@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  '改善：ニック解除した人のスタッツが出ないことがあるのを修正': 'Fixed: stats of a denicked player sometimes did not show',
   '改善：スタッツ付きのパーティーチャットが Party タブに出ないのを修正': 'Fixed: party chat with stats was missing from the Party tab',
   '改善：軽量化（空の色の計算を直して FPS アップ、カクつき減）': 'Faster: sky colour fix, more FPS and fewer stutters',
   'NEW：リキュー（/rq で同じゲームにもう一度入る）': 'NEW: Requeue (type /rq to join the same game again)',

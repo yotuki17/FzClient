@@ -211,6 +211,12 @@ public final class StatsApi {
     private static final UUID NONE = new UUID(0, 0);
     private static final Map<String, UUID> NAMES = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> NAME_LOADING = new ConcurrentHashMap<>();
+    /** Names whose lookup failed (not "unknown"), and when. */
+    private static final Map<String, Long> NAME_FAILED = new ConcurrentHashMap<>();
+    private static final String[] NAME_URLS = {
+            "https://api.minecraftservices.com/minecraft/profile/lookup/name/",
+            "https://api.mojang.com/users/profiles/minecraft/",
+    };
 
     /**
      * The UUID for a name: from the tab list, else from Mojang (in the background; null until it is known).
@@ -225,11 +231,16 @@ public final class StatsApi {
         String k = name.toLowerCase(java.util.Locale.ROOT);
         UUID id = NAMES.get(k);
         if (id != null) return id == NONE ? null : id;
+        Long failedAt = NAME_FAILED.get(k);
+        if (failedAt != null && System.currentTimeMillis() - failedAt < 15_000L) return null;
         if (NAME_LOADING.putIfAbsent(k, Boolean.TRUE) == null) {
             POOL.execute(() -> {
                 try {
-                    UUID found = lookupName(name);
+                    UUID found = lookupNameOrThrow(name);
                     NAMES.put(k, found == null ? NONE : found);
+                } catch (java.io.IOException failed) {
+                    // Mojang is busy or said "slow down": not a nick. Asked again in a while
+                    NAME_FAILED.put(k, System.currentTimeMillis());
                 } finally {
                     NAME_LOADING.remove(k);
                 }
@@ -245,13 +256,38 @@ public final class StatsApi {
     /** Name -> UUID from Mojang right now (call off the game thread). */
     static UUID lookupName(String name) {
         try {
-            String body = Http.get("Mojang", "https://api.minecraftservices.com/minecraft/profile/lookup/name/" + name, null, null);
-            String id = PlayerData.str(new JsonParser().parse(body).getAsJsonObject(), "id");
-            if (id == null || id.length() != 32) return null;
-            return UUID.fromString(id.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5"));
+            return lookupNameOrThrow(name);
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * The same, telling "Mojang does not know this name" (null) apart from "the lookup failed" (exception).
+     * A UUID already known in this session is used; Mojang's second address is asked when the first one fails.
+     */
+    static UUID lookupNameOrThrow(String name) throws java.io.IOException {
+        UUID known = NAMES.get(name.toLowerCase(java.util.Locale.ROOT));
+        if (known != null && known != NONE) return known;
+        java.io.IOException last = null;
+        for (String url : NAME_URLS) {
+            try {
+                String body = Http.get("Mojang", url + name, null, null);
+                String id = PlayerData.str(new JsonParser().parse(body).getAsJsonObject(), "id");
+                if (id == null || id.length() != 32) return null;
+                UUID found = UUID.fromString(id.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5"));
+                NAMES.put(name.toLowerCase(java.util.Locale.ROOT), found);
+                return found;
+            } catch (Http.Status s) {
+                if (s.code == 404 || s.code == 204) return null;   // no such name
+                last = s;
+            } catch (java.io.IOException e) {
+                last = e;
+            } catch (RuntimeException e) {
+                last = new java.io.IOException("Mojang: " + e);
+            }
+        }
+        throw last;
     }
 
     /** Why the Hypixel key is not being used right now, or null. */
