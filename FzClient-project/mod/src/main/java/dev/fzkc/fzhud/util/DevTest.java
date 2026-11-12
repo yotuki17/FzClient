@@ -53,7 +53,7 @@ public class DevTest {
     }
 
     private dev.fzkc.fzhud.gui.SettingsScreen set;
-    private int setTheme;
+    private int setTheme, setType;
 
     /** The settings windows: crosshair rows, the type tiles, the colour window, inline choices, in dark and white. */
     private void settings(Minecraft mc, int w) {
@@ -83,6 +83,20 @@ public class DevTest {
             dev.fzkc.fzhud.gui.Themes.apply(setTheme);
             mc.displayGuiScreen(null);
         }
+        // every crosshair type in the world, at its real size
+        dev.fzkc.fzhud.config.ChoiceSetting type = null;
+        for (dev.fzkc.fzhud.hud.HudElement e : dev.fzkc.fzhud.FzHud.elements) {
+            if (e instanceof dev.fzkc.fzhud.hud.Crosshair) type = ((dev.fzkc.fzhud.hud.Crosshair) e).typeSetting();
+        }
+        if (type != null && w >= 310 && w < 310 + type.options.length * 6) {
+            int i = (w - 310) / 6;
+            if ((w - 310) % 6 == 0) {
+                if (i == 0) setType = type.index;
+                type.index = i;
+            }
+            if ((w - 310) % 6 == 4) shot(mc, "xh_" + i);
+        }
+        if (type != null && w == 310 + type.options.length * 6) type.index = setType;
     }
 
     private dev.fzkc.fzhud.gui.StatsScreen pv;

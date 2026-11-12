@@ -15,8 +15,8 @@ public class Crosshair extends HudElement {
     private static final float SIZE = 21f;
 
     public static final String[] TYPES = {
-            "シェブロン ^", "十字", "十字＋点", "点",
-            "円", "円＋点", "四角", "X", "T字", "カッコ [ ]"};
+            "シェブロン ^", "十字", "十字＋点", "点", "円", "円＋点", "四隅", "X", "T字", "カッコ [ ]",
+            "隙間なし十字", "細い十字", "4つの点", "ひし形", "三角"};
 
     private final ChoiceSetting type;
     private final ColorSetting color, outlineColor, targetColor;
@@ -70,22 +70,6 @@ public class Crosshair extends HudElement {
                 && !hit.entityHit.isInvisible();   // never reveal invisible players (that would be a cheat)
     }
 
-    /** A bar drawn with an optional outline pass underneath. */
-    private void bar(float x, float y, float w, float h, int c, int o, boolean withOutline) {
-        if (withOutline) R.rect(x - 0.5f, y - 0.5f, w + 1f, h + 1f, o);
-        R.rect(x, y, w, h, c);
-    }
-
-    /** Same as {@link #bar}, as part of an R.batchBegin() / R.batchEnd() group. */
-    private void batchBar(float x, float y, float w, float h, int c, int o, boolean withOutline) {
-        if (withOutline) R.batchRect(x - 0.5f, y - 0.5f, w + 1f, h + 1f, o);
-        R.batchRect(x, y, w, h, c);
-    }
-
-    private void ring(float cx, float cy, float r, float t, int c) {
-        R.roundedOutline(cx - r, cy - r, r * 2, r * 2, r, t, c);
-    }
-
     @Override
     public void draw(float alpha, boolean preview) {
         if (!preview && Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) return;   // first person only
@@ -116,92 +100,191 @@ public class Crosshair extends HudElement {
     }
 
     private void shape(int t, int base, float alpha) {
-        float c = SIZE / 2f;
         int col = R.alpha(base, alpha);
         int out = R.alpha(outlineColor.get(), alpha * 0.85f);
-        boolean ol = outline.get();
-        float len = length.get(), th = thickness.get(), g = gap.get();
-        float h = th / 2f;
+        if (t == 0) {
+            chevron(col, out, alpha);
+            return;
+        }
+        pixelShape(t, col, out);
+    }
 
-        switch (t) {
-            case 0: { // chevron "^"
-                for (int side = -1; side <= 1; side += 2) {
-                    GlStateManager.pushMatrix();
-                    GlStateManager.translate(c, c, 0f);
-                    GlStateManager.rotate(side * -spread.get(), 0f, 0f, 1f);
-                    R.rect(-th, 1.5f, th * 2, len + 1.5f, col);
-                    if (whiteCore.get()) R.rect(-th / 3f, 2.2f, th * 2 / 3f, len, R.alpha(0xFFFFFFFF, alpha));
-                    GlStateManager.popMatrix();
-                }
-                if (dot.get()) {
-                    R.rect(c - 1.5f, c - 1.5f, 3f, 3f, col);
-                    R.rect(c - 0.5f, c - 0.5f, 1f, 1f, out);
-                }
+    /** The chevron "^" (drawn turned, so it is not snapped to pixels). */
+    private void chevron(int col, int out, float alpha) {
+        float c = SIZE / 2f, th = thickness.get(), len = length.get();
+        for (int side = -1; side <= 1; side += 2) {
+            GlStateManager.pushMatrix();
+            GlStateManager.translate(c, c, 0f);
+            GlStateManager.rotate(side * -spread.get(), 0f, 0f, 1f);
+            R.rect(-th, 1.5f, th * 2, len + 1.5f, col);
+            if (whiteCore.get()) R.rect(-th / 3f, 2.2f, th * 2 / 3f, len, R.alpha(0xFFFFFFFF, alpha));
+            GlStateManager.popMatrix();
+        }
+        if (dot.get()) {
+            R.rect(c - 1.5f, c - 1.5f, 3f, 3f, col);
+            R.rect(c - 0.5f, c - 0.5f, 1f, 1f, out);
+        }
+    }
+
+    // ---------------------------------------------------------------- pixel crosshairs
+    // Every other type is laid out in whole screen pixels around the centre, so lines are sharp and the same width
+    // on both sides at any GUI scale (fractional sizes would smear a line over two pixels).
+
+    private static final java.nio.FloatBuffer MATRIX = org.lwjgl.BufferUtils.createFloatBuffer(16);
+    /** Filled rectangles of the shape being built: x, y, w, h in pixels. */
+    private final java.util.List<int[]> parts = new java.util.ArrayList<int[]>();
+
+    private void add(int x, int y, int w, int h) {
+        if (w > 0 && h > 0) parts.add(new int[]{x, y, w, h});
+    }
+
+    private void pixelShape(int type, int col, int out) {
+        Minecraft mc = Minecraft.getMinecraft();
+        float sf = new net.minecraft.client.gui.ScaledResolution(mc).getScaleFactor();
+        MATRIX.clear();
+        org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_MODELVIEW_MATRIX, MATRIX);
+        float sx = MATRIX.get(0), sy = MATRIX.get(5), tx = MATRIX.get(12), ty = MATRIX.get(13);
+        if (sx <= 0f || sy <= 0f) return;
+        float px = sx * sf;   // screen pixels per crosshair unit
+        // the centre, on the nearest pixel corner
+        float cx = Math.round((sx * SIZE / 2f + tx) * sf), cy = Math.round((sy * SIZE / 2f + ty) * sf);
+
+        int t = Math.max(1, Math.round(thickness.get() * px));
+        int l = Math.max(1, Math.round(length.get() * px));
+        int g = Math.max(0, Math.round(gap.get() * px));
+        // the centre cell is t wide: [lo, hi) on both axes (odd t: a centre pixel; even t: a pixel corner)
+        int lo = -(t / 2), hi = lo + t;
+        parts.clear();
+        build(type, t, l, g, lo, hi, px);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.translate((cx / sf - tx) / sx, (cy / sf - ty) / sy, 0f);
+        GlStateManager.scale(1f / (sf * sx), 1f / (sf * sy), 1f);
+        R.batchBegin();
+        if (outline.get()) {
+            int o = Math.max(1, Math.round(px * 0.5f));
+            for (int[] r : parts) R.batchRect(r[0] - o, r[1] - o, r[2] + o * 2, r[3] + o * 2, out);
+        }
+        for (int[] r : parts) R.batchRect(r[0], r[1], r[2], r[3], col);
+        R.batchEnd();
+        GlStateManager.popMatrix();
+    }
+
+    private void build(int type, int t, int l, int g, int lo, int hi, float px) {
+        switch (type) {
+            case 1: case 2: // cross (+ dot)
+                bars(t, l, g, lo, hi);
+                if (type == 2) add(lo, lo, t, t);
                 break;
-            }
-            case 1: case 2: { // cross (+ dot), all bars in one draw
-                R.batchBegin();
-                batchBar(c - h, c - g - len, th, len, col, out, ol);          // up
-                batchBar(c - h, c + g, th, len, col, out, ol);                // down
-                batchBar(c - g - len, c - h, len, th, col, out, ol);          // left
-                batchBar(c + g, c - h, len, th, col, out, ol);                // right
-                if (t == 2) batchBar(c - h, c - h, th, th, col, out, ol);
-                R.batchEnd();
-                break;
-            }
             case 3: { // dot
-                float d = Math.max(1.5f, th * 1.5f);
-                if (ol) R.rounded(c - d / 2 - 0.6f, c - d / 2 - 0.6f, d + 1.2f, d + 1.2f, d / 2 + 0.6f, out);
-                R.rounded(c - d / 2, c - d / 2, d, d, d / 2, col);
+                int e = Math.max(1, t / 2);
+                add(lo - e, lo - e, t + e * 2, t + e * 2);
                 break;
             }
             case 4: case 5: { // circle (+ dot)
-                float r = g + len / 2f + 1f;
-                if (ol) ring(c, c, r, th + 1.5f, out);
-                ring(c, c, r, th, col);
-                if (t == 5) {
-                    if (ol) R.rect(c - 1.2f, c - 1.2f, 2.4f, 2.4f, out);
-                    R.rect(c - 0.7f, c - 0.7f, 1.4f, 1.4f, col);
+                ring(g + l / 2f + t, t, lo, hi);
+                if (type == 5) add(lo, lo, t, t);
+                break;
+            }
+            case 6: { // four corners
+                int s = g + Math.max(2, l / 2);
+                int left = lo - s - t, right = hi + s + t, a = Math.max(t + 1, (right - left) / 3);
+                add(left, left, a, t);
+                add(left, left, t, a);
+                add(right - a, left, a, t);
+                add(right - t, left, t, a);
+                add(left, right - t, a, t);
+                add(left, right - a, t, a);
+                add(right - a, right - t, a, t);
+                add(right - t, right - a, t, a);
+                break;
+            }
+            case 7: // X: four steps of t x t squares
+                for (int k = 1; k <= l; k++) {
+                    int off = g + k;
+                    add(lo - off, lo - off, t, t);
+                    add(hi + off - t, lo - off, t, t);
+                    add(lo - off, hi + off - t, t, t);
+                    add(hi + off - t, hi + off - t, t, t);
+                }
+                break;
+            case 8: // T (no top line)
+                add(lo, hi + g, t, l);
+                add(lo - g - l, lo, l, t);
+                add(hi + g, lo, l, t);
+                break;
+            case 9: { // brackets [ ]
+                int s = g + Math.max(t + 1, l / 2), h = Math.max(l, t * 2), a = Math.max(t + 1, l / 3);
+                int lx = lo - s - t, rx = hi + s;
+                add(lx, lo - h, t, hi - lo + h * 2);
+                add(lx, lo - h, a, t);
+                add(lx, hi + h - t, a, t);
+                add(rx, lo - h, t, hi - lo + h * 2);
+                add(rx + t - a, lo - h, a, t);
+                add(rx + t - a, hi + h - t, a, t);
+                break;
+            }
+            case 10: // cross without a gap
+                add(lo, lo - l, t, l * 2 + t);
+                add(lo - l, lo, l, t);
+                add(hi, lo, l, t);
+                break;
+            case 11: { // thin cross: always one pixel line (like the game's own)
+                int th = Math.max(1, Math.round(px * 0.5f)), c0 = -(th / 2), len = l + g + t;
+                add(c0, c0 - len, th, len * 2 + th);
+                add(c0 - len, c0, len, th);
+                add(c0 + th, c0, len, th);
+                break;
+            }
+            case 12: { // four dots around the centre
+                int d = g + l / 2 + t;
+                add(lo, lo - d - t, t, t);
+                add(lo, hi + d, t, t);
+                add(lo - d - t, lo, t, t);
+                add(hi + d, lo, t, t);
+                break;
+            }
+            case 13: { // diamond outline
+                int r = g + l / 2 + t;
+                for (int dx = -r; dx <= r; dx++) {
+                    int dy = r - Math.abs(dx);
+                    add(lo + dx, lo - dy, t, t);
+                    if (dy != 0) add(lo + dx, lo + dy, t, t);
                 }
                 break;
             }
-            case 6: { // square
-                float s = g + len / 2f + 1f;
-                if (ol) R.roundedOutline(c - s, c - s, s * 2, s * 2, 0.01f, th + 1.5f, out);
-                R.roundedOutline(c - s, c - s, s * 2, s * 2, 0.01f, th, col);
+            default: { // triangle under the centre, pointing up
+                int rows = Math.max(3, l / Math.max(1, t / 2 + 1));
+                int step = Math.max(1, t / 2 + 1);
+                int top = hi + g;
+                for (int r = 0; r < rows; r++) add(lo - r * step, top + r * step, t + r * step * 2, step);
                 break;
             }
-            case 7: { // X
-                for (int k = 0; k < 4; k++) {
-                    GlStateManager.pushMatrix();
-                    GlStateManager.translate(c, c, 0f);
-                    GlStateManager.rotate(45f + k * 90f, 0f, 0f, 1f);
-                    bar(-h, g, th, len, col, out, ol);
-                    GlStateManager.popMatrix();
+        }
+    }
+
+    /** The four arms of a cross. */
+    private void bars(int t, int l, int g, int lo, int hi) {
+        add(lo, lo - g - l, t, l);    // up
+        add(lo, hi + g, t, l);        // down
+        add(lo - g - l, lo, l, t);    // left
+        add(hi + g, lo, l, t);        // right
+    }
+
+    /** A pixel ring of width t whose middle line is r pixels from the centre cell's middle. */
+    private void ring(float r, int t, int lo, int hi) {
+        float c = (lo + hi) / 2f, half = t / 2f + (t <= 2 ? 0.25f : 0f);
+        int R0 = (int) Math.ceil(r + t / 2f + 1);
+        for (int y = (int) Math.floor(c - R0); y < c + R0; y++) {
+            int start = Integer.MIN_VALUE;
+            for (int x = (int) Math.floor(c - R0); x <= (int) Math.ceil(c + R0); x++) {
+                float dx = x + 0.5f - c, dy = y + 0.5f - c;
+                boolean in = Math.abs((float) Math.sqrt(dx * dx + dy * dy) - r) <= half;
+                if (in && start == Integer.MIN_VALUE) start = x;
+                else if (!in && start != Integer.MIN_VALUE) {
+                    add(start, y, x - start, 1);
+                    start = Integer.MIN_VALUE;
                 }
-                break;
-            }
-            case 8: { // T (no top line)
-                R.batchBegin();
-                batchBar(c - h, c + g, th, len, col, out, ol);
-                batchBar(c - g - len, c - h, len, th, col, out, ol);
-                batchBar(c + g, c - h, len, th, col, out, ol);
-                R.batchEnd();
-                break;
-            }
-            default: { // brackets [ ]
-                float s = g + 2f, l = len;
-                R.batchBegin();
-                // left bracket
-                batchBar(c - s - th, c - l, th, l * 2, col, out, ol);
-                batchBar(c - s - th, c - l, l * 0.6f, th, col, out, ol);
-                batchBar(c - s - th, c + l - th, l * 0.6f, th, col, out, ol);
-                // right bracket
-                batchBar(c + s, c - l, th, l * 2, col, out, ol);
-                batchBar(c + s + th - l * 0.6f, c - l, l * 0.6f, th, col, out, ol);
-                batchBar(c + s + th - l * 0.6f, c + l - th, l * 0.6f, th, col, out, ol);
-                R.batchEnd();
-                break;
             }
         }
     }

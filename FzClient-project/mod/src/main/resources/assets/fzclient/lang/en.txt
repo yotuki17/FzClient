@@ -1156,3 +1156,9 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 {0} の名前を外しました（その人はほかのニックで見つかりました）	{0}: name removed (that player was found under another nick)
 {0} の名前を外しました（共有データで取り消されました）	{0}: name removed (taken back in the shared data)
 完了	Done
+四隅	Corners
+隙間なし十字	Cross (no gap)
+細い十字	Thin cross
+4つの点	Four dots
+ひし形	Diamond
+三角	Triangle
