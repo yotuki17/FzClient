@@ -182,7 +182,7 @@ async function homeSkin(a, again) {
   if (key === homeSkinFor && !again) return;
   homeSkinFor = key;
   const stage = $('homeStage');
-  // drawn player until the skin is in (also hides the last account's skin right away)
+  // nothing is shown until the skin is in (also hides the last account's skin right away)
   const none = () => { stage.classList.remove('ready'); if (homeViewer) homeViewer.loadSkin(null); };
   if (!a || a.type !== 'msa') { none(); return; }
   if (!homeSkinStarted) { homeSkinStarted = true; await new Promise(r => setTimeout(r, 1500)); }

@@ -1,7 +1,7 @@
 {
   "name": "fzclient-launcher",
   "productName": "FzClient Launcher",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "FzClient Launcher - Minecraft 1.8.9 PvP client",
   "main": "main.js",
   "author": "fuzuki",

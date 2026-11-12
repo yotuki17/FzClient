@@ -202,8 +202,17 @@ public class FzMainMenu extends FzScreen {
         float age = (now % 1000000L) / 50f;
         ResourceLocation cape = mine.cape.isEmpty() ? null : dev.fzkc.fzhud.cosmetic.Cosmetics.capeTexture(mine.cape);
         dev.fzkc.fzhud.cosmetic.AuraFx.draw2D(skinFx, x, foot, s, 0f);
+        boolean shoulder = dev.fzkc.fzhud.cosmetic.PetFx.shoulder(mine.pet);
+        dev.fzkc.fzhud.cosmetic.PlayerPreview.shoulderPet = shoulder ? mine.pet : null;
         dev.fzkc.fzhud.cosmetic.PlayerPreview.draw(x, foot, s, skinYaw, cape, age);
+        dev.fzkc.fzhud.cosmetic.PlayerPreview.shoulderPet = null;
         dev.fzkc.fzhud.cosmetic.HaloFx.draw2D(mine.halo, x, foot, s);
+        // the pet floats by the right shoulder, like in the cosmetics screen
+        if (!mine.pet.isEmpty() && !shoulder) {
+            float side = (float) Math.cos(Math.toRadians(skinYaw));
+            dev.fzkc.fzhud.cosmetic.PetFx.drawGui(mine.pet, x - side * s * 0.85f,
+                    foot - s * 1.3f + (float) Math.sin(age * 0.12f) * s * 0.05f, s, skinYaw, age);
+        }
 
         if (h > 0.01f) {
             String hint = dev.fzkc.fzhud.util.Lang.t("クリックでコスメ・ドラッグで回す");

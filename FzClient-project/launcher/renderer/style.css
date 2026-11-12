@@ -145,7 +145,7 @@ h1 { font-size: 26px; margin: 4px 0 6px; font-weight: 600; }
 .stage3d { position: relative; z-index: 2; flex: 1; min-height: 0; width: 100%; max-width: 420px; display: flex; align-items: flex-end; justify-content: center; }
 .stage3d canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; cursor: grab; }
 .stage3d canvas:active { cursor: grabbing; }
-.stage3d .ph { height: clamp(180px, 44vh, 320px); width: auto; margin-bottom: 18px; filter: drop-shadow(0 16px 16px rgba(0,0,0,.45)); animation: bob 4s ease-in-out infinite; }
+.stage3d .ph { height: clamp(180px, 44vh, 320px); width: auto; margin-bottom: 18px; visibility: hidden; }   /* keeps the space; nothing shows until the real skin is loaded */
 .stage3d.ready .ph { display: none; }
 .stage3d:not(.ready) canvas { visibility: hidden; }
 @keyframes bob { 50% { transform: translateY(-6px); } }

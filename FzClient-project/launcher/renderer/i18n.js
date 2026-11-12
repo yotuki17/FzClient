@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  '修正：メインメニューのスキンにペットが出ないのを修正': 'Fixed: pets now show on the main menu skin preview',
   'NEW：ランチャーを一新（上にタブ・ホームに自分の 3D スキン）': 'NEW: a redesigned launcher (tabs on top, your 3D skin on the home screen)',
   '改善：手動で入れた MOD も jar の中の画像をアイコンに': 'Better: mods added by hand show the picture from inside their jar',
   '改善：アプリのアイコンを立体的なデザインに一新': 'Better: a new 3D style app icon',
@@ -418,7 +419,7 @@ const EN = {
   'テーマ': 'Theme', 'ダーク': 'Dark', 'ホワイト': 'White', 'カジュアル': 'Casual', 'ネオン': 'Neon', 'サクラ': 'Sakura', 'オーシャン': 'Ocean', 'ミッドナイト': 'Midnight',
   'ホーム': 'Home', '設定': 'Settings', 'アカウント': 'Account',
   '最適化': 'Optimize', 'お知らせ': 'News', '切り替え': 'Switch', 'Microsoft アカウント': 'Microsoft account', 'クリックして追加': 'Click to add one',
-  '軽くて、見やすくて、勝てる。いつものサーバーへ、ワンクリックで。': 'Light, clear, built to win. Your usual server, one click away.',
+  '軽くて、見やすくて、なめらか。いつものサーバーへ、ワンクリックで。': 'Light, clear and smooth. Your usual server, one click away.',
   // home
   'プレイ': 'Play', 'プレイ中': 'Playing', '準備中…': 'Preparing…', '起動中…': 'Launching…', 'ダウンロード中…': 'Downloading…',
   'アカウント未設定': 'No account', '（オフライン）': ' (Offline)', 'オフライン': 'Offline',

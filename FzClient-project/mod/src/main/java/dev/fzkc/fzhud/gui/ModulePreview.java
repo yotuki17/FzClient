@@ -13,6 +13,7 @@ import dev.fzkc.fzhud.cosmetic.AuraFx;
 import dev.fzkc.fzhud.cosmetic.Cosmetics;
 import dev.fzkc.fzhud.cosmetic.Equip;
 import dev.fzkc.fzhud.cosmetic.HaloFx;
+import dev.fzkc.fzhud.cosmetic.PetFx;
 import dev.fzkc.fzhud.cosmetic.PlayerPreview;
 import dev.fzkc.fzhud.hud.HudElement;
 import dev.fzkc.fzhud.render.Icons;
@@ -125,8 +126,16 @@ final class ModulePreview {
         if (cos) stepAura(mine.aura);
         if (cos) AuraFx.draw2D(fx, footX, footY, size, 0f);
         ResourceLocation cape = cos && !mine.cape.isEmpty() ? Cosmetics.capeTexture(mine.cape) : null;
+        boolean shoulder = cos && PetFx.shoulder(mine.pet);
+        PlayerPreview.shoulderPet = shoulder ? mine.pet : null;
         PlayerPreview.draw(footX, footY, size, yaw, cape, age);
+        PlayerPreview.shoulderPet = null;
         if (cos) HaloFx.draw2D(mine.halo, footX, footY, size);
+        if (cos && !mine.pet.isEmpty() && !shoulder) {
+            float side = (float) Math.cos(Math.toRadians(yaw));
+            PetFx.drawGui(mine.pet, footX - side * size * 0.85f,
+                    footY - size * 1.3f + (float) Math.sin(age * 0.12f) * size * 0.05f, size, yaw, age);
+        }
 
         if (m == Modules.hitbox) {
             float half = (.3f + (Modules.hitboxMargin.get() ? .1f : 0f)) * size;
