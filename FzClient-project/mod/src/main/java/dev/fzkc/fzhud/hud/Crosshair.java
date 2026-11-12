@@ -89,7 +89,6 @@ public class Crosshair extends HudElement {
     @Override
     public void draw(float alpha, boolean preview) {
         if (!preview && Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) return;   // first person only
-        float c = SIZE / 2f;
 
         // ---- colour: eased towards the "over a player" colour while one is under the crosshair
         long now = System.nanoTime();
@@ -99,14 +98,32 @@ public class Crosshair extends HudElement {
         tint += (want - tint) * (1f - (float) Math.exp(-30f * dt));
         if (Math.abs(want - tint) < 0.01f) tint = want;
         int base = tint > 0f ? R.lerpColor(color.get(), targetColor.get(), tint) : color.get();
+        shape(type.get(), base, alpha);
+    }
 
+    /** The type setting (its options are shown as pictures in the settings). */
+    public ChoiceSetting typeSetting() {
+        return type;
+    }
+
+    /** One crosshair type with the current colour and sizes, centred on (cx, cy), for the type picker. */
+    public void drawType(int t, float cx, float cy, float scale, float alpha) {
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(cx - SIZE / 2f * scale, cy - SIZE / 2f * scale, 0f);
+        GlStateManager.scale(scale, scale, 1f);
+        shape(t, color.get(), alpha);
+        GlStateManager.popMatrix();
+    }
+
+    private void shape(int t, int base, float alpha) {
+        float c = SIZE / 2f;
         int col = R.alpha(base, alpha);
         int out = R.alpha(outlineColor.get(), alpha * 0.85f);
         boolean ol = outline.get();
         float len = length.get(), th = thickness.get(), g = gap.get();
         float h = th / 2f;
 
-        switch (type.get()) {
+        switch (t) {
             case 0: { // chevron "^"
                 for (int side = -1; side <= 1; side += 2) {
                     GlStateManager.pushMatrix();
@@ -128,7 +145,7 @@ public class Crosshair extends HudElement {
                 batchBar(c - h, c + g, th, len, col, out, ol);                // down
                 batchBar(c - g - len, c - h, len, th, col, out, ol);          // left
                 batchBar(c + g, c - h, len, th, col, out, ol);                // right
-                if (type.get() == 2) batchBar(c - h, c - h, th, th, col, out, ol);
+                if (t == 2) batchBar(c - h, c - h, th, th, col, out, ol);
                 R.batchEnd();
                 break;
             }
@@ -142,7 +159,7 @@ public class Crosshair extends HudElement {
                 float r = g + len / 2f + 1f;
                 if (ol) ring(c, c, r, th + 1.5f, out);
                 ring(c, c, r, th, col);
-                if (type.get() == 5) {
+                if (t == 5) {
                     if (ol) R.rect(c - 1.2f, c - 1.2f, 2.4f, 2.4f, out);
                     R.rect(c - 0.7f, c - 0.7f, 1.4f, 1.4f, col);
                 }

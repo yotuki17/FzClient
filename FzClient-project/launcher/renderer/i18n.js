@@ -139,6 +139,8 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：クロスヘアの種類を絵で見て選べるように': 'NEW: pick a crosshair style from pictures',
+  '改善：設定の選択肢を並べて表示・色は別ウィンドウで': 'Better: options sit side by side; colors open in their own window',
   '修正：メインメニューのスキンにペットが出ないのを修正': 'Fixed: pets now show on the main menu skin preview',
   'NEW：ランチャーを一新（上にタブ・ホームに自分の 3D スキン）': 'NEW: a redesigned launcher (tabs on top, your 3D skin on the home screen)',
   '改善：手動で入れた MOD も jar の中の画像をアイコンに': 'Better: mods added by hand show the picture from inside their jar',

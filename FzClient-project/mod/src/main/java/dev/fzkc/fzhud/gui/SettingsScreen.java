@@ -26,7 +26,7 @@ import java.util.Map;
 
 /** One module's settings, with a module list on the left for quick switching. */
 public class SettingsScreen extends FzScreen {
-    private static final float SW = 140, ROW = 28, PICKER_H = 84;
+    private static final float SW = 140, ROW = 28;
     private static final int[] PRESETS = {0x5CE1E6, 0xFFFFFF, 0xFF5555, 0x22C55E, 0xFFD84A, 0xFF6AD5,
             0xA78BFA, 0xFF9F43, 0x3B82F6, 0x111111, 0x9CA3AF};
 
@@ -42,8 +42,12 @@ public class SettingsScreen extends FzScreen {
     // interaction state
     private SliderSetting draggingSlider;
     private ColorSetting draggingSV, draggingHue;
-    private ColorSetting expanded;
-    private Setting editing;          // TextSetting or ColorSetting (hex)
+    /** The small windows over the settings: all options of a choice as tiles, or the colour picker. */
+    private ChoiceSetting choiceOpen;
+    private ColorSetting colorOpen;
+    private final Anim pop = new Anim(0f, 18f);
+    private float choiceScroll;
+    private Setting editing;          // TextSetting or ColorSetting (hex, inside the colour window)
     private String editBuffer = "";
     /** Caret position inside the text being edited (0..length). */
     private int cursor;
@@ -173,7 +177,162 @@ public class SettingsScreen extends FzScreen {
     private float rowH(Setting s) {
         if (s instanceof ModuleHeaderSetting) return 38;
         if (s instanceof HeaderSetting) return 16;
-        return s == expanded ? ROW + PICKER_H : ROW;
+        return ROW;
+    }
+
+    // ---------------------------------------------------------------- choices: side by side, or a window of tiles
+
+    private static final float SEG_GAP = 2;
+
+    /** Width of each option when the options sit side by side in the row. */
+    private float[] segWidths(ChoiceSetting c) {
+        float[] w = new float[c.options.length];
+        for (int i = 0; i < w.length; i++) w[i] = Math.max(30, R.width(c.options[i]) + 14);
+        return w;
+    }
+
+    private float segTotal(ChoiceSetting c) {
+        float t = 0;
+        for (float w : segWidths(c)) t += w + SEG_GAP;
+        return t - SEG_GAP + 4;
+    }
+
+    /** A few short options fit in the row itself; longer lists open a window with all of them. */
+    private boolean inline(ChoiceSetting c) {
+        if (c.options.length > 4) return false;
+        float room = cw() - 20 - Math.min(R.width(Lang.t(c.label)), cw() * 0.42f) - 12;
+        return segTotal(c) <= Math.min(room, 250);
+    }
+
+    /** Width of the closed control (current value and a small arrow); a long value gets cut, not the label. */
+    private float dropW(ChoiceSetting c) {
+        return Math.max(100, Math.min(R.width(c.display()) + 34 + (picture(c) != null ? 16 : 0), cw() * 0.5f));
+    }
+
+    /** Small down arrow, 5 wide and 3 tall, centred on x. */
+    private static void chevron(float x, float y, int argb) {
+        for (int i = 0; i < 3; i++) R.rect(x - 2 + i, y + i, 5 - i * 2, 1, argb);
+    }
+
+    private void openChoice(ChoiceSetting c) {
+        UiSound.hit();
+        choiceOpen = c;
+        colorOpen = null;
+        choiceScroll = 0;
+        pop.snap(0f);
+        for (int i = 0; i < c.options.length; i++) anim("tile" + i, 0).snap(0f);
+    }
+
+    private void openColor(ColorSetting c) {
+        UiSound.hit();
+        colorOpen = c;
+        choiceOpen = null;
+        hues.remove(c);
+        pop.snap(0f);
+        anim("done", 0).snap(0f);
+    }
+
+    private void closePopup() {
+        commitEdit();
+        choiceOpen = null;
+        colorOpen = null;
+        draggingSV = null;
+        draggingHue = null;
+    }
+
+    private boolean popupOpen() {
+        return choiceOpen != null || colorOpen != null;
+    }
+
+    /** Dev check: the settings of a module by id (null when there is none). */
+    public static SettingsScreen devOpen(String id, GuiScreen parent) {
+        for (Module m : all()) if (m.id.equals(id)) return new SettingsScreen(m, parent);
+        return null;
+    }
+
+    /** Dev check: opens the window of a setting by key (null closes it). */
+    public void devPopup(String key) {
+        closePopup();
+        for (Setting s : module.settings) {
+            if (!s.key.equals(key)) continue;
+            if (s instanceof ChoiceSetting) openChoice((ChoiceSetting) s);
+            else if (s instanceof ColorSetting) openColor((ColorSetting) s);
+        }
+        pop.snap(1f);
+    }
+
+    private static final float TILE_H = 22, TILE_GAP = 6, POP_HEAD = 30, POP_PAD = 12;
+
+    /** The crosshair whose type this is (its options are drawn as pictures), or null. */
+    private dev.fzkc.fzhud.hud.Crosshair picture(ChoiceSetting c) {
+        for (Module m : all()) {
+            if (m instanceof dev.fzkc.fzhud.hud.Crosshair && ((dev.fzkc.fzhud.hud.Crosshair) m).typeSetting() == c) return (dev.fzkc.fzhud.hud.Crosshair) m;
+        }
+        return null;
+    }
+
+    private float tileH(ChoiceSetting c) {
+        return picture(c) != null ? 54 : TILE_H;
+    }
+
+    /** Width of one tile of the choice window (all the same, so they line up in a grid). */
+    private float tileW(ChoiceSetting c) {
+        float w = picture(c) != null ? 64 : 70;
+        for (String o : c.options) w = Math.max(w, R.width(o) + 22);
+        return Math.min(w, Math.min(200, popMaxW() - POP_PAD * 2));
+    }
+
+    /** The widest a window may be: inside the panel and the screen. */
+    private float popMaxW() {
+        return Math.max(120, Math.min(Math.min(W() - 20, vw - 16), 460));
+    }
+
+    private int tileCols(ChoiceSetting c) {
+        float maxW = popMaxW() - POP_PAD * 2;
+        int cols = (int) ((maxW + TILE_GAP) / (tileW(c) + TILE_GAP));
+        return Math.max(1, Math.min(Math.min(cols, 5), c.options.length));
+    }
+
+    private float tileRowsH(ChoiceSetting c) {
+        int rows = (c.options.length + tileCols(c) - 1) / tileCols(c);
+        return rows * (tileH(c) + TILE_GAP) - TILE_GAP;
+    }
+
+    private float gridW(ChoiceSetting c) {
+        return tileCols(c) * (tileW(c) + TILE_GAP) - TILE_GAP;
+    }
+
+    /** Keeps a window on the screen even when the panel is small. */
+    private float[] place(float w, float h) {
+        float x = px() + (W() - w) / 2f, y = py() + (H() - h) / 2f;
+        x = Math.max(4, Math.min(x, vw - w - 4));
+        y = Math.max(4, Math.min(y, vh - h - 4));
+        return new float[]{x, y};
+    }
+
+    /** x, y, w, h of the choice window, the height of its visible tile area and the left edge of the tiles. */
+    private float[] choiceRect(ChoiceSetting c) {
+        float w = Math.min(popMaxW(), Math.max(gridW(c) + POP_PAD * 2, R.width(Lang.t(c.label)) + 60));
+        float gridH = Math.max(tileH(c), Math.min(tileRowsH(c), Math.min(H(), vh - 8) - 90));
+        float h = POP_HEAD + gridH + POP_PAD;
+        float[] at = place(w, h);
+        return new float[]{at[0], at[1], w, h, gridH, at[0] + (w - gridW(c)) / 2f};
+    }
+
+    private void clampChoiceScroll() {
+        if (choiceOpen == null) return;
+        choiceScroll = Math.max(0, Math.min(Math.max(0, tileRowsH(choiceOpen) - choiceRect(choiceOpen)[4]), choiceScroll));
+    }
+
+    // ---------------------------------------------------------------- the colour window
+
+    private static final float SQ_W = 160, SQ_H = 104, HUE_W = 12, SIDE_W = 104;
+
+    private float[] colorRect() {
+        float w = POP_PAD + SQ_W + 8 + HUE_W + 12 + SIDE_W + POP_PAD;
+        float h = POP_HEAD + SQ_H + 10 + 16 + 12 + 18 + POP_PAD;
+        float[] at = place(w, h);
+        return new float[]{at[0], at[1], w, h};
     }
 
     private float hue(ColorSetting c) {
@@ -237,11 +396,20 @@ public class SettingsScreen extends FzScreen {
         float o = open.update(1f);
         Ui.backdrop(vw, vh, o);
         Ui.panel(px(), py(), W(), H(), o);
-        drawSidebar(mx, my, o);
-        drawHeader(mx, my, o);
-        drawPages(mx, my, o);
-        drawRows(mx, my, o);
+        // with a window open, nothing behind it reacts to the mouse
+        boolean popup = popupOpen();
+        int bx = popup ? -10000 : mx, by = popup ? -10000 : my;
+        drawSidebar(bx, by, o);
+        drawHeader(bx, by, o);
+        drawPages(bx, by, o);
+        drawRows(bx, by, o);
         if (pvW() > 0) ModulePreview.draw(module, x0() + cw() + 14, py() + 58, pvW(), H() - 66, o);
+        if (popup) {
+            float p = pop.update(1f);
+            R.rounded(px(), py(), W(), H(), Ui.rad(7f), R.alpha(0x70000000, o * p));
+            if (choiceOpen != null) drawChoicePopup(choiceOpen, mx, my, o * p);
+            else drawColorPopup(colorOpen, mx, my, o * p);
+        }
 
         Decoration.corner(vw, vh, o);
     }
@@ -390,9 +558,37 @@ public class SettingsScreen extends FzScreen {
             R.textCentered(v, rx - sw - 10 - pw / 2f, y + 10, R.alpha(Ui.accent, o));
         } else if (s instanceof ChoiceSetting) {
             ChoiceSetting c = (ChoiceSetting) s;
-            String v = "‹  " + c.display() + "  ›";
-            float bw = Math.max(100, R.width(v) + 16);
-            Ui.button(rx - bw, y + 5, bw, 18, v, hv * 0.5f, o);
+            if (inline(c)) {
+                // every option side by side: click the one you want
+                float[] ws = segWidths(c);
+                float x = rx - segTotal(c);
+                R.rounded(x, y + 4, segTotal(c), 20, Ui.rad(5f), R.alpha(Ui.flat() ? 0x14000000 : 0x40000000, o));
+                x += 2;
+                for (int i = 0; i < ws.length; i++) {
+                    boolean sel = i == c.index;
+                    boolean on = over && Ui.inside(mx, my, x, y + 6, ws[i], 16);
+                    float t = anim(c.options[i] + "#" + c.key, 0).update(on ? 1 : 0);
+                    if (sel) R.rounded(x, y + 6, ws[i], 16, Ui.rad(4f), R.alpha(Ui.accentA(0x55), o));
+                    else if (t > 0.01f) R.rounded(x, y + 6, ws[i], 16, Ui.rad(4f), R.alpha((int) (0x22 * t) << 24 | 0xFFFFFF, o));
+                    if (sel) R.roundedOutline(x, y + 6, ws[i], 16, Ui.rad(4f), 1f, R.alpha(Ui.accent, o));
+                    R.textCentered(c.options[i], x + ws[i] / 2f, y + 10, R.alpha(sel ? Ui.text : Ui.textA(0xA0), o));
+                    x += ws[i] + SEG_GAP;
+                }
+            } else {
+                // the current option; a click shows all of them in a window
+                float bw = dropW(c);
+                boolean on = over && mx >= rx - bw;
+                Ui.button(rx - bw, y + 5, bw, 18, "", Math.max(hv * 0.5f, on ? 1f : 0f) * (choiceOpen == c ? 1f : 0.8f), o);
+                dev.fzkc.fzhud.hud.Crosshair pic = picture(c);
+                float tx = rx - bw + 9;
+                if (pic != null) {
+                    // the chosen crosshair next to its name
+                    pic.drawType(c.index, rx - bw + 15, y + 14, 0.65f, o);
+                    tx += 16;
+                }
+                R.text(Ui.trim(c.display(), bw - 30 - (tx - (rx - bw + 9))), tx, y + 10, R.alpha(Ui.text, o));
+                chevron(rx - 12, y + 12, R.alpha(choiceOpen == c ? Ui.accent : Ui.textA(0xB0), o));
+            }
         } else if (s instanceof TextSetting) {
             TextSetting ts = (TextSetting) s;
             boolean focused = editing == ts;
@@ -418,63 +614,144 @@ public class SettingsScreen extends FzScreen {
     private float controlW(Setting s) {
         if (s instanceof BoolSetting) return 26;
         if (s instanceof SliderSetting) return sliderW() + 10 + Math.max(40, R.width(((SliderSetting) s).display()) + 12);
-        if (s instanceof ChoiceSetting) return Math.max(100, R.width("‹  " + ((ChoiceSetting) s).display() + "  ›") + 16);
+        if (s instanceof ChoiceSetting) {
+            ChoiceSetting c = (ChoiceSetting) s;
+            return inline(c) ? segTotal(c) : dropW(c);
+        }
         if (s instanceof TextSetting) return textW();
-        if (s instanceof ColorSetting) return 26 + 8 + 74 + 8 + 46;
+        if (s instanceof ColorSetting) return colorCtlW((ColorSetting) s);
         return 0;
     }
 
+    private float colorCtlW(ColorSetting c) {
+        return Math.max(R.width(c.hex()), R.width("クロマ")) + 8 + 28 + 8;
+    }
+
+    /** The row only shows the colour; a click opens the colour window (picker, HEX, chroma, presets). */
     private void drawColorRow(ColorSetting c, float y, float rx, int mx, int my, float o) {
-        // swatch (click to open the picker)
         float sx = rx - 26;
+        boolean on = colorOpen == c || (Ui.inside(mx, my, rx - colorCtlW(c), y + 4, colorCtlW(c), 20) && my >= y0() && my < y0() + ch());
         R.rounded(sx - 1, y + 4, 28, 20, 4f, R.alpha(0xFF0A1114, o));
         R.rounded(sx + 1, y + 6, 24, 16, 3f, R.alpha(c.get(), o));
-        R.roundedOutline(sx + 1, y + 6, 24, 16, 3f, 1f, R.alpha(c == expanded ? Ui.accent : 0x80FFFFFF, o));
-        // hex box
-        boolean focused = editing == c;
-        String txt = focused ? editBuffer : (c.chroma ? "クロマ" : c.hex());
-        int caret = focused ? clampCursor(txt) : txt.length();
-        Ui.textBox(sx - 8 - 74, y + 5, 74, 18, txt, "#RRGGBB", focused, caret, o);
-        // chroma chip
-        float cx = sx - 8 - 74 - 8 - 46;
-        boolean chOver = Ui.inside(mx, my, cx, y + 5, 46, 18);
-        R.rounded(cx, y + 5, 46, 18, 9f, R.alpha(c.chroma ? 0xFF1C2D33 : (chOver ? 0xFF1A2428 : 0xFF111A1D), o));
-        R.roundedOutline(cx, y + 5, 46, 18, 9f, 1f, R.alpha(c.chroma ? Ui.accent : 0x50FFFFFF, o));
-        R.textCentered("クロマ", cx + 23, y + 10, c.chroma ? R.alpha(R.CHROMA, o) : R.alpha(Ui.MUTED, o));
+        R.roundedOutline(sx + 1, y + 6, 24, 16, 3f, 1f, R.alpha(on ? Ui.accent : 0x80FFFFFF, o));
+        String txt = c.chroma ? "クロマ" : c.hex();
+        R.text(txt, sx - 8 - R.width(txt), y + 10, c.chroma ? R.alpha(R.CHROMA, o) : R.alpha(on ? Ui.text : Ui.textA(0xB0), o));
+    }
 
-        if (c != expanded) return;
-        float py0 = y + ROW + 2;
-        float bx = x0() + 10;
+    /** The window with every option of a choice as a tile. */
+    private void drawChoicePopup(ChoiceSetting c, int mx, int my, float o) {
+        float[] r = choiceRect(c);
+        float wx = r[0], wy = r[1], ww = r[2], wh = r[3], gridH = r[4];
+        popBase(wx, wy, ww, wh, o);
+        Ui.panel(wx, wy, ww, wh, o);
+        R.text(Ui.trim(Lang.t(c.label), ww - 50), wx + POP_PAD, wy + 11, R.alpha(Ui.text, o));
+        drawClose(wx + ww - 22, wy + 7, mx, my, o);
+
+        float maxScroll = Math.max(0, tileRowsH(c) - gridH);
+        clampChoiceScroll();
+        int cols = tileCols(c);
+        float tw = tileW(c), th = tileH(c), gx = r[5], gy = wy + POP_HEAD;
+        dev.fzkc.fzhud.hud.Crosshair pic = picture(c);
+        Ui.scissor(wx, gy - 2, ww, gridH + 4);
+        for (int i = 0; i < c.options.length; i++) {
+            float tx = gx + (i % cols) * (tw + TILE_GAP), ty = gy + (i / cols) * (th + TILE_GAP) - choiceScroll;
+            if (ty + th < gy - 2 || ty > gy + gridH + 2) continue;
+            boolean sel = i == c.index;
+            boolean on = Ui.within(mx, my, tx, ty, tw, th) && my >= gy && my < gy + gridH;
+            float t = anim("tile" + i, 0).update(on ? 1 : 0);
+            String label = Ui.trim(c.options[i], tw - 8);
+            if (sel) {
+                R.rounded(tx, ty, tw, th, Ui.rad(5f), R.alpha(Ui.accentA(0x55), o));
+                R.roundedOutline(tx, ty, tw, th, Ui.rad(5f), 1.2f, R.alpha(Ui.accent, o));
+            } else {
+                Ui.button(tx, ty, tw, th, "", t, o);
+            }
+            if (pic != null) {
+                // the crosshair itself, in your colour and size, with its name under it
+                pic.drawType(i, tx + tw / 2f, ty + 21, 1.5f, o);
+                R.textCentered(label, tx + tw / 2f, ty + th - 12, R.alpha(sel ? Ui.text : Ui.textA(0xB0), o));
+            } else {
+                R.textCentered(label, tx + tw / 2f, ty + (th - 8) / 2f, R.alpha(Ui.text, o));
+            }
+        }
+        Ui.endScissor();
+        if (maxScroll > 0) {
+            float barH = Math.max(16, gridH * gridH / tileRowsH(c));
+            R.rounded(wx + ww - 6, gy + (gridH - barH) * (choiceScroll / maxScroll), 3, barH, 1.5f, R.alpha(0x70FFFFFF, o));
+        }
+    }
+
+    /** Solid ground under a window, so the rows behind do not show through it. */
+    private static void popBase(float x, float y, float w, float h, float o) {
+        int c = Ui.flat() ? Ui.FLAT_BG : Glass.on() ? 0xFF10181B : Ui.panelShade(0f, 0xFF);
+        R.rounded(x, y, w, h, Ui.rad(Glass.on() ? 12f : 7f), R.alpha(0xFF000000 | c, o));
+    }
+
+    /** A small × in the corner of a window. */
+    private void drawClose(float x, float y, int mx, int my, float o) {
+        boolean on = Ui.inside(mx, my, x, y, 16, 16);
+        if (on) R.rounded(x, y, 16, 16, Ui.rad(4f), R.alpha(0x30FFFFFF, o));
+        R.textCentered("×", x + 8, y + 4, R.alpha(on ? Ui.text : Ui.textA(0xA0), o));
+    }
+
+    private void drawColorPopup(ColorSetting c, int mx, int my, float o) {
+        float[] r = colorRect();
+        float wx = r[0], wy = r[1], ww = r[2];
+        popBase(wx, wy, ww, r[3], o);
+        Ui.panel(wx, wy, ww, r[3], o);
+        R.text(Ui.trim(Lang.t(c.label), ww - 50), wx + POP_PAD, wy + 11, R.alpha(Ui.text, o));
+        drawClose(wx + ww - 22, wy + 7, mx, my, o);
+
+        float bx = wx + POP_PAD, by = wy + POP_HEAD;
         float[] hsb = c.hsb();
         float hue = hue(c);
         int pure = java.awt.Color.HSBtoRGB(hue, 1f, 1f) | 0xFF000000;
         // saturation / brightness square
-        float sqW = 150, sqH = 72;
-        Ui.gradient(bx, py0, sqW, sqH, R.alpha(0xFFFFFFFF, o), R.alpha(pure, o), R.alpha(0xFF000000, o), R.alpha(0xFF000000, o));
-        Ui.gradient(bx, py0, sqW, sqH, 0x00000000, 0x00000000, R.alpha(0xFF000000, o), R.alpha(0xFF000000, o));
+        Ui.gradient(bx, by, SQ_W, SQ_H, R.alpha(0xFFFFFFFF, o), R.alpha(pure, o), R.alpha(0xFF000000, o), R.alpha(0xFF000000, o));
+        Ui.gradient(bx, by, SQ_W, SQ_H, 0x00000000, 0x00000000, R.alpha(0xFF000000, o), R.alpha(0xFF000000, o));
+        R.roundedOutline(bx, by, SQ_W, SQ_H, 2f, 1f, R.alpha(0x40FFFFFF, o));
         if (!c.chroma) {
-            float kx = bx + hsb[1] * sqW, ky = py0 + (1 - hsb[2]) * sqH;
+            float kx = bx + hsb[1] * SQ_W, ky = by + (1 - hsb[2]) * SQ_H;
             R.roundedOutline(kx - 3, ky - 3, 6, 6, 3f, 1.5f, R.alpha(0xFFFFFFFF, o));
         }
         // hue bar
-        float hx = bx + sqW + 8, hw = 12;
+        float hx = bx + SQ_W + 8;
         for (int i = 0; i < 6; i++) {
             int a = java.awt.Color.HSBtoRGB(i / 6f, 1f, 1f) | 0xFF000000;
             int b = java.awt.Color.HSBtoRGB((i + 1) / 6f, 1f, 1f) | 0xFF000000;
-            Ui.gradient(hx, py0 + i * sqH / 6f, hw, sqH / 6f, R.alpha(a, o), R.alpha(a, o), R.alpha(b, o), R.alpha(b, o));
+            Ui.gradient(hx, by + i * SQ_H / 6f, HUE_W, SQ_H / 6f, R.alpha(a, o), R.alpha(a, o), R.alpha(b, o), R.alpha(b, o));
         }
-        float hy = py0 + hue * sqH;
-        R.rect(hx - 2, hy - 1, hw + 4, 2, R.alpha(0xFFFFFFFF, o));
-        // presets
-        float gx = hx + hw + 14;
-        R.text("おすすめ", gx, py0, R.alpha(Ui.MUTED, o));
+        R.rect(hx - 2, by + hue * SQ_H - 1, HUE_W + 4, 2, R.alpha(0xFFFFFFFF, o));
+
+        // right side: the colour, HEX box, chroma
+        float gx = hx + HUE_W + 12;
+        R.rounded(gx - 1, by - 1, SIDE_W + 2, 30, 4f, R.alpha(Ui.flat() ? Ui.FLAT_BORDER : 0xFF0A1114, o));
+        R.rounded(gx + 1, by + 1, SIDE_W - 2, 26, 3f, R.alpha(c.get(), o));
+        R.text("HEX", gx, by + 37, R.alpha(Ui.MUTED, o));
+        boolean focused = editing == c;
+        String txt = focused ? editBuffer : (c.chroma ? "" : c.hex());
+        Ui.textBox(gx, by + 47, SIDE_W, 18, txt, "#RRGGBB", focused, focused ? clampCursor(txt) : txt.length(), o);
+        boolean chOver = Ui.inside(mx, my, gx, by + 72, SIDE_W, 18);
+        R.rounded(gx, by + 72, SIDE_W, 18, 9f, R.alpha(c.chroma ? 0xFF1C2D33 : (Ui.flat() ? (chOver ? 0xFFE6ECF2 : 0xFFF1F4F7) : (chOver ? 0xFF1A2428 : 0xFF111A1D)), o));
+        R.roundedOutline(gx, by + 72, SIDE_W, 18, 9f, 1f, R.alpha(c.chroma ? Ui.accent : (Ui.flat() ? Ui.FLAT_BORDER : 0x50FFFFFF), o));
+        R.textCentered("クロマ", gx + SIDE_W / 2f, by + 77, c.chroma ? R.alpha(R.CHROMA, o) : R.alpha(Ui.MUTED, o));
+
+        // presets under the square
+        float ry = by + SQ_H + 10;
         for (int i = 0; i < PRESETS.length; i++) {
-            float px = gx + (i % 6) * 20, ppy = py0 + 12 + (i / 6) * 20;
+            float ppx = bx + i * 20;
             boolean sel = !c.chroma && c.rgb == PRESETS[i];
-            R.rounded(px, ppy, 16, 16, 4f, R.alpha(0xFF000000 | PRESETS[i], o));
-            R.roundedOutline(px, ppy, 16, 16, 4f, 1f, R.alpha(sel ? Ui.accent : 0x60FFFFFF, o));
+            R.rounded(ppx, ry, 16, 16, 4f, R.alpha(0xFF000000 | PRESETS[i], o));
+            R.roundedOutline(ppx, ry, 16, 16, 4f, 1f, R.alpha(sel ? Ui.accent : 0x60FFFFFF, o));
         }
-        R.text("HEXは文字欄に #RRGGBB で入力", gx, py0 + 58, R.alpha(0x90FFFFFF, o));
+        // done
+        float[] d = doneRect();
+        Ui.primaryButton(d[0], d[1], d[2], d[3], "完了", anim("done", 0).update(Ui.inside(mx, my, d[0], d[1], d[2], d[3]) ? 1 : 0), o);
+    }
+
+    private float[] doneRect() {
+        float[] r = colorRect();
+        return new float[]{r[0] + r[2] - POP_PAD - 64, r[1] + r[3] - POP_PAD - 18, 64, 18};
     }
 
     // ---------------------------------------------------------------- input
@@ -491,6 +768,10 @@ public class SettingsScreen extends FzScreen {
     protected void click(int mx, int my, int button) {
         Setting wasEditing = editing;
         commitEdit();
+        if (popupOpen()) {
+            popupClick(mx, my, button, wasEditing);
+            return;
+        }
 
         // sidebar
         float[] br = backRect();
@@ -508,7 +789,6 @@ public class SettingsScreen extends FzScreen {
                 module = list.get(i);
                 page = 0;
                 scrollTarget = 0;
-                expanded = null;
             }
             return;
         }
@@ -540,7 +820,6 @@ public class SettingsScreen extends FzScreen {
                     UiSound.hit();
                     page = i;
                     scrollTarget = 0;
-                    expanded = null;
                     editing = null;
                 }
             }
@@ -585,12 +864,22 @@ public class SettingsScreen extends FzScreen {
             }
         } else if (s instanceof ChoiceSetting) {
             ChoiceSetting c = (ChoiceSetting) s;
-            if (button == 0) {
-                UiSound.hit();
-                c.next();
+            if (button == 1) {
+                // right click still steps back one option
+                select(c, (c.index - 1 + c.options.length) % c.options.length);
+            } else if (button == 0 && inline(c)) {
+                float[] ws = segWidths(c);
+                float x = rx - segTotal(c) + 2;
+                for (int i = 0; i < ws.length; i++) {
+                    if (Ui.within(mx, my, x, y + 6, ws[i], 16)) {
+                        if (i != c.index) select(c, i);
+                        return;
+                    }
+                    x += ws[i] + SEG_GAP;
+                }
+            } else if (button == 0 && mx >= rx - dropW(c)) {
+                openChoice(c);
             }
-            else if (button == 1) c.index = (c.index - 1 + c.options.length) % c.options.length;
-            if (c == dev.fzkc.fzhud.Modules.uiTheme) Themes.apply(c.index);
         } else if (s instanceof TextSetting) {
             TextSetting ts = (TextSetting) s;
             if (button == 1) {
@@ -604,59 +893,76 @@ public class SettingsScreen extends FzScreen {
                 cursor = Ui.cursorFromX(t, rx - textW(), textW(), basis, mx);
             }
         } else if (s instanceof ColorSetting) {
-            ColorSetting c = (ColorSetting) s;
-            float sx = rx - 26;
-            if (my < y + ROW) {
-                if (Ui.inside(mx, my, sx - 1, y + 4, 28, 20)) {
-                    expanded = expanded == c ? null : c;
-                } else if (Ui.inside(mx, my, sx - 8 - 74, y + 5, 74, 18)) {
-                    float bxHex = sx - 8 - 74;
-                    if (wasEditing == c) {
-                        // already typing here: keep the text and just move the caret
-                        editing = c;
-                        cursor = Ui.cursorFromX(editBuffer, bxHex, 74, clampCursor(editBuffer), mx);
-                    } else {
-                        editing = c;
-                        editBuffer = c.chroma ? "" : c.hex();
-                        cursor = Ui.cursorFromX(editBuffer, bxHex, 74, editBuffer.length(), mx);
-                    }
-                } else if (Ui.inside(mx, my, sx - 8 - 74 - 8 - 46, y + 5, 46, 18)) {
-                    c.chroma = !c.chroma;
-                } else {
-                    UiSound.hit();
-                    expanded = expanded == c ? null : c;
-                }
-                return;
-            }
-            // picker area
-            float py0 = y + ROW + 2, bx = x0() + 10, sqW = 150, sqH = 72;
-            if (Ui.inside(mx, my, bx, py0, sqW, sqH)) {
-                draggingSV = c;
-                setSV(mx, my, y);
-            } else if (Ui.inside(mx, my, bx + sqW + 6, py0, 16, sqH)) {
-                draggingHue = c;
-                setHue(my, y);
-            } else {
-                float gx = bx + sqW + 8 + 12 + 14;
-                for (int i = 0; i < PRESETS.length; i++) {
-                    float px = gx + (i % 6) * 20, ppy = py0 + 12 + (i / 6) * 20;
-                    if (Ui.inside(mx, my, px, ppy, 16, 16)) {
-                        c.rgb = PRESETS[i];
-                        c.chroma = false;
-                        hues.remove(c);
-                    }
-                }
-            }
+            if (button == 0 && mx >= rx - colorCtlW((ColorSetting) s)) openColor((ColorSetting) s);
         }
     }
 
-    private float rowY(Setting target) {
-        float y = y0() - scroll.value;
-        for (Setting s : visible()) {
-            if (s == target) return y;
-            y += rowH(s) + 4;
+    private void select(ChoiceSetting c, int i) {
+        UiSound.hit();
+        c.index = i;
+        if (c == dev.fzkc.fzhud.Modules.uiTheme) Themes.apply(c.index);
+    }
+
+    /** A click while a window is open: it goes to the window, and a click outside it closes it. */
+    private void popupClick(int mx, int my, int button, Setting wasEditing) {
+        if (choiceOpen != null) {
+            ChoiceSetting c = choiceOpen;
+            float[] r = choiceRect(c);
+            if (!Ui.within(mx, my, r[0], r[1], r[2], r[3]) || Ui.within(mx, my, r[0] + r[2] - 22, r[1] + 7, 16, 16)) {
+                closePopup();
+                return;
+            }
+            clampChoiceScroll();
+            float gx = r[5], gy = r[1] + POP_HEAD, tw = tileW(c), th = tileH(c);
+            if (button != 0 || my < gy || my >= gy + r[4]) return;
+            int cols = tileCols(c);
+            for (int i = 0; i < c.options.length; i++) {
+                float tx = gx + (i % cols) * (tw + TILE_GAP), ty = gy + (i / cols) * (th + TILE_GAP) - choiceScroll;
+                if (Ui.within(mx, my, tx, ty, tw, th)) {
+                    select(c, i);
+                    closePopup();
+                    return;
+                }
+            }
+            return;
         }
-        return y;
+        ColorSetting c = colorOpen;
+        float[] r = colorRect();
+        float[] d = doneRect();
+        if (!Ui.within(mx, my, r[0], r[1], r[2], r[3]) || Ui.within(mx, my, r[0] + r[2] - 22, r[1] + 7, 16, 16)
+                || Ui.within(mx, my, d[0], d[1], d[2], d[3])) {
+            if (Ui.within(mx, my, d[0], d[1], d[2], d[3])) UiSound.hit();
+            closePopup();
+            return;
+        }
+        if (button != 0) return;
+        float bx = r[0] + POP_PAD, by = r[1] + POP_HEAD, hx = bx + SQ_W + 8, gx = hx + HUE_W + 12;
+        if (Ui.within(mx, my, bx, by, SQ_W, SQ_H)) {
+            draggingSV = c;
+            setSV(mx, my);
+        } else if (Ui.within(mx, my, hx - 3, by, HUE_W + 6, SQ_H)) {
+            draggingHue = c;
+            setHue(my);
+        } else if (Ui.within(mx, my, gx, by + 47, SIDE_W, 18)) {
+            UiSound.hit();
+            editing = c;
+            if (wasEditing != c) editBuffer = c.chroma ? "" : c.hex();
+            // already typing here: keep the text and just move the caret
+            cursor = Ui.cursorFromX(editBuffer, gx, SIDE_W, wasEditing == c ? clampCursor(editBuffer) : editBuffer.length(), mx);
+        } else if (Ui.within(mx, my, gx, by + 72, SIDE_W, 18)) {
+            UiSound.hit();
+            c.chroma = !c.chroma;
+        } else {
+            float ry = by + SQ_H + 10;
+            for (int i = 0; i < PRESETS.length; i++) {
+                if (Ui.within(mx, my, bx + i * 20, ry, 16, 16)) {
+                    UiSound.hit();
+                    c.rgb = PRESETS[i];
+                    c.chroma = false;
+                    hues.remove(c);
+                }
+            }
+        }
     }
 
     private void setSlider(int mx) {
@@ -665,16 +971,17 @@ public class SettingsScreen extends FzScreen {
         draggingSlider.set(draggingSlider.min + f * (draggingSlider.max - draggingSlider.min));
     }
 
-    private void setSV(int mx, int my, float rowY) {
-        float py0 = rowY + ROW + 2, bx = x0() + 10;
-        float s = Math.max(0, Math.min(1, (mx - bx) / 150f));
-        float b = 1 - Math.max(0, Math.min(1, (my - py0) / 72f));
+    private void setSV(int mx, int my) {
+        float[] r = colorRect();
+        float bx = r[0] + POP_PAD, by = r[1] + POP_HEAD;
+        float s = Math.max(0, Math.min(1, (mx - bx) / SQ_W));
+        float b = 1 - Math.max(0, Math.min(1, (my - by) / SQ_H));
         draggingSV.setHsb(hue(draggingSV), s, b);
     }
 
-    private void setHue(int my, float rowY) {
-        float py0 = rowY + ROW + 2;
-        float h = Math.max(0, Math.min(0.999f, (my - py0) / 72f));
+    private void setHue(int my) {
+        float by = colorRect()[1] + POP_HEAD;
+        float h = Math.max(0, Math.min(0.999f, (my - by) / SQ_H));
         hues.put(draggingHue, h);
         float[] hsb = draggingHue.hsb();
         float sat = draggingHue.chroma || hsb[1] < 0.05f ? 1f : hsb[1];
@@ -685,8 +992,8 @@ public class SettingsScreen extends FzScreen {
     @Override
     protected void drag(int mx, int my) {
         if (draggingSlider != null) setSlider(mx);
-        if (draggingSV != null) setSV(mx, my, rowY(draggingSV));
-        if (draggingHue != null) setHue(my, rowY(draggingHue));
+        if (draggingSV != null) setSV(mx, my);
+        if (draggingHue != null) setHue(my);
     }
 
     @Override
@@ -698,7 +1005,12 @@ public class SettingsScreen extends FzScreen {
 
     @Override
     protected void scroll(int mx, int my, int amount) {
-        if (!top() && mx >= sx() && mx < sx() + SW) listScrollTarget += amount * 36;
+        if (choiceOpen != null) {
+            choiceScroll += amount * 28;
+            clampChoiceScroll();
+        }
+        else if (colorOpen != null) return;
+        else if (!top() && mx >= sx() && mx < sx() + SW) listScrollTarget += amount * 36;
         else scrollTarget += amount * 30;
     }
 
@@ -731,6 +1043,10 @@ public class SettingsScreen extends FzScreen {
             } else if (ChatAllowedCharacters.isAllowedCharacter(c)) {
                 insert(String.valueOf(c));
             }
+            return;
+        }
+        if (popupOpen()) {
+            if (keyCode == Keyboard.KEY_ESCAPE || keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) closePopup();
             return;
         }
         if (keyCode == Keyboard.KEY_ESCAPE) mc.displayGuiScreen(parent);

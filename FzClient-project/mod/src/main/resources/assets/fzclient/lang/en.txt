@@ -1155,3 +1155,4 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 見破ったニックを共有する（スキン・数字で見つけた人を送り、ほかの人が見つけた人も表示）	Share denicked players (sends who you found by skin or numbers, and shows who others found)
 {0} の名前を外しました（その人はほかのニックで見つかりました）	{0}: name removed (that player was found under another nick)
 {0} の名前を外しました（共有データで取り消されました）	{0}: name removed (taken back in the shared data)
+完了	Done

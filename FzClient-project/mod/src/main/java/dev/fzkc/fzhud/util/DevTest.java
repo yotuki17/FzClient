@@ -49,6 +49,40 @@ public class DevTest {
         else if ("pv".equals(MODE)) pv(mc, w);
         else if ("denick".equals(MODE)) denick(w);
         else if ("denickshare".equals(MODE)) denickShare(w);
+        else if ("settings".equals(MODE)) settings(mc, w);
+    }
+
+    private dev.fzkc.fzhud.gui.SettingsScreen set;
+    private int setTheme;
+
+    /** The settings windows: crosshair rows, the type tiles, the colour window, inline choices, in dark and white. */
+    private void settings(Minecraft mc, int w) {
+        int base = 40;
+        for (int pass = 0; pass < 2; pass++, base += 120) {
+            if (w == base) {
+                if (pass == 0) setTheme = Modules.uiTheme.index;
+                Modules.uiTheme.index = pass;
+                dev.fzkc.fzhud.gui.Themes.apply(pass);
+                set = dev.fzkc.fzhud.gui.SettingsScreen.devOpen("crosshair", null);
+                mc.displayGuiScreen(set);
+            }
+            String p = pass == 0 ? "dark_" : "white_";
+            if (w == base + 15) shot(mc, "set_" + p + "rows");
+            if (w == base + 20) set.devPopup("type");
+            if (w == base + 35) shot(mc, "set_" + p + "type");
+            if (w == base + 40) set.devPopup("color");
+            if (w == base + 55) shot(mc, "set_" + p + "color");
+            if (w == base + 60) {
+                set = dev.fzkc.fzhud.gui.SettingsScreen.devOpen("fullbright", null);
+                mc.displayGuiScreen(set);
+            }
+            if (w == base + 75) shot(mc, "set_" + p + "inline");
+        }
+        if (w == 300) {
+            Modules.uiTheme.index = setTheme;
+            dev.fzkc.fzhud.gui.Themes.apply(setTheme);
+            mc.displayGuiScreen(null);
+        }
     }
 
     private dev.fzkc.fzhud.gui.StatsScreen pv;
