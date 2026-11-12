@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  '改善：ニック解除は新しい方で上書き・3D スキンの初期値を細く': 'Better: denick keeps the newest answer; thinner 3D skin layers by default',
   '改善：/pv の画面を一新（ゲームのアイコン・比率のバー）': 'Better: the /pv window is redesigned (game icons, ratio bars)',
   'NEW：Item Position（持っているアイテムの位置と大きさ）': 'NEW: Item Position (move and resize the item in your hand)',
   'NEW：Name Hider（録画用に自分の名前を別の名前で表示）': 'NEW: Name Hider (shows another name instead of yours, for recordings)',

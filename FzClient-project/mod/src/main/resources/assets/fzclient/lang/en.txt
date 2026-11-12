@@ -1148,3 +1148,5 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 ほかにも隠す名前（ニックなど・カンマ区切り）	More names to hide (comma separated)
 自分のスキンもデフォルト（Steve）にする	Show the default skin (Steve) instead of yours too
 名前を確認して、左下の欄からもう一度検索してください	Check the name, then search again in the box at the bottom left
+{0} の名前を外しました（{1} は今 {2}）	{0}: name removed ({1} is now {2})
+（前は {0}）	(was {0})

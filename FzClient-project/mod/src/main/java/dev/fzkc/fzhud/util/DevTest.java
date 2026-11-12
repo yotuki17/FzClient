@@ -47,6 +47,7 @@ public class DevTest {
         if ("itempos".equals(MODE)) itemPos(mc, w);
         else if ("namehider".equals(MODE)) nameHider(mc, w);
         else if ("pv".equals(MODE)) pv(mc, w);
+        else if ("denick".equals(MODE)) denick(w);
     }
 
     private dev.fzkc.fzhud.gui.StatsScreen pv;
@@ -102,6 +103,24 @@ public class DevTest {
             dev.fzkc.fzhud.Config.save();
             LOG.info("pv done");
         }
+    }
+
+    /** Denick: one name per nick and one nick per name, the newest answer winning (see Denick.resolve). */
+    private void denick(int w) {
+        if (w == 40) dev.fzkc.fzhud.stats.Denick.devResolve("NickA", "Steve", "test");
+        if (w == 42) dev.fzkc.fzhud.stats.Denick.devResolve("NickB", "Steve", "test");   // NickA loses Steve
+        if (w == 44) dev.fzkc.fzhud.stats.Denick.devResolve("NickB", "Alex", "test");    // NickB: Steve -> Alex
+        if (w == 46) dev.fzkc.fzhud.stats.Denick.devResolve("nickc", "alex", "test");    // NickB loses Alex (any case)
+        if (w == 48) dev.fzkc.fzhud.stats.Denick.devResolve("NickC", "Alex", "test");    // nothing new
+        if (w == 50) {
+            String r = "A=" + dn("NickA") + " B=" + dn("NickB") + " C=" + dn("NickC");
+            LOG.info("denick " + r + ("A=null B=null C=alex".equals(r) ? " OK" : " WRONG"));
+        }
+    }
+
+    private static String dn(String nick) {
+        dev.fzkc.fzhud.stats.Denick.Real r = dev.fzkc.fzhud.stats.Denick.real(nick);
+        return r == null ? "null" : r.name;
     }
 
     private static void pvLook(int style, double size, int lang) {

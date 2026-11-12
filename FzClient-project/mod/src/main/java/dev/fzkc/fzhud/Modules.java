@@ -154,8 +154,8 @@ public final class Modules {
     public static final Module skinLayers = new Module("skinlayers", "3D Skin Layers", Category.VISUAL,
             "スキンの上のレイヤー（帽子・上着・袖・ズボン）を立体にする", true);
     public static final BoolSetting skinLayersFlatSemi = skinLayers.add(new BoolSetting("flatsemi", "半透明のところは3Dにしない", true));
-    public static final SliderSetting skinLayersHead = skinLayers.add(new SliderSetting("headsize", "頭の立体の大きさ（出っぱり）", 0.25, 2.0, 0.05, 1.0, "px"));
-    public static final SliderSetting skinLayersBody = skinLayers.add(new SliderSetting("bodysize", "体・腕・足の立体の大きさ（出っぱり）", 0.25, 2.0, 0.05, 1.0, "px"));
+    public static final SliderSetting skinLayersHead = skinLayers.add(new SliderSetting("headsize", "頭の立体の大きさ（出っぱり）", 0.25, 2.0, 0.05, 0.4, "px"));
+    public static final SliderSetting skinLayersBody = skinLayers.add(new SliderSetting("bodysize", "体・腕・足の立体の大きさ（出っぱり）", 0.25, 2.0, 0.05, 0.35, "px"));
     public static final BoolSetting skinLayersOthers = skinLayers.add(new BoolSetting("others", "ほかのプレイヤーも3Dにする", true));
     public static final SliderSetting skinLayersRange = skinLayers.add(new SliderSetting("range", "3Dにする距離", 4, 64, 4, 24, "m"));
     public static final BoolSetting skinLayersPreview = skinLayers.add(new BoolSetting("preview", "Cosmetics と /pv のプレビューも3Dにする", true));

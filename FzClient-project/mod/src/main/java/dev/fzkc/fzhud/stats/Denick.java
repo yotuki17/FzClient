@@ -55,17 +55,23 @@ public final class Denick {
     public static final class Real {
         public final String name;
         public final String how;
+        /** The nick as it was written. */
+        public final String nick;
         public volatile UUID id;
 
-        Real(String name, String how) {
+        Real(String name, String how, String nick) {
             this.name = name;
             this.how = how;
+            this.nick = nick;
         }
     }
 
     private static final Map<String, Real> RESOLVED = new ConcurrentHashMap<>();
-    /** Nicks already looked at (by skin) in this session. */
-    private static final Set<String> CHECKED = new HashSet<>();
+    /**
+     * Nicks already looked at (by skin) in this session, with the skin they had then: the same nick with another skin
+     * is looked at again (someone else using that nick now).
+     */
+    private static final Map<String, String> CHECKED = new HashMap<>();
     private static final Set<String> ANNOUNCED = new HashSet<>();
     /** Skin hash -> nicks seen wearing it; two or more = one of Hypixel's nick skins. Saved between sessions. */
     private static final Map<String, Set<String>> SKIN_NICKS = new HashMap<>();
@@ -115,12 +121,17 @@ public final class Denick {
             if (!isNick(info)) continue;
             String nick = info.getGameProfile().getName();
             String k = nick.toLowerCase(Locale.ROOT);
-            if (!CHECKED.add(k)) continue;
+            String[] owner = skinOwner(info);
+            String skin = owner == null ? "" : owner[1];
+            String before = CHECKED.put(k, skin);
+            if (skin.equals(before)) continue;
+            boolean otherSkin = before != null;
             if (!ANNOUNCED.contains(k) && RESOLVED.get(k) == null) {
                 say("§d[Denick] §f" + nick + " §7" + Lang.t("はニックです"));
                 ANNOUNCED.add(k);
             }
-            if (Modules.denickSkin.get() && RESOLVED.get(k) == null) bySkin(info, nick);
+            // a known nick is looked at again only when it shows up with another skin (a new answer replaces the old)
+            if (Modules.denickSkin.get() && (otherSkin || RESOLVED.get(k) == null)) bySkin(info, nick);
         }
         if (Modules.denickTeam.get()) byParty(mc);
         if (skinsDirty) {
@@ -534,18 +545,33 @@ public final class Denick {
         }
     }
 
+    /**
+     * A nick turned out to be someone. One name per nick and one nick per name, the newest answer winning either way:
+     * a player found under a new nick leaves the old one (which may be someone else by now), and a nick found to be
+     * someone else gets the new name.
+     */
     private static void resolve(String nick, String realName, String how) {
         String k = nick.toLowerCase(Locale.ROOT);
-        if (RESOLVED.containsKey(k)) return;
-        Real r = new Real(realName, how);
+        Real old = RESOLVED.get(k);
+        if (old != null && old.name.equalsIgnoreCase(realName)) return;   // nothing new
+        for (Map.Entry<String, Real> e : RESOLVED.entrySet()) {
+            if (e.getKey().equals(k) || !e.getValue().name.equalsIgnoreCase(realName)) continue;
+            RESOLVED.remove(e.getKey());
+            String was = e.getValue().nick;
+            say("§d[Denick] §7" + Lang.f("{0} の名前を外しました（{1} は今 {2}）", "§f" + was + "§7", "§a" + realName + "§7", "§f" + nick + "§7"));
+            refreshNames(was);
+        }
+        Real r = new Real(realName, how, nick);
         RESOLVED.put(k, r);
         ANNOUNCED.add(k);
-        say("§d[Denick] §f" + nick + " §7→ §a§l" + realName + " §8(" + how + ")");
+        say("§d[Denick] §f" + nick + " §7→ §a§l" + realName + " §8(" + how + ")"
+                + (old != null ? " §8" + Lang.f("（前は {0}）", old.name) : ""));
         refreshNames(nick);
         // the real UUID, so the tab list and chat show the real player's stats
         new Thread(() -> {
             // one failed request used to leave the nick on "NICK" for the whole session: try again for a while
-            for (int i = 0; i < 8 && r.id == null; i++) {
+            // (stops when a newer answer replaced this one)
+            for (int i = 0; i < 8 && r.id == null && RESOLVED.get(k) == r; i++) {
                 try {
                     UUID id = StatsApi.lookupNameOrThrow(realName);
                     if (id == null) {
@@ -565,6 +591,9 @@ public final class Denick {
             }
         }, "FzClient-DenickName").start();
     }
+
+    /** DevTest: as if a check had found this (the same path as the real checks). */
+    public static void devResolve(String nick, String realName, String how) { resolve(nick, realName, how); }
 
     private static int parse(String s) {
         try {
