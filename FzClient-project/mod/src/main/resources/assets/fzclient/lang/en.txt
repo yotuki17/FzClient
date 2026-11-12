@@ -763,3 +763,5 @@ config/fzclient-cape.png がありません	config/fzclient-cape.png not found
 マント・オーラ	Capes & auras
 ファイルが大きすぎます（8MB まで）	File too large (8 MB max)
 画像を読めませんでした（PNG / JPG）	Couldn't read the picture (PNG / JPG)
+変更後	After
+変更前	Before

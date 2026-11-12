@@ -41,6 +41,18 @@ public class Crosshair extends HudElement {
         whiteCore = add(new BoolSetting("white", "線の中を白くする（シェブロン）", true));
         outline = add(new BoolSetting("outline", "黒いフチをつける", true));
         outlineColor = add(new ColorSetting("outlinecolor", "フチの色", 0xFF0B1416));
+        type.preview = this::drawPreview;
+    }
+
+    /** One shape for the option picker, drawn with the current colour / size settings and scaled into the square. */
+    private void drawPreview(int index, float x, float y, float size, float alpha) {
+        float scale = size / (SIZE * 1.6f);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x + size / 2f, y + size / 2f, 0f);
+        GlStateManager.scale(scale, scale, 1f);
+        GlStateManager.translate(-SIZE / 2f, -SIZE / 2f, 0f);
+        drawShape(index, alpha, R.alpha(color.get(), alpha), R.alpha(outlineColor.get(), alpha * 0.85f));
+        GlStateManager.popMatrix();
     }
 
     @Override public float width() { return SIZE; }
@@ -89,7 +101,6 @@ public class Crosshair extends HudElement {
     @Override
     public void draw(float alpha, boolean preview) {
         if (!preview && Minecraft.getMinecraft().gameSettings.thirdPersonView != 0) return;   // first person only
-        float c = SIZE / 2f;
 
         // ---- colour: eased towards the "over a player" colour while one is under the crosshair
         long now = System.nanoTime();
@@ -100,13 +111,17 @@ public class Crosshair extends HudElement {
         if (Math.abs(want - tint) < 0.01f) tint = want;
         int base = tint > 0f ? R.lerpColor(color.get(), targetColor.get(), tint) : color.get();
 
-        int col = R.alpha(base, alpha);
-        int out = R.alpha(outlineColor.get(), alpha * 0.85f);
+        drawShape(type.get(), alpha, R.alpha(base, alpha), R.alpha(outlineColor.get(), alpha * 0.85f));
+    }
+
+    /** Draws shape {@code t} (index into TYPES) in the 0..SIZE square. */
+    private void drawShape(int t, float alpha, int col, int out) {
+        float c = SIZE / 2f;
         boolean ol = outline.get();
         float len = length.get(), th = thickness.get(), g = gap.get();
         float h = th / 2f;
 
-        switch (type.get()) {
+        switch (t) {
             case 0: { // chevron "^"
                 for (int side = -1; side <= 1; side += 2) {
                     GlStateManager.pushMatrix();
@@ -128,7 +143,7 @@ public class Crosshair extends HudElement {
                 batchBar(c - h, c + g, th, len, col, out, ol);                // down
                 batchBar(c - g - len, c - h, len, th, col, out, ol);          // left
                 batchBar(c + g, c - h, len, th, col, out, ol);                // right
-                if (type.get() == 2) batchBar(c - h, c - h, th, th, col, out, ol);
+                if (t == 2) batchBar(c - h, c - h, th, th, col, out, ol);
                 R.batchEnd();
                 break;
             }
@@ -142,7 +157,7 @@ public class Crosshair extends HudElement {
                 float r = g + len / 2f + 1f;
                 if (ol) ring(c, c, r, th + 1.5f, out);
                 ring(c, c, r, th, col);
-                if (type.get() == 5) {
+                if (t == 5) {
                     if (ol) R.rect(c - 1.2f, c - 1.2f, 2.4f, 2.4f, out);
                     R.rect(c - 0.7f, c - 0.7f, 1.4f, 1.4f, col);
                 }
