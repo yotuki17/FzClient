@@ -941,7 +941,7 @@ Coral（Urchin）	Coral (Urchin)
 /pv コマンド	/pv command
 /pv の表示	Show /pv in
 画面	Window
-名前を入力して Enter	Type a name, then Enter
+名前を入力して Enter	Name, then Enter
 モード別の統計は Bordic にありません（Overlay → データ・API で Hypixel API か Bedlify に）	Bordic has no per-mode stats (Overlay → Data & API: pick Hypixel API or Bedlify)
 このモードの記録がありません	No record for this mode
 今日・今週・今月の数字は Overall だけです	Today / this week / this month is only for Overall
@@ -1147,3 +1147,4 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 表示する名前	Name to show
 ほかにも隠す名前（ニックなど・カンマ区切り）	More names to hide (comma separated)
 自分のスキンもデフォルト（Steve）にする	Show the default skin (Steve) instead of yours too
+名前を確認して、左下の欄からもう一度検索してください	Check the name, then search again in the box at the bottom left

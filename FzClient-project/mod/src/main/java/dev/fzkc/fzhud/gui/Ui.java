@@ -301,7 +301,7 @@ public final class Ui {
         while (end > cursor && R.width(t.substring(start, end)) > w - 14) end--;
         if (t.isEmpty()) {
             // empty and focused: hint text stays visible next to the caret
-            R.text(placeholder, x + 8, ty, R.alpha(0x50FFFFFF, alpha));
+            R.text(placeholder, x + 8, ty, R.alpha(flat() ? (MUTED & 0xFFFFFF) | 0xA0000000 : 0x50FFFFFF, alpha));
         } else {
             R.text(t.substring(start, end), x + 5, ty, R.alpha(Ui.text, alpha));
         }

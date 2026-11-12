@@ -14,8 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Dev check (-Dfzclient.uitest=itempos or namehider): joins the first saved world, switches the feature on with a
- * few settings and saves pictures (screenshots/ip_*.png, nh_*.png). Not registered without the option.
+ * Dev check (-Dfzclient.uitest=itempos, namehider or pv): joins the first saved world, switches the feature on with a
+ * few settings and saves pictures (screenshots/ip_*.png, nh_*.png, pv_*.png). Not registered without the option.
  */
 public class DevTest {
     public static final String MODE = System.getProperty("fzclient.uitest");
@@ -46,6 +46,95 @@ public class DevTest {
         }
         if ("itempos".equals(MODE)) itemPos(mc, w);
         else if ("namehider".equals(MODE)) nameHider(mc, w);
+        else if ("pv".equals(MODE)) pv(mc, w);
+    }
+
+    private dev.fzkc.fzhud.gui.StatsScreen pv;
+    private int pvStyle, pvLang;
+    private double pvSize;
+    private static final String[] PV_STEPS = {"bw", "bw_solo", "duels", "duels_list", "duels_uhc", "tnttag",
+            "bowspleef", "mm", "bw_daily", "classic", "flat", "size70", "size130", "jp"};
+    /** Fzkc's real UUID (looked up at the start), so the made-up numbers come with the real skin. */
+    private volatile java.util.UUID pvId;
+
+    /**
+     * The /pv window: loading, every game and mode with made-up numbers, the mode list, the three looks, the smallest
+     * and biggest menu size, Japanese; then the real numbers (fetched while the made-up ones were shown) and a name
+     * nobody has.
+     */
+    private void pv(Minecraft mc, int w) {
+        if (w == 40) {
+            pvStyle = Modules.uiStyle.index;
+            pvSize = Modules.uiSize.value;
+            pvLang = Modules.langChoice.index;
+            new Thread(() -> pvId = dev.fzkc.fzhud.stats.StatsCommand.lookup("Fzkc"), "FzClient-DevTest-Lookup").start();
+        }
+        if (w == 60) {
+            pv = new dev.fzkc.fzhud.gui.StatsScreen("Fzkc", dev.fzkc.fzhud.stats.Game.BEDWARS, null, dev.fzkc.fzhud.stats.History.Period.TOTAL);
+            mc.displayGuiScreen(pv);
+        }
+        if (w == 64) shot(mc, "pv_loading");
+        int start = 100, every = 25;
+        if (w >= start && w < start + PV_STEPS.length * every && pv != null) {
+            String step = PV_STEPS[(w - start) / every];
+            int d = (w - start) % every;
+            if (d == 0) pvStep(step);
+            if (d == 20) shot(mc, "pv_" + step);
+        }
+        int end = start + PV_STEPS.length * every;
+        if (w == end) {
+            // the first window left its answer out for the made-up numbers; the stats cache still has it
+            pvLook(pvStyle, pvSize, 1);
+            pv = new dev.fzkc.fzhud.gui.StatsScreen("Fzkc", dev.fzkc.fzhud.stats.Game.BEDWARS, null, dev.fzkc.fzhud.stats.History.Period.TOTAL);
+            mc.displayGuiScreen(pv);
+        }
+        if (w == end + 100) shot(mc, "pv_real");
+        if (w == end + 101) pv.devShow(null, dev.fzkc.fzhud.stats.Game.DUELS, null, dev.fzkc.fzhud.stats.History.Period.TOTAL, false);
+        if (w == end + 121) shot(mc, "pv_real_duels");
+        if (w == end + 125) {
+            pv = new dev.fzkc.fzhud.gui.StatsScreen("qzxvnobody9921", dev.fzkc.fzhud.stats.Game.BEDWARS, null, dev.fzkc.fzhud.stats.History.Period.TOTAL);
+            mc.displayGuiScreen(pv);
+        }
+        if (w == end + 205) shot(mc, "pv_error");
+        if (w == end + 210) {
+            mc.displayGuiScreen(null);
+            pvLook(pvStyle, pvSize, pvLang);
+            dev.fzkc.fzhud.Config.save();
+            LOG.info("pv done");
+        }
+    }
+
+    private static void pvLook(int style, double size, int lang) {
+        Modules.uiStyle.index = style;
+        Modules.uiSize.set(size);
+        Modules.langChoice.index = lang;
+    }
+
+    private void pvStep(String step) {
+        dev.fzkc.fzhud.stats.Game g = dev.fzkc.fzhud.stats.Game.BEDWARS;
+        dev.fzkc.fzhud.stats.Game.Mode m = null;
+        dev.fzkc.fzhud.stats.History.Period p = dev.fzkc.fzhud.stats.History.Period.TOTAL;
+        boolean list = false;
+        java.util.UUID id = pvId != null ? pvId : new java.util.UUID(1L, 1L);
+        dev.fzkc.fzhud.stats.PlayerData d = dev.fzkc.fzhud.stats.PlayerData.sample(id, "Fzkc");
+        pvLook(pvStyle, pvSize, 1);
+        switch (step) {
+            case "bw_solo": m = g.mode("solo"); break;
+            case "duels": g = dev.fzkc.fzhud.stats.Game.DUELS; break;
+            case "duels_list": g = dev.fzkc.fzhud.stats.Game.DUELS; list = true; break;
+            case "duels_uhc": g = dev.fzkc.fzhud.stats.Game.DUELS; m = g.mode("uhc"); break;
+            case "tnttag": g = dev.fzkc.fzhud.stats.Game.TNT_TAG; break;
+            case "bowspleef": g = dev.fzkc.fzhud.stats.Game.BOW_SPLEEF; break;
+            case "mm": g = dev.fzkc.fzhud.stats.Game.MURDER; break;
+            case "bw_daily": p = dev.fzkc.fzhud.stats.History.Period.DAILY; break;
+            case "classic": Modules.uiStyle.index = 1; break;
+            case "flat": Modules.uiStyle.index = 2; break;
+            case "size70": Modules.uiSize.set(70); break;
+            case "size130": Modules.uiSize.set(130); break;
+            case "jp": Modules.langChoice.index = 0; break;
+            default: break;
+        }
+        pv.devShow(d, g, m, p, list);
     }
 
     private static void shot(Minecraft mc, String name) {

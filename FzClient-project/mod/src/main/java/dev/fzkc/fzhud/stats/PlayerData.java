@@ -62,6 +62,35 @@ public final class PlayerData {
         return s;
     }
 
+    /** Made-up numbers for every game and mode, for the developer check of the /pv window (see DevTest). */
+    public static PlayerData sample(UUID id, String name) {
+        Map<String, Long> c = new HashMap<>();
+        put(c, "bw", "star", 523, "fk", 8432, "fd", 1720, "w", 2150, "l", 1010, "bb", 4120, "bl", 1302,
+                "k", 15230, "d", 12011, "ws", 7);
+        put(c, "duels", "w", 4210, "l", 2051, "k", 5120, "d", 2533, "ws", 12, "bws", 43);
+        put(c, "tnttag", "w", 37, "k", 812, "d", 655);
+        put(c, "bowspleef", "w", 54, "l", 120, "t", 3021);
+        put(c, "mm", "w", 610, "g", 1530, "k", 2210, "d", 905, "dw", 120, "mw", 210, "bk", 330);
+        for (Game g : Game.values()) {
+            Game.Mode[] ms = g.modes();
+            for (int i = 1; i < ms.length; i++) {
+                for (int f = 0; f < g.fields.length; f += 2) {
+                    String k = g.fields[f];
+                    Long v = c.get(g.key + "." + k);
+                    if (v == null) continue;
+                    long mv = "star".equals(k) ? v : g.states.contains(k) ? v / (i + 1)
+                            : Math.round(v * (0.55 / i) * (0.7 + 0.06 * ((i * 7 + f * 3) % 10)));
+                    c.put(g.modeKey(ms[i]) + k, mv);
+                }
+            }
+        }
+        return new PlayerData(id, name, "§6[MVP§c++§6] ", "§6", false, "Sample", c);
+    }
+
+    private static void put(Map<String, Long> c, String game, Object... kv) {
+        for (int i = 0; i + 1 < kv.length; i += 2) c.put(game + "." + kv[i], ((Number) kv[i + 1]).longValue());
+    }
+
     /** Coloured "[MVP+] Name". */
     public String display() { return rankPrefix + rankColor + name; }
 

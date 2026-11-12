@@ -22,6 +22,14 @@ public final class SkinCache {
     public static final class Skin {
         public volatile ResourceLocation skin, cape;
         public volatile boolean slim;
+        /** Still on its way from Mojang; false once it came, or when the player has none (the default skin). */
+        volatile boolean waiting;
+        final long asked = System.currentTimeMillis();
+
+        /** True while the real skin is still coming (for a few seconds at most; then the default one stays). */
+        public boolean loading() {
+            return waiting && System.currentTimeMillis() - asked < 6000L;
+        }
     }
 
     private static final Map<UUID, Skin> CACHE = new ConcurrentHashMap<>();
@@ -42,15 +50,19 @@ public final class SkinCache {
             return sk;
         }
         final GameProfile profile = new GameProfile(id, name);
+        sk.waiting = true;
         Thread t = new Thread(() -> {
             try {
                 final GameProfile full = mc.getSessionService().fillProfileProperties(profile, false);
+                // no skin of their own: nothing more will come
+                if (!mc.getSessionService().getTextures(full, false).containsKey(MinecraftProfileTexture.Type.SKIN)) sk.waiting = false;
                 mc.addScheduledTask(() -> mc.getSkinManager().loadProfileTextures(full, new SkinManager.SkinAvailableCallback() {
                     @Override
                     public void skinAvailable(MinecraftProfileTexture.Type type, ResourceLocation location, MinecraftProfileTexture texture) {
                         if (type == MinecraftProfileTexture.Type.SKIN) {
                             sk.slim = "slim".equals(texture.getMetadata("model"));
                             sk.skin = location;
+                            sk.waiting = false;
                         } else if (type == MinecraftProfileTexture.Type.CAPE) {
                             sk.cape = location;
                         }
@@ -58,6 +70,7 @@ public final class SkinCache {
                 }, false));
             } catch (Throwable ignored) {
                 // offline or rate limited: keep the default skin
+                sk.waiting = false;
             }
         }, "FzClient-Skin");
         t.setDaemon(true);
