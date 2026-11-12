@@ -43,9 +43,21 @@ document.querySelectorAll('#themes button').forEach(b => b.onclick = () => {
 $('wMin').onclick = () => fz.win.min();
 $('wMax').onclick = () => fz.win.max();
 $('wClose').onclick = () => fz.win.close();
+// the light under the active tab slides to it
+function navDrop() {
+  const b = document.querySelector('.nav.on'), d = $('navDrop');
+  if (!b || !d || !b.offsetWidth) return;
+  d.style.left = b.offsetLeft + 'px';
+  d.style.width = b.offsetWidth + 'px';
+}
+addEventListener('resize', navDrop);
+document.body.dataset.page = 'home';
 document.querySelectorAll('.nav').forEach(b => b.onclick = () => {
   document.querySelectorAll('.nav').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + b.dataset.page));
+  document.body.dataset.page = b.dataset.page;
+  navDrop();
+  homeSkinPause();
   if (b.dataset.page === 'mods') { loadMods(true); fz.settings.get().then(st => { $('modAuto').checked = st.autoUpdateMods !== false; }); }
   if (b.dataset.page === 'shots') loadShots();
   if (b.dataset.page === 'settings') loadRecorder();
@@ -115,6 +127,15 @@ async function loadAccounts() {
     $('acctInit').textContent = '?';
     $('who').textContent = t('アカウント未設定');
   }
+  // the name plate under the player on the home screen
+  $('homeName').textContent = a ? a.name : t('アカウント未設定');
+  $('homeType').textContent = a ? (a.type === 'msa' ? t('Microsoft アカウント') : t('オフライン')) : t('クリックして追加');
+  const hf = $('homeFace');
+  hf.onload = () => hf.classList.add('ok');
+  hf.onerror = () => hf.classList.remove('ok');   // no network: no broken picture
+  hf.classList.remove('ok');
+  if (a) hf.src = face(a.uuid); else hf.removeAttribute('src');
+  homeSkin(a);
   const list = $('acctList');
   list.innerHTML = '';
   if (!accounts.list.length) list.appendChild(el('div', 'empty', t('まだアカウントがありません')));
@@ -130,6 +151,69 @@ async function loadAccounts() {
   }
 }
 $('acctBtn').onclick = () => $('acctModal').classList.add('on');
+$('homePlate').onclick = () => $('acctModal').classList.add('on');
+
+// ---------------------------------------------------------------- home: your player in 3D
+let homeViewer = null;
+let homeSkinFor = null;   // the account whose skin is shown
+function homeViewerReady() {
+  if (homeViewer || !window.skinview3d) return homeViewer;
+  const canvas = $('homeSkin'), box = $('homeStage');
+  try {
+    homeViewer = new skinview3d.SkinViewer({ canvas, width: box.clientWidth || 300, height: box.clientHeight || 360 });
+  } catch { return null; }   // no WebGL: the drawn player stays
+  homeViewer.animation = new skinview3d.IdleAnimation();
+  homeViewer.zoom = 0.8;
+  homeViewer.fov = 35;
+  if (homeViewer.controls) homeViewer.controls.enableZoom = false;
+  homeViewer.playerObject.rotation.y = -0.45;   // turned a little towards the play button
+  new ResizeObserver(() => { if (box.clientWidth && box.clientHeight) homeViewer.setSize(box.clientWidth, box.clientHeight); }).observe(box);
+  homeSkinPause();
+  return homeViewer;
+}
+/** No drawing while the home page is not shown or the window is minimized (e.g. while playing). */
+function homeSkinPause() {
+  if (homeViewer) homeViewer.renderPaused = document.hidden || document.body.dataset.page !== 'home';
+}
+document.addEventListener('visibilitychange', homeSkinPause);
+let homeSkinStarted = false;   // the first fetch waits a moment, so starting the launcher stays quick
+async function homeSkin(a, again) {
+  const key = a ? a.uuid + ':' + a.type : '';
+  if (key === homeSkinFor && !again) return;
+  homeSkinFor = key;
+  const stage = $('homeStage');
+  // drawn player until the skin is in (also hides the last account's skin right away)
+  const none = () => { stage.classList.remove('ready'); if (homeViewer) homeViewer.loadSkin(null); };
+  if (!a || a.type !== 'msa') { none(); return; }
+  if (!homeSkinStarted) { homeSkinStarted = true; await new Promise(r => setTimeout(r, 1500)); }
+  if (homeSkinFor !== key) return;
+  // not while the game is being started: that refreshes the account itself
+  if (busy) { homeSkinFor = null; none(); setTimeout(() => { if (!busy && homeSkinFor === null) homeSkin(current()); }, 15000); return; }
+  let skin = null;
+  try { const cur = await fz.skins.current(); if (cur && cur.skin && cur.skin.image) skin = cur.skin; } catch { /* offline */ }
+  if (homeSkinFor !== key) return;   // switched account meanwhile
+  const v = skin && homeViewerReady();
+  if (!v) { none(); if (!skin) homeSkinFor = null; return; }   // no skin (offline): try again next time
+  try {
+    await v.loadSkin(skin.image, { model: skin.variant === 'slim' ? 'slim' : 'default' });
+    if (homeSkinFor === key) stage.classList.add('ready');
+  } catch { none(); homeSkinFor = null; }
+}
+
+/** News lines "NEW：…" / "改善：…" become small cards with the tag on top. */
+function newsCards() {
+  document.querySelectorAll('.news li').forEach(li => {
+    const all = li.textContent.trim();
+    const m = all.match(/^(NEW|改善|修正|Better|Faster|Fixed|Fix)\s*[：:]\s*/i);
+    const text = m ? all.slice(m[0].length) : all;
+    li.textContent = '';
+    if (m) li.appendChild(el('span', 'tag ' + (/^new$/i.test(m[1]) ? 'new' : 'imp'), esc(m[1])));
+    const p = el('p');
+    p.textContent = text;
+    li.appendChild(p);
+    li.title = text;
+  });
+}
 $('acctClose').onclick = () => { $('acctModal').classList.remove('on'); fz.accounts.msaCancel(); };
 $('acctModal').onclick = e => { if (e.target === $('acctModal')) $('acctClose').onclick(); };
 $('offAdd').onclick = async () => {
@@ -212,8 +296,10 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
   if (b.dataset.tab === 'have') loadMods();
 });
 
-function icon(src, name) {
-  if (src) { const i = el('img', 'ico'); i.src = src; i.alt = ''; return i; }
+/** A mod's picture: from Modrinth / CurseForge, else the one inside the jar (mods added by hand), else its first letter. */
+const modIcon = m => (m.project && m.project.icon) || m.icon || '';
+function icon(src, name, pixel) {
+  if (src) { const i = el('img', 'ico' + (pixel ? ' px' : '')); i.src = src; i.alt = ''; return i; }
   return el('div', 'ico blank', esc((name || '?').slice(0, 1).toUpperCase()));
 }
 
@@ -253,7 +339,7 @@ async function loadMods(checkUpdates) {
     row.title = t('クリックで詳細');
     // the buttons in the row do their own thing; anywhere else opens the details
     row.onclick = ev => { if (!ev.target.closest('button')) openModDetails(m); };
-    row.appendChild(icon(m.project && m.project.icon, m.name));
+    row.appendChild(icon(modIcon(m), m.name, !(m.project && m.project.icon) && m.iconPixel));
     const ver = m.version ? m.version.number : t('手動で追加');
     const src = m.source === 'curseforge' ? '<span class="src">CurseForge</span>' : '';
     const pin = m.pinned ? `<span class="pin">${esc(t('固定'))}</span>` : '';
@@ -309,7 +395,7 @@ function fillModDetails(m) {
   markModRow();
   const ico = $('mdIcon');
   ico.innerHTML = '';
-  ico.appendChild(icon(m.project && m.project.icon, m.name));
+  ico.appendChild(icon(modIcon(m), m.name, !(m.project && m.project.icon) && m.iconPixel));
   $('mdName').textContent = m.name;
   const from = m.source === 'curseforge' ? 'CurseForge' : m.source === 'modrinth' ? 'Modrinth' : t('手動で追加');
   $('mdMeta').textContent = `${from} · ${m.version ? m.version.number : ''}${m.version ? ' · ' : ''}`
@@ -710,7 +796,11 @@ $('recRemove').onclick = async () => {
   const pref = st.lang || 'auto';
   setLang(pref === 'auto' ? (/^ja/i.test(info.locale || '') ? 'ja' : 'en') : pref);
   translateDom();
+  newsCards();
   document.body.style.visibility = 'visible';
+  navDrop();
+  // the tab labels change width once the font is in (and in English)
+  if (document.fonts) document.fonts.ready.then(navDrop);
   $('ver').textContent = `FzClient Launcher ${info.version} · Minecraft ${info.mc}`;
   if (!info.msa) {
     $('msaBtn').disabled = true;
@@ -1006,6 +1096,7 @@ $('skinApply').onclick = async () => {
   try {
     skinCur = await fz.skins.apply(skinSel.id, skinSel.variant);
     toast(t('スキンを {0} にしました（ゲームには次に入ったときから反映されます）', skinSel.name));
+    homeSkin(current(), true);
     skinBusy = false;
     skinSel = null;
     await loadSkins();

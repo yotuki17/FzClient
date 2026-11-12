@@ -8,68 +8,89 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body style="visibility:hidden">
+<div class="pano"></div>
 <div class="aurora"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
+<div class="tint"></div>
 <canvas id="stars"></canvas>
 
 <header class="titlebar">
-  <div class="brand"><img src="assets/bird.png" alt=""><span>FzClient Launcher</span></div>
-  <div class="drag"></div>
-  <button class="wc" id="wMin" title="最小化"><svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg></button>
-  <button class="wc" id="wMax" title="最大化"><svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="1"/></svg></button>
-  <button class="wc close" id="wClose" title="閉じる"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button>
+  <div class="brand"><img src="assets/bird.png" alt=""><span>FzClient</span><small>LAUNCHER</small></div>
+  <nav class="topnav glass">
+    <i class="drop" id="navDrop"></i>
+    <button class="nav on" data-page="home">ホーム</button>
+    <button class="nav" data-page="mods">MOD</button>
+    <button class="nav" data-page="skins">スキン</button>
+    <button class="nav" data-page="opt">最適化</button>
+    <button class="nav" data-page="shots">ギャラリー</button>
+    <button class="nav" data-page="settings">設定</button>
+  </nav>
+  <div class="tb-right">
+    <button class="acct" id="acctBtn" title="アカウント"><img id="acctFace" alt=""><span id="acctInit">?</span></button>
+    <div class="win">
+      <button class="wc" id="wMin" title="最小化"><svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg></button>
+      <button class="wc" id="wMax" title="最大化"><svg viewBox="0 0 12 12"><rect x="2.5" y="2.5" width="7" height="7" rx="1"/></svg></button>
+      <button class="wc close" id="wClose" title="閉じる"><svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6"/></svg></button>
+    </div>
+  </div>
 </header>
-
-<nav class="side">
-  <button class="nav on" data-page="home" title="ホーム">
-    <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>ホーム</span></button>
-  <button class="nav" data-page="mods" title="MOD">
-    <svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>MOD</span></button>
-  <button class="nav" data-page="skins" title="スキン">
-    <svg viewBox="0 0 24 24"><path d="M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3a4 4 0 0 1-8 0z"/></svg><span>スキン</span></button>
-  <button class="nav" data-page="opt" title="最適化">
-    <svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><span>最適化</span></button>
-  <button class="nav" data-page="shots" title="ギャラリー">
-    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>ギャラリー</span></button>
-  <button class="nav" data-page="settings" title="設定">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>設定</span></button>
-  <div class="grow"></div>
-  <button class="acct" id="acctBtn" title="アカウント"><img id="acctFace" alt=""><span id="acctInit">?</span></button>
-</nav>
 
 <main>
   <!-- HOME -->
   <section class="page on" id="page-home">
-    <div class="hero">
-      <img class="bird" src="assets/bird.png" alt="">
-      <img class="title" src="assets/title.png" alt="FzClient">
-      <div class="sub">1.8.9 PVP CLIENT</div>
+    <div class="home-hero">
+      <div class="home-left">
+        <div class="eyebrow">1.8.9 PVP CLIENT</div>
+        <img class="wordmark" src="assets/title.png" alt="FzClient">
+        <p class="tagline">軽くて、見やすくて、勝てる。いつものサーバーへ、ワンクリックで。</p>
+        <div class="launch glass">
+          <button class="play" id="play"><span class="label" id="playLabel">プレイ</span><span class="arrow"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></span></button>
+          <div class="meta"><i></i><span id="who">アカウント未設定</span> · Minecraft 1.8.9 · Forge</div>
+          <div class="progress" id="progress"><div class="bar" id="bar"></div></div>
+          <div class="status" id="status"></div>
+        </div>
+        <div class="themes glass" id="themes">
+          <span>テーマ</span>
+          <button data-theme="dark" title="ダーク" style="background:#5ce1e6"></button>
+          <button data-theme="white" title="ホワイト" style="background:#2f80ed"></button>
+          <button data-theme="casual" title="カジュアル" style="background:#ff9f43"></button>
+          <button data-theme="neon" title="ネオン" style="background:#39ff14"></button>
+          <button data-theme="sakura" title="サクラ" style="background:#ffb7c5"></button>
+          <button data-theme="ocean" title="オーシャン" style="background:#4fc3f7"></button>
+          <button data-theme="midnight" title="ミッドナイト" style="background:#9b8cff"></button>
+        </div>
+      </div>
+      <div class="home-right">
+        <div class="big-num">1.8.9</div>
+        <div class="stage3d" id="homeStage">
+          <canvas id="homeSkin"></canvas>
+          <!-- shown until the 3D skin is ready (or when there is no skin to show) -->
+          <svg class="ph" viewBox="0 0 16 32" shape-rendering="crispEdges">
+            <rect x="4" y="20" width="4" height="12" fill="#2b3a67"/><rect x="8" y="20" width="4" height="12" fill="#24315a"/>
+            <rect x="4" y="8" width="8" height="12" fill="#3aa8ad"/><rect x="0" y="8" width="4" height="12" fill="#2f8f93"/><rect x="12" y="8" width="4" height="12" fill="#3aa8ad"/>
+            <rect x="0" y="17" width="4" height="3" fill="#b88a6a"/><rect x="12" y="17" width="4" height="3" fill="#c99b7a"/>
+            <rect x="4" y="0" width="8" height="8" fill="#c99b7a"/><rect x="4" y="0" width="8" height="2" fill="#3b2a20"/>
+            <rect x="5" y="4" width="2" height="1" fill="#fff"/><rect x="9" y="4" width="2" height="1" fill="#fff"/><rect x="7" y="6" width="2" height="1" fill="#8a5a44"/>
+          </svg>
+        </div>
+        <div class="pedestal glass"><i class="glow"></i><i class="ring"></i><i class="ring d"></i></div>
+        <button class="plate glass" id="homePlate" title="アカウント">
+          <img id="homeFace" alt="">
+          <span class="who"><b id="homeName">アカウント未設定</b><small id="homeType">クリックして追加</small></span>
+          <span class="sw-btn"><svg viewBox="0 0 16 16"><path d="M2 5h10l-3-3M14 11H4l3 3"/></svg>切り替え</span>
+        </button>
+      </div>
     </div>
-    <div class="playbox">
-      <button class="play" id="play"><span class="label" id="playLabel">プレイ</span></button>
-      <div class="meta"><span id="who">アカウント未設定</span> · Minecraft 1.8.9 · Forge</div>
-      <div class="progress" id="progress"><div class="bar" id="bar"></div></div>
-      <div class="status" id="status"></div>
-    </div>
-    <div class="news">
-      <div class="news-h">FzClient 1.2.82</div>
+    <div class="news glass">
+      <b class="news-l">お知らせ</b>
+      <div class="news-h">FzClient 1.3.0</div>
       <ul>
+        <li>NEW：ランチャーを一新（上にタブ・ホームに自分の 3D スキン）</li>
+        <li>改善：手動で入れた MOD も jar の中の画像をアイコンに</li>
         <li>改善：アプリのアイコンを立体的なデザインに一新</li>
         <li>NEW：見破ったニックをほかの FzClient ユーザーと共有</li>
         <li>改善：ニック解除は新しい方で上書き・3D スキンの初期値を細く</li>
         <li>改善：/pv の画面を一新（ゲームのアイコン・比率のバー）</li>
-        <li>NEW：Item Position（持っているアイテムの位置と大きさ）</li>
-        <li>NEW：Name Hider（録画用に自分の名前を別の名前で表示）</li>
       </ul>
-    </div>
-    <div class="themes" id="themes">
-      <span>テーマ</span>
-      <button data-theme="dark" title="ダーク" style="background:#5ce1e6"></button>
-      <button data-theme="white" title="ホワイト" style="background:#2f80ed"></button>
-      <button data-theme="casual" title="カジュアル" style="background:#ff9f43"></button>
-      <button data-theme="neon" title="ネオン" style="background:#39ff14"></button>
-      <button data-theme="sakura" title="サクラ" style="background:#ffb7c5"></button>
-      <button data-theme="ocean" title="オーシャン" style="background:#4fc3f7"></button>
-      <button data-theme="midnight" title="ミッドナイト" style="background:#9b8cff"></button>
     </div>
   </section>
 

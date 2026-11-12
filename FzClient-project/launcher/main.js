@@ -28,6 +28,7 @@ const { Game, MC_VERSION } = require('./src/core/game');
 const updater = require('./src/core/updater');
 const modrinth = require('./src/core/modrinth');
 const curseforge = require('./src/core/curseforge');
+const { jarIcons } = require('./src/core/jaricon');
 const skins = require('./src/core/skins');
 const optimize = require('./src/core/optimize');
 const shots = require('./src/core/shots');
@@ -295,7 +296,15 @@ async function installedMods(checkUpdates) {
   const opts = { checkUpdates: !!checkUpdates };
   const list = await curseforge.annotate(await modrinth.installed(modsDir(), opts), modsDir(), opts);
   const pins = settings.get().modPins || {};
-  return list.map(m => ({ ...m, source: m.source || (m.project ? 'modrinth' : null), pinned: !!pins[pinKey(m)] }));
+  // no picture from a site (added by hand, or the site has none): the one inside the jar
+  const need = list.filter(m => !(m.project && m.project.icon));
+  const pics = await jarIcons(need.map(m => path.join(modsDir(), m.file)));
+  const own = new Map(need.map((m, i) => [m.file, pics[i]]));
+  return list.map(m => {
+    const p = own.get(m.file);
+    return { ...m, source: m.source || (m.project ? 'modrinth' : null), pinned: !!pins[pinKey(m)],
+      icon: p ? p.icon : '', iconPixel: !!(p && p.pixel) };
+  });
 }
 async function installedMod(file) {
   const m = plainFile(file) && (await installedMods(false)).find(x => x.file === file);
@@ -673,11 +682,17 @@ async function msaAccount() {
   if (!acc) throw new Error('先にアカウントを追加してください');
   if (acc.type !== 'msa') throw new Error('オフラインアカウントのスキンは変えられません（Microsoft アカウントだけです）');
   if (!acc.expiresAt || acc.expiresAt < Date.now() + 60000) {
-    acc = await auth.refresh(acc);
-    accounts.upsert(acc);
+    // the home screen and the skins page may both ask at once: refresh the token only once
+    const uuid = acc.uuid;
+    if (!msaRefreshing.has(uuid)) {
+      msaRefreshing.set(uuid, auth.refresh(acc).then(fresh => { accounts.upsert(fresh); return fresh; })
+        .finally(() => msaRefreshing.delete(uuid)));
+    }
+    acc = await msaRefreshing.get(uuid);
   }
   return acc;
 }
+const msaRefreshing = new Map();   // uuid -> refresh in progress
 const skinName = n => String(n || '').replace(/\.png$/i, '').slice(0, 32);
 ipcMain.handle('skins:list', () => skins.list());
 ipcMain.handle('skins:current', async () => skins.current((await msaAccount()).accessToken));
