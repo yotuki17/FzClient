@@ -38,7 +38,7 @@ public final class FzUsers {
     private FzUsers() {}
 
     /** The Worker's address (workers.dev). Empty = feature off. */
-    static final String ENDPOINT = "https://fzclient-users.fuzuki-yozakura.workers.dev";
+    static final String ENDPOINT = System.getProperty("fzclient.endpoint", "https://fzclient-users.fuzuki-yozakura.workers.dev");
     public static final String ENDPOINT_URL = ENDPOINT;
 
     private static final Set<UUID> users = Collections.synchronizedSet(new HashSet<UUID>());

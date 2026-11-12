@@ -19,6 +19,14 @@
 //   POST /hl/report {name, serverId, limits:{key:y}} -> stores what that player found (proven like /cos/set).
 //        Each player has one value per map; the shown value is the lowest one at least two players agree on,
 //        else the lowest one (a single wrong report is outvoted as soon as two players agree on another).
+//   POST /dn/get {nicks:[...]}                  -> {now, found:[{nick, name, gone, how, skin, at}]} who FzClient players
+//        found behind these Hypixel nicks (by nick only: there is no lookup from a real name to a nick). name null =
+//        no answer any more (gone = the name that left). Answers nobody confirmed for 7 days are not given out.
+//   POST /dn/report {name, serverId, items:[{nick, real, how: skin|numbers, skin, age} | {nick, how: 'reset', age}]}
+//        -> {ok, now, results} (proven like /cos/set). One name per nick and one nick per name, the newest find
+//        winning either way (age = ms since it was found). 'reset' takes back an answer you sent. Limits: 20 items
+//        per report, one report per 10 s and 200 items a day per player, 20,000 items a day for everyone.
+//   POST /dn/admin/purge {uuid} + header x-admin-key -> takes back everything that player sent and refuses more
 //   GET  /cf/v1/...                             -> CurseForge API for the launcher (Minecraft mods only).
 //        The CurseForge API key stays here as the secret CF_API_KEY, so it is never inside the launcher.
 //   POST /dvc/id {}                             -> {id} the Discord application of the voice chat HUD
@@ -357,6 +365,191 @@ async function heightLimits(req, env, url) {
   return json({ error: 'not found' }, 404);
 }
 
+// ------------------------------------------------------------------ shared denick answers
+
+// One name per nick and one nick per name, the newest answer winning either way (the same rule as Denick.resolve
+// in the mod). "Newest" = when the answer was found (the client sends its age), not when it got here.
+// Only skin and numbers answers (public data); party and by-hand answers stay in the game that found them.
+const DN_NAME = /^[A-Za-z0-9_]{1,16}$/;
+const DN_SKIN = /^[0-9a-f]{0,64}$/;
+const DN_HOW = new Set(['skin', 'numbers']);
+const DN_DAY = 86400000;
+const DN_TTL = 7 * DN_DAY;            // an answer nobody confirmed for a week is not given out any more
+const DN_MAX_AGE = 10 * 60 * 1000;   // how old a reported find may say it is
+const DN_ITEMS_DAY = 200;             // per player per day
+const DN_ITEMS_ALL = 20000;           // everyone together per day (keeps D1's free daily writes safe)
+const DN_LAST = new Map();            // per IP: last request (a light brake, per worker instance)
+
+let dnReady = false;
+async function dnTables(env) {
+  if (dnReady) return;
+  await env.DB.batch([
+    // nick / name_l lower case; name as written; name NULL = no answer any more (gone = the name that left)
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS denicks (nick TEXT PRIMARY KEY, name TEXT, name_l TEXT, gone TEXT, how TEXT NOT NULL, skin TEXT NOT NULL, at INTEGER NOT NULL, seen INTEGER NOT NULL, uuid TEXT NOT NULL)'),
+    env.DB.prepare('CREATE UNIQUE INDEX IF NOT EXISTS denicks_name ON denicks (name_l)'),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS denicks_seen ON denicks (seen)'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS dn_quota (uuid TEXT NOT NULL, day INTEGER NOT NULL, n INTEGER NOT NULL, last INTEGER NOT NULL, PRIMARY KEY (uuid, day))'),
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS dn_banned (uuid TEXT PRIMARY KEY, at INTEGER NOT NULL)'),
+  ]);
+  dnReady = true;
+}
+
+function dnBrake(req, gap) {
+  const ip = (req.headers.get('cf-connecting-ip') || '') + '|' + gap;
+  const now = Date.now();
+  if (now - (DN_LAST.get(ip) || 0) < gap) return true;
+  DN_LAST.set(ip, now);
+  if (DN_LAST.size > 5000) DN_LAST.clear();
+  return false;
+}
+
+const dnStr = (v, re) => (typeof v === 'string' && re.test(v) ? v : null);
+
+async function denicks(req, env, ctx, url) {
+  if (req.method !== 'POST') return json({ error: 'post' }, 405);
+  let body;
+  try { body = await req.json(); } catch { return json({ error: 'bad json' }, 400); }
+  if (!body || typeof body !== 'object') return json({ error: 'bad json' }, 400);
+  await dnTables(env);
+
+  if (url.pathname === '/dn/get') {
+    if (dnBrake(req, 300)) return json({ error: 'too fast' }, 429);
+    const nicks = [...new Set((Array.isArray(body.nicks) ? body.nicks : []).map(v => dnStr(v, DN_NAME)).filter(Boolean)
+      .map(v => v.toLowerCase()))].slice(0, 100);
+    const now = Date.now();
+    const found = [];
+    for (let i = 0; i < nicks.length; i += 90) {   // D1 allows up to 100 bound values per query
+      const part = nicks.slice(i, i + 90);
+      const r = await env.DB.prepare('SELECT nick, name, gone, how, skin, at FROM denicks WHERE seen > ? AND nick IN ('
+        + part.map(() => '?').join(',') + ')').bind(now - DN_TTL, ...part).all();
+      for (const row of r.results) found.push({ nick: row.nick, name: row.name, gone: row.gone, how: row.how, skin: row.skin, at: row.at });
+    }
+    return json({ now, found });
+  }
+
+  if (url.pathname === '/dn/report') {
+    if (dnBrake(req, 3000)) return json({ error: 'too fast' }, 429);
+    // the items first: nothing usable = no identity check
+    const byNick = new Map();   // in order; a later item for the same nick replaces an earlier one
+    for (const it of (Array.isArray(body.items) ? body.items : []).slice(0, 20)) {
+      if (!it || typeof it !== 'object') continue;
+      const nick = dnStr(it.nick, DN_NAME);
+      const age = Number(it.age);
+      if (!nick || !Number.isFinite(age)) continue;
+      const k = nick.toLowerCase();
+      const a = Math.min(DN_MAX_AGE, Math.max(0, Math.floor(age)));
+      if (it.how === 'reset') {
+        byNick.delete(k);
+        byNick.set(k, { k, reset: true, age: a });
+        continue;
+      }
+      const real = dnStr(it.real, DN_NAME);
+      const skin = typeof it.skin === 'string' && DN_SKIN.test(it.skin) ? it.skin : null;
+      if (!real || real.toLowerCase() === k || !DN_HOW.has(it.how) || skin == null) continue;
+      byNick.delete(k);
+      byNick.set(k, { k, real, rl: real.toLowerCase(), how: it.how, skin, age: a });
+    }
+    const items = [...byNick.values()];
+    if (!items.length) return json({ error: 'nothing' }, 400);
+    const v = await verify(env, body.name, body.serverId);
+    const id = v.id;
+    if (!id) return json({ error: 'not verified', mojang: v.status }, 403);
+    if (await env.DB.prepare('SELECT uuid FROM dn_banned WHERE uuid = ?1').bind(id).first()) return json({ error: 'blocked' }, 403);
+    const now = Date.now();
+    const day = Math.floor(now / DN_DAY);
+    const mine = await env.DB.prepare('SELECT n, last FROM dn_quota WHERE uuid = ?1 AND day = ?2').bind(id, day).first();
+    if (mine && now - mine.last < 10000) return json({ error: 'too fast' }, 429);
+    if (mine && mine.n + items.length > DN_ITEMS_DAY) return json({ error: 'daily limit' }, 429);
+    const all = await env.DB.prepare('SELECT n FROM dn_quota WHERE uuid = ?1 AND day = ?2').bind('*', day).first();
+    if (all && all.n + items.length > DN_ITEMS_ALL) return json({ error: 'busy' }, 503);
+    // counted in one step each (two reports at the same moment both count), then checked on the result
+    const upQuota = 'INSERT INTO dn_quota (uuid, day, n, last) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(uuid, day) DO UPDATE SET n = dn_quota.n + excluded.n, last = excluded.last';
+    await env.DB.batch([
+      env.DB.prepare(upQuota).bind(id, day, items.length, now),
+      env.DB.prepare(upQuota).bind('*', day, items.length, now),
+    ]);
+    const counted = await env.DB.prepare('SELECT n FROM dn_quota WHERE uuid = ?1 AND day = ?2').bind(id, day).first();
+    if (counted && counted.n > DN_ITEMS_DAY) return json({ error: 'daily limit' }, 429);
+
+    const results = [];
+    for (const it of items) {
+      try {
+        results.push(await dnApply(env, it, id, now));
+      } catch (e) {
+        results.push('error');   // e.g. another report changed the same rows at the same moment
+      }
+    }
+    if (Math.random() < 0.02) {
+      ctx.waitUntil(env.DB.batch([
+        env.DB.prepare('DELETE FROM denicks WHERE seen < ?1').bind(now - DN_TTL),
+        env.DB.prepare('DELETE FROM dn_quota WHERE day < ?1').bind(day - 1),
+      ]).catch(() => {}));
+    }
+    return json({ ok: true, now, results });
+  }
+
+  if (url.pathname === '/dn/admin/purge') {
+    // takes back everything one player sent (they become "no answer" for everyone) and refuses their reports
+    if (!env.ADMIN_KEY || req.headers.get('x-admin-key') !== env.ADMIN_KEY) return json({ error: 'forbidden' }, 403);
+    const id = clean(body.uuid);
+    if (!id) return json({ error: 'bad uuid' }, 400);
+    const now = Date.now();
+    const r = await env.DB.batch([
+      env.DB.prepare('INSERT OR IGNORE INTO dn_banned (uuid, at) VALUES (?1, ?2)').bind(id, now),
+      env.DB.prepare("UPDATE denicks SET gone = name_l, name = NULL, name_l = NULL, how = 'purged', at = ?2, seen = ?2 WHERE uuid = ?1 AND name_l IS NOT NULL").bind(id, now),
+    ]);
+    return json({ ok: true, removed: r[1].meta.changes });
+  }
+  return json({ error: 'not found' }, 404);
+}
+
+/** One reported item, by the rule above. The answer: 'new', 'same', 'older', 'moved', 'reset' or 'ignored'. */
+async function dnApply(env, it, id, now) {
+  const row = await env.DB.prepare('SELECT name_l, gone, uuid, at FROM denicks WHERE nick = ?1').bind(it.k).first();
+  if (it.reset) {
+    // taking back an answer: only one you sent yourself
+    if (!row || row.name_l == null || row.uuid !== id) return 'ignored';
+    const when = now - it.age;   // when it was typed
+    if (row.at > when) return 'older';
+    await env.DB.prepare("UPDATE denicks SET gone = name_l, name = NULL, name_l = NULL, how = 'reset', at = ?2, seen = ?4 WHERE nick = ?1 AND uuid = ?3 AND at <= ?2")
+      .bind(it.k, when, id, now).run();
+    return 'reset';
+  }
+  const at = now - it.age;
+  if (row && row.name_l === it.rl) {
+    // the same answer again: the name stays as it is; it now counts from this newer find (as in the game) and does
+    // not run out
+    await env.DB.batch([
+      env.DB.prepare('UPDATE denicks SET at = ?2, skin = ?3 WHERE nick = ?1 AND at < ?2').bind(it.k, at, it.skin),
+      env.DB.prepare('UPDATE denicks SET seen = ?2 WHERE nick = ?1').bind(it.k, now),
+    ]);
+    return 'same';
+  }
+  // something newer is known about this nick (another answer, or this very name leaving it)
+  if (row && row.at > at && (row.name_l != null || row.gone === it.rl)) return 'older';
+  const holder = await env.DB.prepare('SELECT nick, at FROM denicks WHERE name_l = ?1').bind(it.rl).first();
+  if (holder && holder.at > at) {   // a tie: the later report (or item) wins
+    // this player was found under another nick later: in time order this answer came and went again, so the
+    // nick's earlier answer is gone too
+    if (row && row.name_l != null) {
+      await env.DB.prepare("UPDATE denicks SET gone = name_l, name = NULL, name_l = NULL, how = 'moved', at = ?2, seen = ?3 WHERE nick = ?1 AND at <= ?2")
+        .bind(it.k, at, now).run();
+    }
+    return 'moved';
+  }
+  await env.DB.batch([
+    // the same player under another nick: that nick loses the name
+    // (the times are checked again in the writes: another report may have changed the rows since they were read)
+    env.DB.prepare("UPDATE denicks SET gone = name_l, name = NULL, name_l = NULL, how = 'moved', at = ?3, seen = ?4 WHERE name_l = ?1 AND nick <> ?2 AND at <= ?3")
+      .bind(it.rl, it.k, at, now),
+    env.DB.prepare('INSERT INTO denicks (nick, name, name_l, gone, how, skin, at, seen, uuid) VALUES (?1, ?2, ?3, NULL, ?4, ?5, ?6, ?7, ?8) '
+      + 'ON CONFLICT(nick) DO UPDATE SET name = excluded.name, name_l = excluded.name_l, gone = NULL, how = excluded.how, '
+      + 'skin = excluded.skin, at = excluded.at, seen = excluded.seen, uuid = excluded.uuid WHERE denicks.at <= excluded.at OR denicks.name_l IS NULL')
+      .bind(it.k, it.real, it.rl, it.how, it.skin, at, now, id),
+  ]);
+  return 'new';
+}
+
 // ------------------------------------------------------------------ Discord voice chat HUD
 
 const DVC_REDIRECT = 'http://localhost';
@@ -404,6 +597,7 @@ export default {
     if (url.pathname.startsWith('/cos/')) return cosmetics(req, env, url);
     if (url.pathname.startsWith('/hl/')) return heightLimits(req, env, url);
     if (url.pathname.startsWith('/dvc/')) return discordVc(req, env, url);
+    if (url.pathname.startsWith('/dn/')) return denicks(req, env, ctx, url);
     if (req.method !== 'POST') return new Response('FzClient users', { status: 200 });
     let body;
     try {

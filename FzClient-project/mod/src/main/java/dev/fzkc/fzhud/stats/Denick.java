@@ -44,6 +44,8 @@ import java.util.regex.Pattern;
  *       The Aurora lookup (Bordic) lists players with about that many finals / beds; one name on both lists is
  *       the player.</li>
  * </ul>
+ * Answers found by skin or numbers are shared with other FzClient players (DenickShare), with the same overwrite rule
+ * (see resolve). A shared answer never stops this game's own checks: an own find is newer and wins.
  */
 public final class Denick {
     /** (an instance only listens for the player name event) */
@@ -54,19 +56,56 @@ public final class Denick {
     /** Who a nick turned out to be. */
     public static final class Real {
         public final String name;
+        /** How it was found, as shown ("skin", "numbers · shared", ...). */
         public final String how;
+        /** skin, numbers, party or manual. */
+        final String code;
         /** The nick as it was written. */
         public final String nick;
+        /** Found by another FzClient player (the shared answers), not by this game. */
+        public final boolean shared;
+        /** Hash of the skin the nick wore when it was found ("" = none). */
+        final String skin;
+        /** When it was found, on this game's clock (now()). */
+        volatile long at;
         public volatile UUID id;
 
-        Real(String name, String how, String nick) {
+        Real(String name, String code, String nick, boolean shared, String skin, long at) {
             this.name = name;
-            this.how = how;
+            this.code = code;
+            this.how = label(code) + (shared ? " · " + Lang.t("共有") : "");
             this.nick = nick;
+            this.shared = shared;
+            this.skin = skin == null ? "" : skin;
+            this.at = at;
         }
     }
 
+    private static String label(String code) {
+        switch (code) {
+            case "skin": return Lang.t("スキン");
+            case "numbers": return Lang.t("数字");
+            case "party": return Lang.t("パーティ・消去法");
+            case "manual": return Lang.t("手動");
+            default: return code;
+        }
+    }
+
+    /** This game's clock for comparing answers (ms; not moved by the computer's clock being set). */
+    static long now() {
+        return System.nanoTime() / 1_000_000L;
+    }
+
     private static final Map<String, Real> RESOLVED = new ConcurrentHashMap<>();
+    /** "/pdenick <nick> reset" (now()): shared answers found before that are not taken. */
+    private static final Map<String, Long> FORGOT = new ConcurrentHashMap<>();
+    /** Nicks this game sent an answer for (only those can be taken back on the server). */
+    static final Set<String> REPORTED = ConcurrentHashMap.newKeySet();
+    /** Nicks looked at once more because a shared answer replaced this game's own one (once per session). */
+    private static final Set<String> RECHECKED = new HashSet<>();
+    /** "nick=name" shared answers naming an account Mojang does not know (not taken again this session). */
+    private static final Set<String> REJECTED = new HashSet<>();
+    private static boolean lastShare;
     /**
      * Nicks already looked at (by skin) in this session, with the skin they had then: the same nick with another skin
      * is looked at again (someone else using that nick now).
@@ -98,7 +137,8 @@ public final class Denick {
     }
 
     static boolean on() {
-        return Modules.stats.enabled && (Modules.denickSkin.get() || Modules.denickNumbers.get() || Modules.denickTeam.get()) && Stats.onHypixel();
+        return Modules.stats.enabled && (Modules.denickSkin.get() || Modules.denickNumbers.get() || Modules.denickTeam.get()
+                || Modules.denickShare.get()) && Stats.onHypixel();
     }
 
     /** New world: number lookups start over (the nicks may stay the same, so resolved names are kept). */
@@ -113,6 +153,19 @@ public final class Denick {
             lastShow = show;
             refreshAllNames();
         }
+        DenickShare.tick();
+        boolean share = DenickShare.on();
+        if (share != lastShare) {   // sharing turned off: shared answers go, nothing more is sent
+            lastShare = share;
+            if (!share) {
+                DenickShare.clear();
+                for (Map.Entry<String, Real> e : RESOLVED.entrySet()) {
+                    if (!e.getValue().shared) continue;
+                    RESOLVED.remove(e.getKey(), e.getValue());
+                    refreshNames(e.getValue().nick);
+                }
+            }
+        }
         if (!on()) return;
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
@@ -121,17 +174,26 @@ public final class Denick {
             if (!isNick(info)) continue;
             String nick = info.getGameProfile().getName();
             String k = nick.toLowerCase(Locale.ROOT);
+            DenickShare.saw(nick);
             String[] owner = skinOwner(info);
             String skin = owner == null ? "" : owner[1];
             String before = CHECKED.put(k, skin);
             if (skin.equals(before)) continue;
             boolean otherSkin = before != null;
-            if (!ANNOUNCED.contains(k) && RESOLVED.get(k) == null) {
+            Real known = RESOLVED.get(k);
+            if (otherSkin && known != null && known.shared && !known.skin.equals(skin) && RESOLVED.remove(k, known)) {
+                // a shared answer only holds while the nick wears the skin it was found with (someone else now?)
+                refreshNames(nick);
+                known = null;
+            }
+            boolean ownChecks = Modules.denickSkin.get() || Modules.denickNumbers.get() || Modules.denickTeam.get();
+            if (ownChecks && !ANNOUNCED.contains(k) && known == null) {
                 say("§d[Denick] §f" + nick + " §7" + Lang.t("はニックです"));
                 ANNOUNCED.add(k);
             }
-            // a known nick is looked at again only when it shows up with another skin (a new answer replaces the old)
-            if (Modules.denickSkin.get() && (otherSkin || RESOLVED.get(k) == null)) bySkin(info, nick);
+            // a known nick is looked at again only when it shows up with another skin (a new answer replaces the old);
+            // a shared answer does not stop the own check
+            if (Modules.denickSkin.get() && (otherSkin || known == null || known.shared)) bySkin(info, nick);
         }
         if (Modules.denickTeam.get()) byParty(mc);
         if (skinsDirty) {
@@ -161,7 +223,7 @@ public final class Denick {
             String now = id == null ? null : currentSkin(id);
             Minecraft.getMinecraft().addScheduledTask(() -> {
                 if (now == null) return;
-                if (now.equals(hash)) resolve(nick, name, Lang.t("スキン"));
+                if (now.equals(hash)) resolve(nick, name, "skin");
                 else {
                     // not theirs: remember the skin as a nick skin
                     SKIN_NICKS.get(hash).add("*");
@@ -169,6 +231,14 @@ public final class Denick {
                 }
             });
         }, "FzClient-DenickSkin").start();
+    }
+
+    /** A skin known as one of Hypixel's nick skins (seen on two or more nicks, counting this one, or not its owner's). */
+    private static boolean isNickSkin(String hash, String nick) {
+        Set<String> nicks = SKIN_NICKS.get(hash);
+        if (nicks == null) return false;
+        if (nicks.contains("*")) return true;
+        return nicks.size() + (nicks.contains(nick.toLowerCase(Locale.ROOT)) ? 0 : 1) >= 2;
     }
 
     /** Hash of the skin a player wears right now (Mojang's session server), or null. */
@@ -230,7 +300,7 @@ public final class Denick {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.thePlayer.sendQueue == null) return;
         NetworkPlayerInfo info = mc.thePlayer.sendQueue.getPlayerInfo(nick);
-        if (!isNick(info) || real(nick) != null) return;
+        if (!isNick(info) || known(nick)) return;
         Numbers nb = NUMBERS.computeIfAbsent(nick.toLowerCase(Locale.ROOT), k -> new Numbers());
         boolean finals = type.equals("finals");
         if (finals ? (nb.finalsBusy || nb.finals != null) : (nb.bedsBusy || nb.beds != null)) return;
@@ -276,12 +346,12 @@ public final class Denick {
         }
         if (finals) nb.finals = found;
         else nb.beds = found;
-        if (real(nick) != null) return;
+        if (known(nick)) return;
         if (nb.finals != null && nb.beds != null) {
             List<String> both = new ArrayList<>(nb.finals);
             both.retainAll(nb.beds);
             if (both.size() == 1) {
-                resolve(nick, both.get(0), Lang.t("数字"));
+                resolve(nick, both.get(0), "numbers");
                 return;
             }
             if (both.isEmpty()) {
@@ -351,7 +421,7 @@ public final class Denick {
                 continue;
             }
             Real r = real(n);
-            if (r != null) {
+            if (r != null && !r.shared) {
                 visible.add(r.name.toLowerCase(Locale.ROOT));   // already found: that party member is accounted for
                 continue;
             }
@@ -387,7 +457,7 @@ public final class Denick {
         if (!pair.equals(pendingPair)) { pendingPair = pair; pendingCount = 0; }
         if (++pendingCount >= 3) {
             pendingPair = null;
-            resolve(nicks.get(0), missing.get(0), Lang.t("パーティ・消去法"));
+            resolve(nicks.get(0), missing.get(0), "party");
         }
     }
 
@@ -521,12 +591,12 @@ public final class Denick {
             String k = args[0].toLowerCase(Locale.ROOT);
             RESOLVED.remove(k);
             if (args[1].equalsIgnoreCase("reset")) {
-                CHECKED.remove(k);
+                forget(args[0]);
                 say("§d[Denick] §f" + args[0] + " §7" + Lang.t("の名前を消しました"));
                 refreshNames(args[0]);
                 return;
             }
-            resolve(args[0], args[1], Lang.t("手動"));
+            resolve(args[0], args[1], "manual");
         }
 
         @Override
@@ -545,29 +615,160 @@ public final class Denick {
         }
     }
 
+    /** This game found who a nick is (now: always the newest answer). */
+    private static void resolve(String nick, String realName, String code) {
+        apply(nick, realName, code, now(), false, skinNow(nick), false);
+    }
+
     /**
      * A nick turned out to be someone. One name per nick and one nick per name, the newest answer winning either way:
      * a player found under a new nick leaves the old one (which may be someone else by now), and a nick found to be
-     * someone else gets the new name.
+     * someone else gets the new name. The server keeps the shared answers by the same rule, so an answer from there
+     * (shared) only counts against what is known here by when each was found.
      */
-    private static void resolve(String nick, String realName, String how) {
+    private static void apply(String nick, String realName, String code, long at, boolean shared, String skin, boolean dev) {
         String k = nick.toLowerCase(Locale.ROOT);
         Real old = RESOLVED.get(k);
-        if (old != null && old.name.equalsIgnoreCase(realName)) return;   // nothing new
+        if (shared) {
+            Long forgot = FORGOT.get(k);
+            if (forgot != null && at <= forgot) return;   // you said to forget it after that
+            if (!dev && DenickShare.waiting(k, realName)) return;   // an own newer find is still on its way there
+        }
+        if (old != null && old.name.equalsIgnoreCase(realName)) {
+            if (!shared && old.shared) {
+                // the own check agrees with a shared answer: own from now on (and sent again, which keeps it alive)
+                Real mine = new Real(old.name, code, old.nick, false, skin, at);
+                mine.id = old.id;
+                RESOLVED.put(k, mine);
+                if (mine.id == null) findId(k, mine);
+                DenickShare.report(mine);
+            } else if (shared && old.shared && at > old.at) {
+                old.at = at;
+            }
+            return;   // nothing new
+        }
+        if (old != null && old.at > at) return;   // something newer is known about this nick
+        List<Map.Entry<String, Real>> holders = new ArrayList<>();
+        boolean newerElsewhere = false;
         for (Map.Entry<String, Real> e : RESOLVED.entrySet()) {
             if (e.getKey().equals(k) || !e.getValue().name.equalsIgnoreCase(realName)) continue;
-            RESOLVED.remove(e.getKey());
-            String was = e.getValue().nick;
-            say("§d[Denick] §7" + Lang.f("{0} の名前を外しました（{1} は今 {2}）", "§f" + was + "§7", "§a" + realName + "§7", "§f" + nick + "§7"));
-            refreshNames(was);
+            holders.add(e);
+            if (e.getValue().at > at) newerElsewhere = true;
         }
-        Real r = new Real(realName, how, nick);
+        if (newerElsewhere) {
+            // this player is known under another nick since later: in time order this answer came and went again,
+            // so the nick's earlier answer is gone too
+            if (old != null) {
+                drop(k, old, Lang.f("{0} の名前を外しました（{1} は今 {2}）", "§f" + old.nick + "§7", "§a" + realName + "§7",
+                        "§f" + holders.get(0).getValue().nick + "§7"), shared);
+            }
+            return;
+        }
+        for (Map.Entry<String, Real> e : holders) {
+            drop(e.getKey(), e.getValue(), Lang.f("{0} の名前を外しました（{1} は今 {2}）", "§f" + e.getValue().nick + "§7",
+                    "§a" + realName + "§7", "§f" + nick + "§7"), shared);
+        }
+        Real r = new Real(realName, code, nick, shared, skin, at);
         RESOLVED.put(k, r);
         ANNOUNCED.add(k);
-        say("§d[Denick] §f" + nick + " §7→ §a§l" + realName + " §8(" + how + ")"
+        say("§d[Denick] §f" + nick + " §7→ §a§l" + realName + " §8(" + r.how + ")"
                 + (old != null ? " §8" + Lang.f("（前は {0}）", old.name) : ""));
         refreshNames(nick);
-        // the real UUID, so the tab list and chat show the real player's stats
+        if (shared && old != null && !old.shared) recheck(k);
+        findId(k, r);
+        if (!shared) DenickShare.report(r);
+    }
+
+    /** Takes an answer away (with a line in chat). A shared answer taking away an own one: looked at once more. */
+    private static void drop(String k, Real r, String line, boolean byShared) {
+        if (!RESOLVED.remove(k, r)) return;
+        say("§d[Denick] §7" + line);
+        refreshNames(r.nick);
+        if (byShared && !r.shared) recheck(k);
+    }
+
+    /** The own checks run once more for this nick (once per session). */
+    private static void recheck(String k) {
+        if (!RECHECKED.add(k)) return;
+        CHECKED.remove(k);
+        NUMBERS.remove(k);
+    }
+
+    /** True when this game itself already knows who the nick is (a shared answer does not stop the own checks). */
+    private static boolean known(String nick) {
+        Real r = real(nick);
+        return r != null && !r.shared;
+    }
+
+    /** Still this game's own current answer (for DenickShare, any thread). */
+    static boolean stillMine(Real r) {
+        return !r.shared && RESOLVED.get(r.nick.toLowerCase(Locale.ROOT)) == r;
+    }
+
+    /** "/pdenick <nick> reset": shared answers found before now are not taken, and one you sent is taken back. */
+    private static void forget(String nick) {
+        String k = nick.toLowerCase(Locale.ROOT);
+        CHECKED.remove(k);
+        FORGOT.put(k, now());
+        DenickShare.reset(nick, REPORTED.contains(k));
+    }
+
+    /** Skin hash the nick wears right now ("" = none or not in the tab list). */
+    private static String skinNow(String nick) {
+        String[] owner = skinOwner(tabEntry(nick));
+        return owner == null ? "" : owner[1];
+    }
+
+    /** The tab list entry of a name, any case (null when not there). */
+    private static NetworkPlayerInfo tabEntry(String name) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || mc.thePlayer.sendQueue == null || name == null) return null;
+        for (NetworkPlayerInfo i : mc.thePlayer.sendQueue.getPlayerInfoMap()) {
+            if (name.equalsIgnoreCase(i.getGameProfile().getName())) return i;
+        }
+        return null;
+    }
+
+    /**
+     * Answers from the shared list (main thread). Only for nicks in your tab list right now, and only when the nick
+     * still wears the skin it wore when it was found (otherwise someone else may use that nick now); a skin answer
+     * also has to match the skin's owner.
+     */
+    static void sharedRows(List<DenickShare.Row> rows) {
+        if (!DenickShare.on()) return;
+        rows.sort((x, y) -> Long.compare(x.at, y.at));
+        for (DenickShare.Row w : rows) {
+            NetworkPlayerInfo info = tabEntry(w.nick);
+            if (!isNick(info)) continue;
+            String nick = info.getGameProfile().getName();
+            if (w.name == null) {
+                gone(nick, w.gone, w.how, w.at, false);
+                continue;
+            }
+            if (!"skin".equals(w.how) && !"numbers".equals(w.how)) continue;
+            String[] owner = skinOwner(info);
+            if (!(owner == null ? "" : owner[1]).equals(w.skin)) continue;
+            if ("skin".equals(w.how) && (owner == null || !owner[0].equalsIgnoreCase(w.name))) continue;
+            if ("skin".equals(w.how) && isNickSkin(owner[1], nick)) continue;   // proves nothing (see bySkin)
+            if (w.name.equalsIgnoreCase(nick) || REJECTED.contains(nick.toLowerCase(Locale.ROOT) + "=" + w.name.toLowerCase(Locale.ROOT))) continue;
+            apply(nick, w.name, w.how, w.at, true, w.skin, false);
+        }
+    }
+
+    /** The shared list says this name left the nick at that time (found under another nick, or taken back). */
+    private static void gone(String nick, String gone, String how, long at, boolean dev) {
+        String k = nick.toLowerCase(Locale.ROOT);
+        Real r = RESOLVED.get(k);
+        if (r == null || gone == null || !r.name.equalsIgnoreCase(gone) || r.at > at) return;
+        if (!dev && DenickShare.waiting(k, r.name)) return;
+        drop(k, r, "moved".equals(how)
+                ? Lang.f("{0} の名前を外しました（その人はほかのニックで見つかりました）", "§f" + r.nick + "§7")
+                : Lang.f("{0} の名前を外しました（共有データで取り消されました）", "§f" + r.nick + "§7"), true);
+    }
+
+    /** The real UUID, so the tab list and chat show the real player's stats. */
+    private static void findId(String k, Real r) {
+        String realName = r.name, nick = r.nick;
         new Thread(() -> {
             // one failed request used to leave the nick on "NICK" for the whole session: try again for a while
             // (stops when a newer answer replaced this one)
@@ -576,6 +777,11 @@ public final class Denick {
                     UUID id = StatsApi.lookupNameOrThrow(realName);
                     if (id == null) {
                         why("real name " + realName + " of " + nick + ": Mojang does not know it");
+                        // a shared answer naming nobody is dropped
+                        if (r.shared) Minecraft.getMinecraft().addScheduledTask(() -> {
+                            REJECTED.add(k + "=" + realName.toLowerCase(Locale.ROOT));
+                            if (RESOLVED.remove(k, r)) refreshNames(nick);
+                        });
                         return;
                     }
                     r.id = id;
@@ -594,6 +800,26 @@ public final class Denick {
 
     /** DevTest: as if a check had found this (the same path as the real checks). */
     public static void devResolve(String nick, String realName, String how) { resolve(nick, realName, how); }
+
+    /** DevTest: as if the shared list had answered this (name null = gone), found ageMs ago. */
+    public static void devShared(String nick, String name, String gone, String how, long ageMs) {
+        long at = now() - ageMs;
+        if (name == null) gone(nick, gone, how, at, true);
+        else apply(nick, name, how, at, true, "", true);
+    }
+
+    /** DevTest: "/pdenick <nick> reset". */
+    public static void devForget(String nick) {
+        RESOLVED.remove(nick.toLowerCase(Locale.ROOT));
+        forget(nick);
+    }
+
+    /** DevTest: sharing against a local test server, outside Hypixel. */
+    public static void devShare(String... ask) {
+        DenickShare.devMode = true;
+        DenickShare.tick();
+        for (String n : ask) DenickShare.saw(n);
+    }
 
     private static int parse(String s) {
         try {

@@ -1150,3 +1150,8 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 名前を確認して、左下の欄からもう一度検索してください	Check the name, then search again in the box at the bottom left
 {0} の名前を外しました（{1} は今 {2}）	{0}: name removed ({1} is now {2})
 （前は {0}）	(was {0})
+共有	shared
+ほかの FzClient ユーザーと共有	Share with other FzClient users
+見破ったニックを共有する（スキン・数字で見つけた人を送り、ほかの人が見つけた人も表示）	Share denicked players (sends who you found by skin or numbers, and shows who others found)
+{0} の名前を外しました（その人はほかのニックで見つかりました）	{0}: name removed (that player was found under another nick)
+{0} の名前を外しました（共有データで取り消されました）	{0}: name removed (taken back in the shared data)

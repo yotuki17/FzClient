@@ -48,6 +48,7 @@ public class DevTest {
         else if ("namehider".equals(MODE)) nameHider(mc, w);
         else if ("pv".equals(MODE)) pv(mc, w);
         else if ("denick".equals(MODE)) denick(w);
+        else if ("denickshare".equals(MODE)) denickShare(w);
     }
 
     private dev.fzkc.fzhud.gui.StatsScreen pv;
@@ -116,6 +117,40 @@ public class DevTest {
             String r = "A=" + dn("NickA") + " B=" + dn("NickB") + " C=" + dn("NickC");
             LOG.info("denick " + r + ("A=null B=null C=alex".equals(r) ? " OK" : " WRONG"));
         }
+        // shared answers count by when they were found
+        if (w == 60) dev.fzkc.fzhud.stats.Denick.devResolve("NickD", "Dan", "test");
+        if (w == 62) dev.fzkc.fzhud.stats.Denick.devShared("NickD", "Bob", null, "skin", 60_000);    // older: no
+        if (w == 64) dev.fzkc.fzhud.stats.Denick.devShared("NickE", "Dan", null, "skin", 60_000);    // Dan known later at D: no
+        if (w == 66) dev.fzkc.fzhud.stats.Denick.devShared("NickE", "Dan", null, "numbers", 0);      // newer: D loses Dan
+        if (w == 68) dev.fzkc.fzhud.stats.Denick.devShared("NickE", null, "alex", "moved", 0);      // another name left: no
+        if (w == 70) dev.fzkc.fzhud.stats.Denick.devShared("NickE", null, "dan", "moved", 0);       // Dan left E
+        if (w == 72) dev.fzkc.fzhud.stats.Denick.devResolve("NickF", "Fred", "test");
+        if (w == 74) dev.fzkc.fzhud.stats.Denick.devForget("NickF");
+        if (w == 76) dev.fzkc.fzhud.stats.Denick.devShared("NickF", "Fred", null, "skin", 30_000);   // before the reset: no
+        if (w == 78) dev.fzkc.fzhud.stats.Denick.devShared("NickG", "Gus", null, "skin", 0);
+        if (w == 80) dev.fzkc.fzhud.stats.Denick.devResolve("NickG", "Gus", "test");                 // own check agrees
+        if (w == 82) dev.fzkc.fzhud.stats.Denick.devShared("NickH", "Hal", null, "skin", 0);
+        if (w == 84) dev.fzkc.fzhud.stats.Denick.devShared("NickH", "Ian", null, "skin", 0);         // newer shared replaces
+        if (w == 90) {
+            String r = "D=" + dn("NickD") + " E=" + dn("NickE") + " F=" + dn("NickF") + " G=" + dn("NickG") + sh("NickG")
+                    + " H=" + dn("NickH") + sh("NickH");
+            LOG.info("denick shared " + r + ("D=null E=null F=null G=Gus(own) H=Ian(shared)".equals(r) ? " OK" : " WRONG"));
+        }
+    }
+
+    private static String sh(String nick) {
+        dev.fzkc.fzhud.stats.Denick.Real r = dev.fzkc.fzhud.stats.Denick.real(nick);
+        return r == null ? "" : r.shared ? "(shared)" : "(own)";
+    }
+
+    /** Sharing against a local test server (-Dfzclient.endpoint): sends a find, then asks about it. */
+    private void denickShare(int w) {
+        if (w == 40) {
+            dev.fzkc.fzhud.stats.Denick.devShare();
+            dev.fzkc.fzhud.stats.Denick.devResolve("NickT", "Steve", "skin");
+            dev.fzkc.fzhud.stats.Denick.devResolve("NickU", "Alex", "party");   // never sent
+        }
+        if (w == 300) dev.fzkc.fzhud.stats.Denick.devShare("NickT", "NickU", "NickV");
     }
 
     private static String dn(String nick) {
