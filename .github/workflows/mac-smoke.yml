@@ -43,6 +43,8 @@ jobs:
           SMOKE_OUT: ${{ github.workspace }}/out
           SMOKE_JAR: ${{ runner.temp }}/fzclient.jar
           SMOKE_SECONDS: '240'
+          # the test Macs are virtual machines without a graphics card LWJGL accepts: let it use the software one
+          SMOKE_JVM: -Dorg.lwjgl.opengl.Display.allowSoftwareOpenGL=true
         run: |
           npm ci
           curl -fL -o "$SMOKE_JAR" https://github.com/yotuki17/FzClient/releases/latest/download/fzclient.jar

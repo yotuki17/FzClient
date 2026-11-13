@@ -57,7 +57,7 @@ async function run() {
   const t0 = Date.now();
   const child = await game.launch({
     account: { name: 'FzSmokeTest', uuid: '00000000000000000000000000000001', accessToken: '0', type: 'legacy' },
-    memoryMb: 2048, width: 1280, height: 720, fullscreen: mode === 'arg', jvmArgs: '', bundledJar: jar,
+    memoryMb: 2048, width: 1280, height: 720, fullscreen: mode === 'arg', jvmArgs: process.env.SMOKE_JVM || '', bundledJar: jar,
     launcherVersion: 'smoke', jvmExtras: ['-Dfzclient.ticket=' + token],
     onProgress: stage => { if (stage !== lastStage) { lastStage = stage; log('[progress] ' + stage); } },
     onLog: text => { bytes += text.length; gameOut.write(text); },
