@@ -82,14 +82,14 @@
     </div>
     <div class="news glass">
       <b class="news-l">お知らせ</b>
-      <div class="news-h">FzClient 1.3.4</div>
+      <div class="news-h">FzClient 1.3.5</div>
       <ul>
+        <li>NEW：M チップの Mac に対応（ランチャーもゲームも）</li>
+        <li>改善：Mac では Windows 専用の機能を出さないように</li>
         <li>NEW：クロスヘアを自分で作れるように（ドットで塗るだけ）</li>
         <li>NEW：クロスヘアをバニラ風の反転表示・不透明度に対応</li>
         <li>NEW：クロスヘアを 15 種類に（四隅・ひし形・4つの点など）</li>
         <li>改善：クロスヘアを画面のピクセルに合わせてくっきり表示</li>
-        <li>NEW：クロスヘアの種類を絵で見て選べるように</li>
-        <li>改善：設定の選択肢を並べて表示・色は別ウィンドウで</li>
       </ul>
     </div>
   </section>
@@ -169,16 +169,16 @@
 
   <!-- OPTIMIZE -->
   <section class="page" id="page-opt">
-    <h1>最適化</h1>
-    <p class="lead">Minecraft の PvP 向けに PC の設定を整えます。変える前の値は保存されるので、いつでも元に戻せます。</p>
-    <div class="row-actions">
+    <h1 class="win-only">最適化</h1>
+    <p class="lead win-only">Minecraft の PvP 向けに PC の設定を整えます。変える前の値は保存されるので、いつでも元に戻せます。</p>
+    <div class="row-actions win-only">
       <button class="btn" id="optRec">おすすめを選ぶ</button>
       <button class="btn primary" id="optApply" disabled>適用</button>
       <button class="btn" id="optRevert">すべて元に戻す</button>
       <span class="count" id="optMsg"></span>
     </div>
-    <div id="optList" class="optlist"><div class="empty">読み込み中…</div></div>
-    <details class="optdebug" id="optDebug"><summary>詳細（うまくいかないとき）</summary>
+    <div id="optList" class="optlist win-only"><div class="empty">読み込み中…</div></div>
+    <details class="optdebug win-only" id="optDebug"><summary>詳細（うまくいかないとき）</summary>
       <p class="credit">ここをスクショして送ってもらえれば、原因を調べられます。</p>
       <pre id="optDebugText"></pre>
     </details>
@@ -198,8 +198,8 @@
     </div>
     <p class="credit">OptiFine は作者（sp614x）のライセンスで optifine.net からしか配れないため、公式ページを開いてダウンロードしてもらい、ダウンロードフォルダに来たものをランチャーが mods に入れます。</p>
 
-    <h2 class="opt-h">FPS を計測</h2>
-    <div class="card measure">
+    <h2 class="opt-h win-only">FPS を計測</h2>
+    <div class="card measure win-only">
       <div>
         <b>ゲーム中のフレームを記録して、平均 FPS と 1% Low（重い瞬間の FPS）を出します</b>
         <small>Minecraft を起動して、ふだん遊ぶ場所で計測してください。設定を変える前と後で比べると効果が分かります。</small>
@@ -207,8 +207,8 @@
       <select id="optSec"><option value="10">10 秒</option><option value="20" selected>20 秒</option><option value="30">30 秒</option></select>
       <button class="btn primary" id="optMeasure">計測</button>
     </div>
-    <div id="optResults" class="optresults"></div>
-    <p class="credit">NVIDIA の設定には NVIDIA Profile Inspector、計測には PresentMon（どちらも MIT ライセンスのオープンソース）を使います。初めて使うときに公式の GitHub から取得します。</p>
+    <div id="optResults" class="optresults win-only"></div>
+    <p class="credit win-only">NVIDIA の設定には NVIDIA Profile Inspector、計測には PresentMon（どちらも MIT ライセンスのオープンソース）を使います。初めて使うときに公式の GitHub から取得します。</p>
   </section>
 
   <!-- SCREENSHOTS -->
@@ -251,24 +251,24 @@
       <label>言語<small>ランチャーの表示言語</small></label>
       <div class="ctl"><select id="lang"><option value="auto">Auto / 自動</option><option value="ja">日本語</option><option value="en">English</option></select></div>
     </div>
-    <div class="set">
+    <div class="set win-only">
       <label>録画<small>ゲーム中に Alt+X のオーバーレイから録画できるようにします（音はゲームの音だけ）。録画に使う ffmpeg（約 75 MB）を GitHub から一度だけ取得します</small></label>
       <div class="ctl"><span class="path" id="recState">確認中…</span><button class="btn primary" id="recPrepare">準備する</button><button class="btn" id="recOpen">録画フォルダを開く</button><button class="btn" id="recRemove">削除</button></div>
     </div>
-    <div class="set">
+    <div class="set win-only">
       <label>録画する範囲<small>ゲームのウィンドウだけなら、上に重なった通知やオーバーレイは映りません</small></label>
       <div class="ctl"><select id="recArea"><option value="game">Minecraft のウィンドウだけ</option><option value="monitor">ゲームがあるモニター全体</option></select>
         <select id="recFps"><option value="60">60 FPS</option><option value="30">30 FPS</option></select></div>
     </div>
-    <div class="set">
+    <div class="set win-only">
       <label>直前の数十秒をいつも残しておく<small>ON にすると、あとから「直前を保存」で今の場面を保存できます。録画と保存のキーはゲームの「操作設定」→ FzClient で決められます</small></label>
       <div class="ctl"><label class="chk"><input type="checkbox" id="recReplay"> 残しておく</label><input type="number" id="recSec" min="10" max="120" step="5"> 秒</div>
     </div>
-    <div class="set">
+    <div class="set win-only">
       <label>録画中のマーク<small>録画しているあいだ、画面の右下に小さな印を出します（録画には映りません）</small></label>
       <div class="ctl"><label class="chk"><input type="checkbox" id="recBadge"> 表示する</label></div>
     </div>
-    <div class="set">
+    <div class="set win-only">
       <label>録画の音<small>録画の開始・停止と、直前を保存したときに音を鳴らします（録画には入りません）</small></label>
       <div class="ctl"><label class="chk"><input type="checkbox" id="recSound"> 鳴らす</label></div>
     </div>

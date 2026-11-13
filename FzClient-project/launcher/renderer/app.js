@@ -2,6 +2,14 @@
 /* global fz */
 const $ = id => document.getElementById(id);
 let info = null;
+/** A Mac: no recording, no Windows tweaks, the window buttons are the Mac's own (style.css html.mac). */
+const IS_MAC = fz.platform === 'darwin';
+if (IS_MAC) {
+  document.documentElement.classList.add('mac');
+  // only the OptiFine part of the 最適化 page works on a Mac
+  const optTab = document.querySelector('.nav[data-page="opt"]');
+  if (optTab) optTab.textContent = 'OptiFine';
+}
 let busy = false;
 
 // ---------------------------------------------------------------- helpers
@@ -60,9 +68,9 @@ document.querySelectorAll('.nav').forEach(b => b.onclick = () => {
   homeSkinPause();
   if (b.dataset.page === 'mods') { loadMods(true); fz.settings.get().then(st => { $('modAuto').checked = st.autoUpdateMods !== false; }); }
   if (b.dataset.page === 'shots') loadShots();
-  if (b.dataset.page === 'settings') loadRecorder();
+  if (b.dataset.page === 'settings' && !IS_MAC) loadRecorder();
   if (b.dataset.page === 'skins') loadSkins();
-  if (b.dataset.page === 'opt') { loadOpt(); loadOptiFine(); }
+  if (b.dataset.page === 'opt') { if (!IS_MAC) loadOpt(); loadOptiFine(); }
   if (b.dataset.page !== 'shots') closeShot();
   if (b.dataset.page !== 'mods' && $('modModal').classList.contains('on')) $('mdClose').onclick();
 });
@@ -887,10 +895,12 @@ $('ofModalInstall').onclick = () => { ofAsked(); if (!ofWaiting) startOptiFine()
 (function updates() {
   const pill = $('upd'), text = $('updText');
   let readyVersion = null;
+  // a Mac: the launcher cannot replace itself, the pill opens the download instead
+  const readyText = v => IS_MAC ? t('v{0} が出ています — クリックでダウンロード', v) : t('v{0} に更新できます — クリックで再起動', v);
   const show = (msg, ready) => { text.textContent = msg; pill.className = 'upd on' + (ready ? ' ready' : ''); };
   fz.update.onLauncher(d => {
     if (d.state === 'downloading') show(t('ランチャーの更新をダウンロード中… {0}%', d.percent || 0), false);
-    if (d.state === 'ready') { readyVersion = d.version; show(t('v{0} に更新できます — クリックで再起動', d.version), true); }
+    if (d.state === 'ready') { readyVersion = d.version; show(readyText(d.version), true); }
   });
   fz.update.onMod(d => {
     if (d.state === 'done') toast(t('FzClient を {0} に更新しました', d.version));
@@ -900,7 +910,7 @@ $('ofModalInstall').onclick = () => { ofAsked(); if (!ofWaiting) startOptiFine()
     if (!readyVersion) return;
     try { await fz.update.install(); } catch (e) { toast(errText(e), true); }
   };
-  fz.update.status().then(s => { if (s && s.ready) { readyVersion = s.ready; show(t('v{0} に更新できます — クリックで再起動', s.ready), true); } });
+  fz.update.status().then(s => { if (s && s.ready) { readyVersion = s.ready; show(readyText(s.ready), true); } });
 })();
 
 

@@ -67,7 +67,8 @@ public abstract class MixinMinecraft {
 
     @Inject(require = 0, method = "toggleFullscreen", at = @At("HEAD"), cancellable = true)
     private void fzhud$borderless(CallbackInfo ci) {
-        if (!Modules.borderless.enabled) return;
+        // a Mac's own fullscreen is already a borderless window over the desktop: keep the game's toggle there
+        if (!Modules.borderless.enabled || !dev.fzkc.fzhud.util.Os.WIN) return;
         ci.cancel();
 
         try {

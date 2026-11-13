@@ -201,6 +201,7 @@ $('menuBtn').onclick = () => fzo.openMenu();
 
 fzo.onState(s => {
   state = s;
+  if (s.mac) $('rec').style.display = 'none';   // no recording on a Mac
   render();
 });
 

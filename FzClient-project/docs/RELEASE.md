@@ -12,10 +12,12 @@
 3. `vX.Y.Z` のタグを push する
 
 タグを push すると `.github/workflows/release.yml` が動き、次をやります：
-- MOD をタグのバージョンでビルドして `launcher/resources/fzclient.jar` に入れる
-- ランチャーをビルドする（`npm run dist`）
-- Release を作って、次の 5 つを上げる：
-  `FzClient-Launcher-Setup.exe` / `FzClient-Launcher-Setup.exe.blockmap` / `latest.yml` / `fzclient.jar` / `fzclient.json`
+- `mod`: MOD をタグのバージョンでビルドして、次の 2 つに渡す
+- `windows`: Windows 版ランチャーをビルドする（`npm run dist`、fzclient.jar / fzclient.json もここで作る）
+- `mac`: Mac（Apple Silicon）版ランチャーをビルドする（`npm run dist:mac`、macos-14、Apple の署名なし＝ad-hoc 署名）
+- `publish`: 全部そろってから Release を 1 回だけ作って、次の 10 個を上げる：
+  `FzClient-Launcher-Setup.exe` / `.exe.blockmap` / `latest.yml` / `fzclient.jar` / `fzclient.json` /
+  `FzClient-Launcher-mac-arm64.dmg` / `.dmg.blockmap` / `FzClient-Launcher-mac-arm64.zip` / `.zip.blockmap` / `latest-mac.yml`
 
 「Latest」になったリリースが使われます。タグを push した時点でみんなのランチャーに届くので、push する前に
 commit の中身とバージョンを必ず確認する。
@@ -25,8 +27,12 @@ commit の中身とバージョンを必ず確認する。
   プレイを押した時にも確認します（オフラインなら今の版でそのまま起動）。
 - ランチャーの新しい版は裏でダウンロードされ、右下に「v1.0.1 に更新できます — クリックで再起動」が出ます。
   押さなくても、ランチャーを閉じた時に自動でインストールされます。
+- Mac: MOD は同じく自動で更新されます。ランチャーは Apple の署名がないので自分では入れ替えられず、
+  「v1.0.1 が出ています — クリックでダウンロード」が出て、押すと dmg のダウンロードが開きます。
+  ゲームはインテル版 Java 8 を Rosetta 2 で動かします（LWJGL 2 に Apple Silicon 版がないため）。
 
 ## 失敗したとき
 - GitHub の Actions タブで `Release` の実行を開いて、赤くなった手順のログを見る。
+- `publish` より前で失敗したなら Release はまだ出ていない。直せる原因なら「Re-run failed jobs」でやり直せる。
 - 同じバージョンを出し直すときは、Release とタグを消してから、もう一度タグを push する
   （すでにその版に更新した人には、同じ番号だと届かないので、基本は次の番号で出す）。

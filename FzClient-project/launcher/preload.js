@@ -3,6 +3,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('fz', {
+  platform: process.platform,   // 'win32' / 'darwin': the page hides what a Mac does not have
   win: {
     min: () => ipcRenderer.send('win:min'),
     max: () => ipcRenderer.send('win:max'),

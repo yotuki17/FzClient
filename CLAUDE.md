@@ -5,7 +5,7 @@ Sources live in `FzClient-project/` (mod = Forge 1.8.9, launcher = Electron, ser
 
 ## Releasing a new version (vX.Y.Z)
 Pushing the tag runs `.github/workflows/release.yml`, which builds everything with the tag's version and
-publishes the 5 auto-update files. The version is injected by CI, but these places are written by hand and
+publishes the release files (Windows installer, Mac dmg/zip, mod). The version is injected by CI, but these places are written by hand and
 must be updated in the same commit before tagging:
 
 1. `FzClient-project/launcher/package.json` → `"version"`
@@ -18,3 +18,4 @@ must be updated in the same commit before tagging:
 
 Before tagging, grep for the previous version number (`git grep -n "X.Y.(Z-1)"`) to catch anything new.
 The installer name is fixed: `FzClient-Launcher-Setup.exe` (never put a version in download links).
+The Mac download name is fixed too: `FzClient-Launcher-mac-arm64.dmg` (Apple Silicon, ad-hoc signed, built on a macos-14 runner).

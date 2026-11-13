@@ -5,6 +5,12 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawn, spawnSync } = require('child_process');
 const AdmZip = require('adm-zip');
+
+/** A Mac (Apple Silicon or Intel). Minecraft 1.8.9's LWJGL 2 only has Intel Mac files, so the game runs on an
+ *  Intel Java 8; on an M-chip Mac macOS runs it through Rosetta 2. */
+const MAC = process.platform === 'darwin';
+/** The OS name in Mojang's library rules / natives. */
+const MOJANG_OS = MAC ? 'osx' : 'windows';
 const { getJson, download, downloadAll, isValid } = require('./http');
 
 const MC_VERSION = '1.8.9';
@@ -23,7 +29,9 @@ async function getJsonAny(urls) {
   throw last;
 }
 /** The newest Java 8 from Eclipse Temurin: same Java as Mojang's 8u51, ten years of fixes newer (GC pauses, speed). */
-const TEMURIN_8 = 'https://api.adoptium.net/v3/assets/latest/8/hotspot?architecture=x64&image_type=jre&os=windows&vendor=eclipse';
+const TEMURIN_8 = 'https://api.adoptium.net/v3/assets/latest/8/hotspot?architecture=x64&image_type=jre&os=' + (MAC ? 'mac' : 'windows') + '&vendor=eclipse';
+/** Mojang's Java 8 for this system (there is no Apple Silicon one: the Intel one runs under Rosetta). */
+const MOJANG_JAVA_KEY = MAC ? 'mac-os' : 'windows-x64';
 const GPU_PREFS = 'HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences';
 const LIBRARIES = 'https://libraries.minecraft.net/';
 const RESOURCES = 'https://resources.download.minecraft.net/';
@@ -38,12 +46,12 @@ function mavenPath(name, classifier) {
   return `${group.replace(/\./g, '/')}/${artifact}/${version}/${artifact}-${version}${cls ? '-' + cls : ''}.jar`;
 }
 
-/** Vanilla library rules (os allow / disallow) for Windows. */
+/** Vanilla library rules (os allow / disallow) for this system. */
 function allowed(lib) {
   if (!lib.rules) return true;
   let ok = false;
   for (const r of lib.rules) {
-    const matches = !r.os || r.os.name === 'windows';
+    const matches = !r.os || r.os.name === MOJANG_OS;
     if (matches) ok = r.action === 'allow';
   }
   return ok;
@@ -85,7 +93,7 @@ class Game {
     // client jar
     jobs.push({ urls: [v.downloads.client.url], file: path.join(this.versionDir, MC_VERSION + '.jar'),
       sha1: v.downloads.client.sha1, size: v.downloads.client.size });
-    // libraries (+ Windows natives)
+    // libraries (+ this system's natives)
     const natives = [];
     for (const lib of v.libraries) {
       if (!allowed(lib)) continue;
@@ -93,8 +101,8 @@ class Game {
       if (d.artifact) {
         jobs.push({ urls: [d.artifact.url], file: path.join(this.libDir, d.artifact.path), sha1: d.artifact.sha1, size: d.artifact.size });
       }
-      if (lib.natives && lib.natives.windows) {
-        const key = lib.natives.windows.replace('${arch}', '64');
+      if (lib.natives && lib.natives[MOJANG_OS]) {
+        const key = lib.natives[MOJANG_OS].replace('${arch}', '64');
         const n = d.classifiers && d.classifiers[key];
         if (n) {
           const file = path.join(this.libDir, n.path);
@@ -167,13 +175,30 @@ class Game {
 
   // ------------------------------------------------------------------ Java 8 (Temurin, or Mojang's own runtime)
 
+  /** Java's home inside a runtime folder: the folder itself on Windows, Contents/Home of the bundle on a Mac. */
+  static javaHome(dir) {
+    if (!MAC) return dir;
+    for (const sub of ['jre.bundle/Contents/Home', 'Contents/Home', '']) {
+      const home = path.join(dir, sub);
+      if (fs.existsSync(path.join(home, 'bin', 'java'))) return home;
+    }
+    return path.join(dir, 'Contents', 'Home');
+  }
+
+  /** The java program that starts Java (javaw.exe / bin/java). */
+  static javaBin(dir) {
+    return MAC ? path.join(Game.javaHome(dir), 'bin', 'java') : path.join(dir, 'bin', 'javaw.exe');
+  }
+
   /** Java under its own name, so Discord (and Task Manager) see "FzClient.exe" instead of a generic javaw.exe. */
   javaExe() {
+    if (MAC) return Game.javaBin(this.runtimeDir);   // a copy would lose its place next to libjli
     return path.join(this.runtimeDir, 'bin', 'FzClient.exe');
   }
 
   /** Keeps bin/FzClient.exe an exact copy of bin/javaw.exe (Java runs fine under another name). */
   ensureNamedJava() {
+    if (MAC) return;
     const src = path.join(this.runtimeDir, 'bin', 'javaw.exe');
     const dst = this.javaExe();
     if (!fs.existsSync(src)) return;
@@ -182,12 +207,13 @@ class Game {
   }
 
   javaReady(dir) {
-    return fs.existsSync(path.join(dir, '.fz-ok')) && fs.existsSync(path.join(dir, 'bin', 'javaw.exe'))
+    return fs.existsSync(path.join(dir, '.fz-ok')) && fs.existsSync(Game.javaBin(dir))
       && !fs.existsSync(path.join(dir, '.fz-failed'));
   }
 
   /** Temurin 8 when it can be had (FZ_MOJANG_JAVA=1 keeps Mojang's), else Mojang's Java 8. */
   async installJava(progress) {
+    if (MAC) checkRosetta();
     if (process.env.FZ_MOJANG_JAVA !== '1' && await this.installTemurin(progress)) return;
     this.runtimeDir = this.legacyDir;
     await this.installMojangJava(progress);
@@ -203,7 +229,7 @@ class Game {
       this.ensureNamedJava();
       return true;
     }
-    const zipFile = path.join(this.root, 'runtime', 'temurin-8.zip');
+    const zipFile = path.join(this.root, 'runtime', MAC ? 'temurin-8.tar.gz' : 'temurin-8.zip');
     const tmp = dir + '.tmp';
     try {
       const list = await getJson(TEMURIN_8);
@@ -214,12 +240,19 @@ class Game {
       const got = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
       if (got !== String(pkg.checksum).toLowerCase()) throw new Error('checksum mismatch');
       fs.rmSync(tmp, { recursive: true, force: true });
-      new AdmZip(zipFile).extractAllTo(tmp, true);
-      // the zip holds one folder ("jdk8u512-b09-jre") with bin/javaw.exe inside
+      if (MAC) {
+        // macOS' own tar keeps the programs runnable (adm-zip would drop that)
+        fs.mkdirSync(tmp, { recursive: true });
+        const t = spawnSync('/usr/bin/tar', ['-xzf', zipFile, '-C', tmp], { encoding: 'utf8' });
+        if (t.status !== 0) throw new Error('tar: ' + (t.stderr || t.status));
+      } else {
+        new AdmZip(zipFile).extractAllTo(tmp, true);
+      }
+      // the archive holds one folder ("jdk8u512-b09-jre") with bin/javaw.exe (Mac: Contents/Home/bin/java) inside
       let home = tmp;
-      if (!fs.existsSync(path.join(home, 'bin', 'javaw.exe'))) {
-        const sub = fs.readdirSync(tmp).map(n => path.join(tmp, n)).find(p => fs.existsSync(path.join(p, 'bin', 'javaw.exe')));
-        if (!sub) throw new Error('javaw.exe not in the zip');
+      if (!fs.existsSync(Game.javaBin(home))) {
+        const sub = fs.readdirSync(tmp).map(n => path.join(tmp, n)).find(p => fs.existsSync(Game.javaBin(p)));
+        if (!sub) throw new Error('java not in the archive');
         home = sub;
       }
       fs.rmSync(dir, { recursive: true, force: true });
@@ -228,7 +261,7 @@ class Game {
       progress('Java 8', 1, 1, pkg.size || 0, pkg.size || 0);
       this.runtimeDir = dir;
       this.ensureNamedJava();
-      this.copyGpuChoice(path.join(this.legacyDir, 'bin', 'FzClient.exe'), this.javaExe());
+      if (!MAC) this.copyGpuChoice(path.join(this.legacyDir, 'bin', 'FzClient.exe'), this.javaExe());
       this.log('[java] using Temurin ' + (list[0].release_name || ''));
       return true;
     } catch (e) {
@@ -252,24 +285,32 @@ class Game {
 
   async installMojangJava(progress) {
     const marker = path.join(this.runtimeDir, '.fz-ok');
-    if (fs.existsSync(marker) && fs.existsSync(path.join(this.runtimeDir, 'bin', 'javaw.exe'))) {
+    if (fs.existsSync(marker) && fs.existsSync(Game.javaBin(this.runtimeDir))) {
       this.ensureNamedJava();
       return;
     }
     const all = await getJsonAny(JAVA_MANIFESTS);
-    const entry = all['windows-x64'] && all['windows-x64']['jre-legacy'] && all['windows-x64']['jre-legacy'][0];
+    const entry = all[MOJANG_JAVA_KEY] && all[MOJANG_JAVA_KEY]['jre-legacy'] && all[MOJANG_JAVA_KEY]['jre-legacy'][0];
     if (!entry) throw new Error('Java 8 runtime not found');
     const files = (await getJson(entry.manifest.url)).files;
-    const jobs = [];
+    const jobs = [], runnable = [], links = [];
     for (const rel of Object.keys(files)) {
       const f = files[rel];
       const out = path.join(this.runtimeDir, rel);
       if (f.type === 'directory') { fs.mkdirSync(out, { recursive: true }); continue; }
+      if (f.type === 'link' && MAC && f.target) { links.push([out, f.target]); continue; }
       if (f.type !== 'file') continue;
       const raw = f.downloads.raw;
       jobs.push({ urls: [raw.url], file: out, sha1: raw.sha1, size: raw.size });
+      if (f.executable) runnable.push(out);
     }
     await downloadAll(jobs, (d, t, bd, bt) => progress('Java 8', d, t, bd, bt));
+    if (MAC) {
+      for (const file of runnable) { try { fs.chmodSync(file, 0o755); } catch {} }
+      for (const [file, target] of links) {
+        try { fs.rmSync(file, { force: true }); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.symlinkSync(target, file); } catch {}
+      }
+    }
     fs.writeFileSync(marker, entry.version ? entry.version.name : 'ok');
     this.ensureNamedJava();
   }
@@ -362,13 +403,15 @@ class Game {
       `-Xmx${mem}M`, `-Xms${opts.optimizeJvm ? mem : Math.min(mem, 1024)}M`,
       '-XX:+UseG1GC', '-XX:+UnlockExperimentalVMOptions', '-XX:G1NewSizePercent=20', '-XX:G1ReservePercent=20',
       '-XX:MaxGCPauseMillis=50', '-XX:G1HeapRegionSize=32M',
-      '-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump',
+      ...(MAC ? [] : ['-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump']),
+      // a Mac: the dock shows the game's name instead of "java" (LWJGL 2 must not get -XstartOnFirstThread)
+      ...(MAC ? ['-Xdock:name=Minecraft 1.8.9 (FzClient)'] : []),
       `-Djava.library.path=${this.nativesDir}`,
       '-Dfml.ignoreInvalidMinecraftCertificates=true', '-Dfml.ignorePatchDiscrepancies=true',
       '-Dminecraft.launcher.brand=FzClient', `-Dminecraft.launcher.version=${opts.launcherVersion || '1.0.0'}`,
       ...(opts.jvmExtras || []),
       ...(opts.jvmArgs ? opts.jvmArgs.split(/\s+/).filter(Boolean) : []),
-      '-cp', this.buildClasspath(vanilla, forge).join(';'),
+      '-cp', this.buildClasspath(vanilla, forge).join(path.delimiter),
       forge.mainClass,
     ];
     const args = [...jvm, ...gameArgs];
@@ -378,7 +421,7 @@ class Game {
       // "ゲームの優先度を高く" (最適化 page): Windows gives the game the CPU first
       try { require('os').setPriority(child.pid, require('os').constants.priority.PRIORITY_HIGH); } catch (e) { this.log('[launch] priority: ' + e.message); }
     }
-    if (opts.affinityMask && child.pid) {
+    if (opts.affinityMask && child.pid && !MAC) {
       // "キャッシュの大きいコアで動かす" (最適化 page): Node has no call for this, Windows' own PowerShell does
       const ps = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
         `(Get-Process -Id ${child.pid}).ProcessorAffinity = [IntPtr]${Number(opts.affinityMask)}`], { windowsHide: true });
@@ -388,10 +431,12 @@ class Game {
     if (this.runtimeDir === this.temurinDir) {
       // a game that ends with an error within a minute and a half on Temurin: Mojang's Java from the next start
       const started = Date.now();
-      child.on('exit', code => {
-        if (code && Date.now() - started < 90000) {
-          try { fs.writeFileSync(path.join(this.temurinDir, '.fz-failed'), 'exit ' + code); } catch {}
-          this.log('[java] the game ended (' + code + ') soon after starting on Temurin: Mojang Java 8 next time');
+      // a Mac: a Java that crashes ends on a signal (SIGABRT / SIGSEGV), not an exit code; "停止" in the launcher
+      // (child.fzStopped) is not a crash
+      child.on('exit', (code, signal) => {
+        if ((code || signal) && !child.fzStopped && Date.now() - started < 90000) {
+          try { fs.writeFileSync(path.join(this.temurinDir, '.fz-failed'), 'exit ' + (code || signal)); } catch {}
+          this.log('[java] the game ended (' + (code || signal) + ') soon after starting on Temurin: Mojang Java 8 next time');
         }
       });
     }
@@ -402,4 +447,17 @@ class Game {
   }
 }
 
-module.exports = { Game, MC_VERSION, FORGE_VERSION };
+/**
+ * An M-chip Mac runs the Intel Java 8 only with Rosetta 2 installed. Without it the game would fail with
+ * "Bad CPU type in executable", so this says how to install it instead.
+ */
+function checkRosetta() {
+  if (process.arch !== 'arm64') return;   // an Intel Mac runs it directly
+  const r = spawnSync('/usr/bin/arch', ['-x86_64', '/usr/bin/true']);
+  if (r.status === 0) return;
+  const e = new Error('Rosetta 2 が入っていません。ターミナルで「softwareupdate --install-rosetta --agree-to-license」を実行してから、もう一度プレイを押してください');
+  e.rosetta = true;
+  throw e;
+}
+
+module.exports = { Game, MC_VERSION, FORGE_VERSION, MAC };

@@ -241,11 +241,7 @@ public class FzMainMenu extends FzScreen {
 
     private static void openFile(java.io.File f) {
         if (f.isDirectory() || !f.getParentFile().exists()) f.mkdirs();
-        try {
-            Runtime.getRuntime().exec(new String[] {"explorer.exe", f.getAbsolutePath()});
-        } catch (Exception e) {
-            org.lwjgl.Sys.openURL(f.toURI().toString());
-        }
+        dev.fzkc.fzhud.util.Os.openFile(f);
     }
 
     /** Title screen buttons in liquid glass, when that style is picked and switched on for the title screen. */

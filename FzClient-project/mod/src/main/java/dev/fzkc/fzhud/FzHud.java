@@ -127,10 +127,10 @@ public class FzHud {
         elements.add(new ArmorStatus(0.995f, 0.72f));
         elements.add(new ServerDisplay(0.002f, 0.975f));
         elements.add(new Coordinates(0.002f, 0.30f));
-        elements.add(new SpotifyHud(0.002f, 0.90f));
+        if (dev.fzkc.fzhud.util.Os.WIN) elements.add(new SpotifyHud(0.002f, 0.90f));   // reads Spotify's Windows window
         elements.add(new ItemCounter(0.995f, 0.55f));
         elements.add(new TargetHud(0.54f, 0.55f));
-        elements.add(new DiscordVcHud(0.002f, 0.60f));
+        if (dev.fzkc.fzhud.util.Os.WIN) elements.add(new DiscordVcHud(0.002f, 0.60f));   // Discord's Windows pipe
         StatPanel reach = new StatPanel("reach", "Reach Display", "最後に殴った時の距離", 0.5f, 0.62f, 40f, HudValues::reach, false);
         HudValues.reachUnit = reach.add(new dev.fzkc.fzhud.config.BoolSetting("unit", "「blocks」の文字を表示", true));
         HudValues.reachHideIdle = reach.add(new dev.fzkc.fzhud.config.BoolSetting("hideidle", "殴っていない時（--）は隠す", false));
@@ -156,12 +156,16 @@ public class FzHud {
         ClientRegistry.registerKeyBinding(Extras.zoomKey);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.Snaplook.KEY);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_OVERLAY);
-        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_RECORD);
-        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_SAVE);
+        if (dev.fzkc.fzhud.util.Os.WIN) {   // the launcher's recorder is Windows only
+            ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_RECORD);
+            ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_SAVE);
+        }
         dev.fzkc.fzhud.feature.LauncherLink.start();   // the launcher's overlay and recorder
-        ClientRegistry.registerKeyBinding(Spotify.keyPlay);
-        ClientRegistry.registerKeyBinding(Spotify.keyNext);
-        ClientRegistry.registerKeyBinding(Spotify.keyPrev);
+        if (dev.fzkc.fzhud.util.Os.WIN) {
+            ClientRegistry.registerKeyBinding(Spotify.keyPlay);
+            ClientRegistry.registerKeyBinding(Spotify.keyNext);
+            ClientRegistry.registerKeyBinding(Spotify.keyPrev);
+        }
         MinecraftForge.EVENT_BUS.register(new Translator());
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.ChatAlerts());
         dev.fzkc.fzhud.chat.BedwarsAlerts bwAlerts = new dev.fzkc.fzhud.chat.BedwarsAlerts();   // void sound / party message, invite sound
@@ -202,7 +206,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.stats.Denick());   // real names for found nicks (nametags)
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.gui.PauseButtons());     // FzClient Settings / Cosmetics in the game menu
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new PartyRelay.TestCommand());
-        net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new DiscordVoice.CodeCommand());
+        if (dev.fzkc.fzhud.util.Os.WIN) net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new DiscordVoice.CodeCommand());
         // player stats: tab list columns, /fzstats, Watcher / Xadia tags
         dev.fzkc.fzhud.stats.Stats.init();
         dev.fzkc.fzhud.stats.Stats statsEvents = new dev.fzkc.fzhud.stats.Stats();
@@ -341,7 +345,7 @@ public class FzHud {
     private void borderlessAtStart(Minecraft mc) {
         if (borderlessChecked) return;
         borderlessChecked = true;
-        if (!Modules.borderless.enabled || !org.lwjgl.opengl.Display.isFullscreen()) return;
+        if (!Modules.borderless.enabled || !dev.fzkc.fzhud.util.Os.WIN || !org.lwjgl.opengl.Display.isFullscreen()) return;
         mc.toggleFullscreen();
         mc.toggleFullscreen();
     }

@@ -1,6 +1,7 @@
 name: Release
-# Push a tag like v1.0.7 -> builds the mod and the launcher with that version and publishes a GitHub Release
-# with the 5 files the launcher's auto-updater reads (see FzClient-project/docs/RELEASE.md).
+# Push a tag like v1.0.7 -> builds the mod once, then the Windows launcher and the Mac (Apple Silicon) launcher with
+# that jar, and publishes ONE GitHub Release with every file the auto-updaters and the website read
+# (see FzClient-project/docs/RELEASE.md). Only the last job creates the release, so it never shows up half done.
 on:
   push:
     tags:
@@ -10,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  mod:
     runs-on: windows-latest
     defaults:
       run:
@@ -40,6 +41,33 @@ jobs:
           ./gradlew.bat build "-Pversion=$VERSION" "-Dorg.gradle.java.home=$JAVA_HOME"
           cp "build/libs/fzclient-$VERSION.jar" ../launcher/resources/fzclient.jar
 
+      - name: Hand the mod to the launcher builds
+        uses: actions/upload-artifact@v4.3.0
+        with:
+          name: mod-jar
+          path: FzClient-project/launcher/resources/fzclient.jar
+          if-no-files-found: error
+          retention-days: 3
+
+  windows:
+    needs: mod
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4.1.1
+
+      - name: Read version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Get the mod
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: mod-jar
+          path: FzClient-project/launcher/resources
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -47,17 +75,100 @@ jobs:
           cache: npm
           cache-dependency-path: FzClient-project/launcher/package-lock.json
 
-      - name: Build launcher
+      - name: Build launcher (Windows x64) + mod release files
         working-directory: FzClient-project/launcher
         run: |
           npm ci
           npm version "$VERSION" --no-git-tag-version --allow-same-version
           npm run dist
 
-      - name: Publish GitHub Release
+      - name: Keep the files for the release
+        uses: actions/upload-artifact@v4.3.0
+        with:
+          name: release-windows
+          if-no-files-found: error
+          retention-days: 3
+          path: |
+            FzClient-project/launcher/dist/FzClient-Launcher-Setup.exe
+            FzClient-project/launcher/dist/FzClient-Launcher-Setup.exe.blockmap
+            FzClient-project/launcher/dist/latest.yml
+            FzClient-project/launcher/dist/fzclient.jar
+            FzClient-project/launcher/dist/fzclient.json
+
+  mac:
+    needs: mod
+    runs-on: macos-14   # Apple Silicon runner
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4.1.1
+
+      - name: Read version from tag
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Get the mod
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: mod-jar
+          path: FzClient-project/launcher/resources
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: FzClient-project/launcher/package-lock.json
+
+      - name: Build launcher (Mac Apple Silicon, ad-hoc signed)
+        working-directory: FzClient-project/launcher
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          npm ci
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          # hdiutil on the runners sometimes says "Resource busy": one more try
+          npm run dist:mac || (sleep 10 && npm run dist:mac)
+
+      - name: Check signature and architecture
         working-directory: FzClient-project/launcher/dist
+        run: |
+          APP="mac-arm64/FzClient Launcher.app"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          file "$APP/Contents/MacOS/FzClient Launcher" | grep -q arm64
+          test -f "$APP/Contents/Resources/fzclient.jar"
+          ls -la
+
+      - name: Keep the files for the release
+        uses: actions/upload-artifact@v4.3.0
+        with:
+          name: release-mac
+          if-no-files-found: error
+          retention-days: 3
+          path: |
+            FzClient-project/launcher/dist/FzClient-Launcher-mac-arm64.dmg
+            FzClient-project/launcher/dist/FzClient-Launcher-mac-arm64.dmg.blockmap
+            FzClient-project/launcher/dist/FzClient-Launcher-mac-arm64.zip
+            FzClient-project/launcher/dist/FzClient-Launcher-mac-arm64.zip.blockmap
+            FzClient-project/launcher/dist/latest-mac.yml
+
+  publish:
+    needs: [windows, mac]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect the files
+        uses: actions/download-artifact@v4.1.7
+        with:
+          pattern: release-*
+          path: out
+          merge-multiple: true
+
+      - name: Publish GitHub Release (created once, with every file)
+        working-directory: out
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --title "FzClient $VERSION" --generate-notes \
-            FzClient-Launcher-Setup.exe FzClient-Launcher-Setup.exe.blockmap latest.yml fzclient.jar fzclient.json
+          ls -la
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "FzClient ${GITHUB_REF_NAME#v}" --generate-notes \
+            FzClient-Launcher-Setup.exe FzClient-Launcher-Setup.exe.blockmap latest.yml fzclient.jar fzclient.json \
+            FzClient-Launcher-mac-arm64.dmg FzClient-Launcher-mac-arm64.dmg.blockmap \
+            FzClient-Launcher-mac-arm64.zip FzClient-Launcher-mac-arm64.zip.blockmap latest-mac.yml

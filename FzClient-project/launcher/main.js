@@ -1,5 +1,7 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell, globalShortcut, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, globalShortcut, Notification, Menu } = require('electron');
+/** A Mac: the game, the window and the menus work a little differently; recording and the PC optimisation are Windows only. */
+const MAC = process.platform === 'darwin';
 const path = require('path');
 const fs = require('fs');
 
@@ -146,7 +148,9 @@ function createWindow() {
   const size = windowSize();
   win = new BrowserWindow({
     width: size.width, height: size.height, minWidth: 900, minHeight: 560,
-    frame: false, backgroundColor: '#0B1416', show: false, title: 'FzClient Launcher',
+    // a Mac keeps its own window buttons (top left) over the page's title bar; Windows draws them in the page
+    ...(MAC ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 14, y: 16 } } : { frame: false }),
+    backgroundColor: '#0B1416', show: false, title: 'FzClient Launcher',
     icon: path.join(__dirname, 'renderer', 'assets', 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
@@ -173,9 +177,14 @@ if (!app.requestSingleInstanceLock()) {
   // unneeded caches, every start (only this launcher's own; see src/core/cleanup.js)
   let freedEarly = 0;
   try { freedEarly = cleanup.beforeReady(); } catch { }
-  app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+  const bringBack = () => { if (win && !win.isDestroyed()) { win.show(); if (win.isMinimized()) win.restore(); win.focus(); } };
+  app.on('second-instance', bringBack);
+  // a Mac: clicking the Dock icon brings back a launcher hidden while the game runs
+  app.on('activate', bringBack);
   app.whenReady().then(() => {
     trimLog();
+    // a Mac: only the usual app / edit / window menus (no reload or developer tools that would break a download)
+    if (MAC) Menu.setApplicationMenu(Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }]));
     // before anything can download into the update folder (the mod check starts once the window has loaded)
     try {
       const d = dirs();
@@ -215,7 +224,10 @@ function shutdown(event) {
   setTimeout(() => {
     for (const p of children) {
       if (p === game || p.exitCode !== null) continue;
-      try { require('child_process').spawnSync('taskkill', ['/PID', String(p.pid), '/T', '/F'], { windowsHide: true }); } catch { /* gone */ }
+      try {
+        if (MAC) p.kill('SIGKILL');
+        else require('child_process').spawnSync('taskkill', ['/PID', String(p.pid), '/T', '/F'], { windowsHide: true });
+      } catch { /* gone */ }
     }
     // the normal quit now (a downloaded launcher update installs on it); if anything still holds it, exit anyway
     setTimeout(() => app.exit(0), 3000);
@@ -241,7 +253,7 @@ ipcMain.handle('settings:set', (e, patch) => {
   return r;
 });
 ipcMain.handle('info', () => ({
-  version: app.getVersion(), locale: app.getLocale(), mc: MC_VERSION, dirs: dirs(), msa: auth.msaAvailable(),
+  version: app.getVersion(), locale: app.getLocale(), mc: MC_VERSION, dirs: dirs(), msa: auth.msaAvailable(), platform: process.platform,
   totalMemMb: Math.floor(require('os').totalmem() / 1048576),
 }));
 ipcMain.handle('open:folder', (e, which) => {
@@ -264,7 +276,8 @@ ipcMain.handle('pick:folder', async () => {
 // ---------------------------------------------------------------- updates
 ipcMain.handle('update:status', () => updater.launcherStatus());
 ipcMain.handle('update:install', () => {
-  if (running) throw new Error('Minecraft を閉じてから更新してください');
+  // a Mac only opens the download page, which is fine while the game runs
+  if (running && !MAC) throw new Error('Minecraft を閉じてから更新してください');
   updater.installLauncherNow();
 });
 
@@ -420,7 +433,7 @@ function uiLang() {
 
 function overlayState() {
   return {
-    lang: uiLang(), link: !!(play && play.link.connected), prepared: !!(play && play.capture),
+    lang: uiLang(), link: !!(play && play.link.connected), prepared: !!(play && play.capture), mac: MAC,
     rec: play && play.capture ? play.capture.state() : null,
   };
 }
@@ -440,6 +453,8 @@ function overlayWindow() {
     webPreferences: { preload: path.join(__dirname, 'src', 'overlay', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   overlay.setAlwaysOnTop(true, 'screen-saver');   // over the game, which is on top itself while it has the focus
+  // also over a fullscreen game's Space; skipTransformProcessType keeps the launcher's Dock icon and menus
+  if (MAC) overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
   overlay.setContentProtection(true);             // never in a recording of the whole monitor
   overlay.loadFile(path.join(__dirname, 'renderer', 'overlay', 'overlay.html'));
   overlay.on('blur', hideOverlay);                // Alt+Tab / a click elsewhere: out of the way
@@ -455,6 +470,7 @@ function showOverlay(open) {
   // the game's monitor: the mouse is there (the game holds it in the middle of its window)
   w.setBounds(screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds);
   const go = () => {
+    if (MAC) app.focus({ steal: true });   // a Mac only gives the keys to another program's window when asked
     w.show();
     w.focus();
     w.webContents.send('ov:state', overlayState());
@@ -468,6 +484,7 @@ function showOverlay(open) {
 function hideOverlay() {
   if (!overlayVisible()) return;
   overlay.hide();   // Windows gives the focus back to the window under it: the game
+  if (MAC) app.hide();   // a Mac: the keys go back to the game (the launcher comes back with a click on its Dock icon)
   if (play) play.link.send({ t: 'watch', on: false });
 }
 
@@ -523,6 +540,7 @@ function recNotify(text, error) {
 }
 
 function recNotPrepared() {
+  if (MAC) return;   // no recording on a Mac
   recNotify('ランチャーの「設定」→「録画」で準備してください', true);
 }
 
@@ -623,8 +641,9 @@ ipcMain.on('ov:folder', () => {
 });
 
 // preparing ffmpeg + the helper (settings page)
-ipcMain.handle('rec:status', () => recorder.status());
+ipcMain.handle('rec:status', () => (MAC ? { supported: false, ready: false } : recorder.status()));
 ipcMain.handle('rec:prepare', async () => {
+  if (MAC) throw new Error('録画は Windows だけです');
   const r = await recorder.prepare(p => send('rec:progress', p), log);
   log('[recorder] ready ' + JSON.stringify(r));
   return r;
@@ -716,9 +735,12 @@ ipcMain.handle('skins:cape', async (e, id) => skins.cape((await msaAccount()).ac
 function optJava() {
   optimize.setJavaPath(new Game(dirs(), log).javaExe());
 }
-ipcMain.handle('opt:status', async () => { optJava(); return optimize.status(settings.get()); });
+// the tweaks are Windows settings (PowerShell, registry, NVIDIA): none of them exist on a Mac
+const notOnMac = () => { if (MAC) throw new Error('Mac では使えません（Windows の設定です）'); };
+ipcMain.handle('opt:status', async () => { notOnMac(); optJava(); return optimize.status(settings.get()); });
 ipcMain.handle('opt:recommended', (e, nvidia) => optimize.recommended(!!nvidia));
 ipcMain.handle('opt:change', async (e, want) => {
+  notOnMac();
   if (running) throw new Error('Minecraft を閉じてから変更してください');
   optJava();
   const clean = {};
@@ -730,9 +752,10 @@ ipcMain.handle('opt:change', async (e, want) => {
   log('[optimize] state after:\n' + optimize.lastState().slice(0, 3000));
   return { done: r.done, errors: r.errors };
 });
-ipcMain.handle('opt:flushDns', () => optimize.flushDns());
-ipcMain.handle('opt:debug', () => optimize.debugInfo());
+ipcMain.handle('opt:flushDns', () => { notOnMac(); return optimize.flushDns(); });
+ipcMain.handle('opt:debug', () => { notOnMac(); return optimize.debugInfo(); });
 ipcMain.handle('opt:measure', (e, seconds) => {
+  notOnMac();
   if (!running) throw new Error('先にゲームを起動してください');
   return optimize.measure(Math.max(5, Math.min(60, seconds | 0 || 20)));
 });
@@ -770,7 +793,7 @@ async function launchGame() {
   }
   const game = new Game(dirs(), log);
   let lastSent = 0;
-  const tools = await recorder.forLaunch(log);   // ffmpeg + helper for recording, when they are prepared
+  const tools = MAC ? null : await recorder.forLaunch(log);   // ffmpeg + helper for recording, when they are prepared (Windows)
   // the link to FzClient in the game (overlay keys, numbers, switches)
   const link = new Link(log);
   let linkProp = null;
@@ -785,7 +808,7 @@ async function launchGame() {
       jvmArgs: s.jvmArgs, bundledJar: mod.jar, launcherVersion: app.getVersion(),
       optimizeJvm: !!s.optimizeJvm, jvmExtras: [...(s.optimizeJvm ? optimize.jvmExtras() : []), ...(linkProp ? [linkProp] : []), ...(ticket ? ['-Dfzclient.ticket=' + ticket] : [])],
       highPriority: s.gamePriority === 'high',
-      affinityMask: s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
+      affinityMask: !MAC && s.gameX3d && optimize.cacheCores() ? optimize.cacheCores().mask : 0,
       onProgress: (stage, done, total, bytesDone, bytesTotal) => {
         const now = Date.now();
         if (now - lastSent < 80 && done < total) return; // don't flood the page
@@ -820,4 +843,4 @@ async function launchGame() {
   }, 4000);
   return true;
 }
-ipcMain.handle('game:kill', () => { if (running) running.kill(); });
+ipcMain.handle('game:kill', () => { if (running) { running.fzStopped = true; running.kill(); } });

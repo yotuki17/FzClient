@@ -7,7 +7,11 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { app, net } = require('electron');
+const { app, net, shell } = require('electron');
+/** A Mac: the launcher is not signed by Apple, so it cannot replace itself; a new version is only announced and
+ *  the button opens the download (the mod still updates itself, below). */
+const MAC = process.platform === 'darwin';
+const MAC_DMG = 'https://github.com/yotuki17/FzClient/releases/latest/download/FzClient-Launcher-mac-arm64.dmg';
 
 /** owner/repo whose Releases hold the updates. Keep in sync with "publish" in package.json. */
 const REPO = 'yotuki17/FzClient';
@@ -27,10 +31,17 @@ function startLauncherUpdates(send, log) {
     log('[update] electron-updater unavailable: ' + e.message);
     return;
   }
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoDownload = !MAC;
+  autoUpdater.autoInstallOnAppQuit = !MAC;
   autoUpdater.logger = { info: m => log('[update] ' + m), warn: m => log('[update] ' + m), error: m => log('[update] ' + m), debug: () => {} };
-  autoUpdater.on('update-available', i => send('update:launcher', { state: 'downloading', version: i.version, percent: 0 }));
+  autoUpdater.on('update-available', i => {
+    if (MAC) {
+      launcherReady = i.version;
+      send('update:launcher', { state: 'ready', version: i.version, manual: true });
+      return;
+    }
+    send('update:launcher', { state: 'downloading', version: i.version, percent: 0 });
+  });
   autoUpdater.on('download-progress', p => send('update:launcher', { state: 'downloading', percent: Math.round(p.percent || 0) }));
   autoUpdater.on('update-downloaded', i => {
     launcherReady = i.version;
@@ -43,11 +54,12 @@ function startLauncherUpdates(send, log) {
 }
 
 function launcherStatus() {
-  return { ready: launcherReady };
+  return { ready: launcherReady, manual: MAC };
 }
 
 /** Closes the launcher and runs the downloaded installer silently; the new launcher starts by itself. */
 function installLauncherNow() {
+  if (MAC) { shell.openExternal(MAC_DMG); return; }
   if (autoUpdater && launcherReady) autoUpdater.quitAndInstall(true, true);
 }
 

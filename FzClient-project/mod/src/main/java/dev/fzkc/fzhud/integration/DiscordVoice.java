@@ -360,7 +360,7 @@ public final class DiscordVoice {
                     + "&response_type=code&redirect_uri=" + URLEncoder.encode(REDIRECT, "UTF-8")
                     + "&scope=" + SCOPES + "&state=" + state;
             try {
-                if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(new URI(url));
+                dev.fzkc.fzhud.util.Os.openUrl(url);
             } catch (Throwable t) {
                 log("ブラウザを開けませんでした: " + t);
             }

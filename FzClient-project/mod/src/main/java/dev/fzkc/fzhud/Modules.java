@@ -664,8 +664,10 @@ public final class Modules {
         return clientPage;
     }
 
-    /** Always on and nothing to set, so the menus don't list it. */
+    /** Always on and nothing to set (or not available on this system), so the menus don't list it. */
     public static boolean hiddenInMenu(Module m) {
+        // Windows only (Win32 window / raw mouse / Discord's Windows pipe): not shown on a Mac
+        if (!dev.fzkc.fzhud.util.Os.WIN && (m == borderless || m == rawInput || m == discord)) return true;
         return m == hitDelayFix || m == cosmetics || m == launcherKeys;
     }
 

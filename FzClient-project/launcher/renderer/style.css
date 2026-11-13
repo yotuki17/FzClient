@@ -17,7 +17,11 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
-  font: 14px/1.5 "Segoe UI", "Yu Gothic UI", "Meiryo", system-ui, sans-serif; user-select: none; }
+  font: 14px/1.5 "Segoe UI", "Yu Gothic UI", "Meiryo", -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", system-ui, sans-serif; user-select: none; }
+/* a Mac: its own window buttons sit at the top left (main.js), recording and the Windows tweaks are not there */
+html.mac .win, html.mac .win-only, html.mac #galKind { display: none !important; }
+html.mac .titlebar { padding-left: 86px; }
+html.mac .tb-right { padding-right: 12px; }
 button { font: inherit; color: inherit; }
 input, select { font: inherit; }
 

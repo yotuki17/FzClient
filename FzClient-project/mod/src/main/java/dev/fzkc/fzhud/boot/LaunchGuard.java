@@ -31,9 +31,22 @@ public final class LaunchGuard {
         return ok;
     }
 
+    /** The launcher's data folder, as Electron's app.getPath('appData') (self-contained: runs before the game). */
     private static File ticketFile() {
-        String appData = System.getenv("APPDATA");
-        return appData == null ? null : new File(new File(appData, "FzClient Launcher"), "launch.ticket");
+        String os = System.getProperty("os.name", "").toLowerCase();
+        String home = System.getProperty("user.home", "");
+        File appData;
+        if (os.startsWith("windows")) {
+            String a = System.getenv("APPDATA");
+            if (a == null) return null;
+            appData = new File(a);
+        } else if (os.startsWith("mac")) {
+            appData = new File(home, "Library/Application Support");
+        } else {
+            String xdg = System.getenv("XDG_CONFIG_HOME");
+            appData = xdg != null && !xdg.isEmpty() ? new File(xdg) : new File(home, ".config");
+        }
+        return new File(new File(appData, "FzClient Launcher"), "launch.ticket");
     }
 
     private static boolean check() {

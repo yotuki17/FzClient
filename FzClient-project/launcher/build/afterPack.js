@@ -4,6 +4,7 @@ const path = require('path');
 const ResEdit = require('resedit');
 
 exports.default = async function (context) {
+  if (context.electronPlatformName === 'darwin') return macAdHoc(context);
   if (context.electronPlatformName !== 'win32') return;
   const exe = path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.exe`);
   const data = fs.readFileSync(exe);
@@ -28,3 +29,15 @@ exports.default = async function (context) {
   res.outputResource(pe);
   fs.writeFileSync(exe, Buffer.from(pe.generate()));
 };
+
+/**
+ * A Mac on Apple Silicon only runs a program with a valid signature. The app is not signed by Apple, so it gets an
+ * "ad-hoc" one (no certificate). electron-builder signs it this way too (mac.identity "-"); doing it here as well
+ * makes sure the dmg / zip never carry a broken signature even if that step is skipped.
+ */
+function macAdHoc(context) {
+  const { spawnSync } = require('child_process');
+  const app = path.join(context.appOutDir, context.packager.appInfo.productFilename + '.app');
+  const r = spawnSync('codesign', ['--force', '--deep', '--sign', '-', app], { encoding: 'utf8' });
+  if (r.status !== 0) throw new Error('codesign failed: ' + (r.stderr || r.status));
+}

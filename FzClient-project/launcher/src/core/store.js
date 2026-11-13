@@ -66,6 +66,18 @@ const accounts = {
   save(list) {
     const text = JSON.stringify(list);
     fs.mkdirSync(path.dirname(file('accounts.dat')), { recursive: true });
+    // the old file cannot be read here (a Mac whose Keychain access was denied, another Windows user...): keep it
+    // under a name of its own before it is replaced, so the sign-ins in it are never lost
+    // (a denied Keychain also turns encryption off, so the check reads the file the way list() would)
+    try {
+      const f = file('accounts.dat');
+      if (fs.existsSync(f)) {
+        try {
+          const raw = fs.readFileSync(f);
+          JSON.parse(safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(raw) : raw.toString('utf8'));
+        } catch { fs.copyFileSync(f, f + '.' + Date.now() + '.bak'); }
+      }
+    } catch { /* keep going */ }
     fs.writeFileSync(file('accounts.dat'),
       safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(text) : Buffer.from(text, 'utf8'));
   },

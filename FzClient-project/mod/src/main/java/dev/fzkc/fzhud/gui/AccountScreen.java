@@ -345,17 +345,7 @@ public class AccountScreen extends FzScreen {
     }
 
     private static void openBrowser(String url) {
-        try {
-            if (java.awt.Desktop.isDesktopSupported()) {
-                java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
-                return;
-            }
-        } catch (Throwable ignored) {
-        }
-        try {
-            org.lwjgl.Sys.openURL(url);
-        } catch (Throwable ignored) {
-        }
+        dev.fzkc.fzhud.util.Os.openUrl(url);
     }
 
     private void addOffline() {
