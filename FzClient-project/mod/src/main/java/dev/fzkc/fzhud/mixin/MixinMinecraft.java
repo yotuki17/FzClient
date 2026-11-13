@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import dev.fzkc.fzhud.feature.Gameplay;
+import dev.fzkc.fzhud.feature.MacWindow;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import net.minecraft.client.LoadingScreenRenderer;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -67,6 +68,15 @@ public abstract class MixinMinecraft {
 
     @Inject(require = 0, method = "toggleFullscreen", at = @At("HEAD"), cancellable = true)
     private void fzhud$borderless(CallbackInfo ci) {
+        // a Mac: not while the game is starting (see "A Mac always starts in its window" below)
+        if (MacWindow.refuseFullscreen()) {
+            if (!this.fullscreen) {
+                this.gameSettings.fullScreen = false;
+                this.gameSettings.saveOptions();   // options.txt no longer says fullscreen:true
+                ci.cancel();
+            }
+            return;
+        }
         // a Mac's own fullscreen is already a borderless window over the desktop: keep the game's toggle there
         if (!Modules.borderless.enabled || !dev.fzkc.fzhud.util.Os.WIN) return;
         ci.cancel();
@@ -130,6 +140,28 @@ public abstract class MixinMinecraft {
         } catch (LWJGLException e) {
             System.err.println("[FzClient] Borderless fullscreen failed: " + e);
         }
+    }
+
+    // ============================================================
+    // A Mac always starts in its window (feature/MacWindow)
+    // ============================================================
+
+    /**
+     * Before the window is made: a "--fullscreen" from the launcher is dropped, and so is the fullscreen the game
+     * remembers in options.txt. Forge reads options.txt once more while loading, and the game then calls
+     * toggleFullscreen at the very end of its start: that call is refused in fzhud$borderless above.
+     */
+    @Inject(require = 0, method = "setInitialDisplayMode", at = @At("HEAD"))
+    private void fzhud$macStartsInWindow(CallbackInfo ci) {
+        if (!MacWindow.refuseFullscreen()) return;
+        this.fullscreen = false;
+        if (this.gameSettings != null) this.gameSettings.fullScreen = false;
+    }
+
+    /** The start is over: from here F11 works as the game does it. */
+    @Inject(require = 0, method = "startGame", at = @At("RETURN"))
+    private void fzhud$started(CallbackInfo ci) {
+        MacWindow.started();
     }
 
     // ============================================================

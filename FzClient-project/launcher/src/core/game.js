@@ -349,6 +349,22 @@ class Game {
 
   // ------------------------------------------------------------------ launch
 
+  /**
+   * A Mac: the game's fullscreen can show nothing but a white screen there, and the game remembers it in
+   * options.txt ("fullscreen:true", after F11 or the video settings), so every start was white from then on.
+   * The remembered fullscreen is turned off before each start; FzClient refuses it while the game starts as well.
+   */
+  startInWindow() {
+    const file = path.join(this.gameDir, 'options.txt');
+    try {
+      const text = fs.readFileSync(file, 'utf8');
+      const fixed = text.replace(/^fullscreen:true[ \t]*(\r?)$/m, 'fullscreen:false$1');
+      if (fixed === text) return;
+      fs.writeFileSync(file, fixed);
+      this.log('[launch] options.txt: fullscreen turned off (a Mac starts the game in its window)');
+    } catch { /* no options.txt yet */ }
+  }
+
   buildClasspath(vanilla, forge) {
     const seen = new Set();
     const cp = [];
@@ -394,7 +410,9 @@ class Game {
       user_type: acc.type === 'msa' ? 'msa' : 'legacy',
     };
     const gameArgs = forge.minecraftArguments.split(' ').map(a => a.replace(/\$\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)));
-    if (opts.fullscreen) gameArgs.push('--fullscreen');
+    // a Mac always starts the game in its window (see startInWindow)
+    if (MAC) this.startInWindow();
+    if (opts.fullscreen && !MAC) gameArgs.push('--fullscreen');
     else if (opts.width && opts.height) gameArgs.push('--width', String(opts.width), '--height', String(opts.height));
 
     const mem = Math.max(1024, opts.memoryMb || 3072);
