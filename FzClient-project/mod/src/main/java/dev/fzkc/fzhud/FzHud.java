@@ -345,6 +345,7 @@ public class FzHud {
     private void borderlessAtStart(Minecraft mc) {
         if (borderlessChecked) return;
         borderlessChecked = true;
+        dev.fzkc.fzhud.feature.MacWindow.started();   // the first tick: the start is over (a Mac starts in its window)
         if (!Modules.borderless.enabled || !dev.fzkc.fzhud.util.Os.WIN || !org.lwjgl.opengl.Display.isFullscreen()) return;
         mc.toggleFullscreen();
         mc.toggleFullscreen();

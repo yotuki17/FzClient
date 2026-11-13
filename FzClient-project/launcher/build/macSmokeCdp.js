@@ -54,6 +54,7 @@ function inspect(target, n) {
           theme: document.documentElement.dataset.theme || '', bodyVisibility: getComputedStyle(document.body).visibility,
           bodyBg: getComputedStyle(document.body).backgroundColor, htmlBg: getComputedStyle(document.documentElement).backgroundColor,
           size: [innerWidth, innerHeight], dpr: devicePixelRatio, fz: typeof fz, platform: typeof fz === 'object' ? fz.platform : null,
+          fullscreenBox: (() => { const e = document.getElementById('fs'); return e ? getComputedStyle(e.closest('label')).display : 'missing'; })(),
           font: getComputedStyle(document.body).fontFamily, text: document.body.innerText.slice(0, 1500) })`);
         await picture(`cdp-page-${n}`);
         const tabs = await ev(`[...document.querySelectorAll('.nav[data-page]')].map(b => b.dataset.page)`);

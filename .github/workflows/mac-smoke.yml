@@ -1,6 +1,7 @@
 name: Mac smoke test
-# Not part of a release. Pushing the branch "mac-smoke" starts the released Mac launcher, and the game the way the
-# launcher starts it, on real Apple Silicon Macs and keeps pictures of the screen plus the logs.
+# Not part of a release. Pushing the branch "mac-smoke" builds the mod from this branch and starts the game the way
+# the launcher starts it, and the launcher itself from source, on a real Apple Silicon Mac. Pictures of the screen
+# and the logs are kept.
 on:
   push:
     branches:
@@ -10,12 +11,54 @@ permissions:
   contents: read
 
 jobs:
+  mod:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4.1.1
+
+      - name: Setup Java
+        uses: actions/setup-java@v4.0.0
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build mod
+        working-directory: FzClient-project/mod
+        run: |
+          ./gradlew.bat build "-Dorg.gradle.java.home=$JAVA_HOME"
+          ls -la build/libs
+
+      - name: Hand the mod to the Mac tests
+        uses: actions/upload-artifact@v4.3.0
+        with:
+          name: mod-jar
+          path: FzClient-project/mod/build/libs/fzclient-*.jar
+          if-no-files-found: error
+          retention-days: 3
+
   game:
+    needs: mod
     strategy:
       fail-fast: false
       matrix:
-        java: [temurin, mojang]
-        mode: [windowed, arg, option]
+        include:
+          - { java: mojang, mode: windowed, jar: fixed }
+          - { java: mojang, mode: arg, jar: fixed }
+          - { java: mojang, mode: option, jar: fixed }
+          - { java: mojang, mode: option-late, jar: fixed }
+          - { java: mojang, mode: flag, jar: fixed }
+          - { java: temurin, mode: option-late, jar: fixed }
+          - { java: temurin, mode: flag, jar: fixed }
+          - { java: mojang, mode: flag, jar: release }
     runs-on: macos-latest
     timeout-minutes: 25
     steps:
@@ -32,8 +75,14 @@ jobs:
       - name: Rosetta 2
         run: |
           sw_vers
-          system_profiler SPDisplaysDataType || true
           if /usr/bin/arch -x86_64 /usr/bin/true; then echo "Rosetta is installed"; else softwareupdate --install-rosetta --agree-to-license; fi
+
+      - name: Get the mod built from this branch
+        if: matrix.jar == 'fixed'
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: mod-jar
+          path: ${{ runner.temp }}/jar
 
       - name: Start the game the way the launcher does
         working-directory: FzClient-project/launcher
@@ -41,29 +90,29 @@ jobs:
           FZ_MOJANG_JAVA: ${{ matrix.java == 'mojang' && '1' || '' }}
           SMOKE_MODE: ${{ matrix.mode }}
           SMOKE_OUT: ${{ github.workspace }}/out
-          SMOKE_JAR: ${{ runner.temp }}/fzclient.jar
-          SMOKE_SECONDS: '240'
+          SMOKE_SECONDS: '200'
           # the test Macs are virtual machines without a graphics card LWJGL accepts: let it use the software one
           SMOKE_JVM: -Dorg.lwjgl.opengl.Display.allowSoftwareOpenGL=true
         run: |
           npm ci
-          curl -fL -o "$SMOKE_JAR" https://github.com/yotuki17/FzClient/releases/latest/download/fzclient.jar
+          if [ "${{ matrix.jar }}" = "release" ]; then
+            mkdir -p "$RUNNER_TEMP/jar"
+            curl -fL -o "$RUNNER_TEMP/jar/fzclient-release.jar" https://github.com/yotuki17/FzClient/releases/latest/download/fzclient.jar
+          fi
+          export SMOKE_JAR="$(ls "$RUNNER_TEMP"/jar/*.jar | head -1)"
+          ls -la "$SMOKE_JAR"
           npx electron build/macSmoke.js
 
       - name: Keep the pictures and logs
         if: always()
         uses: actions/upload-artifact@v4.3.0
         with:
-          name: game-${{ matrix.java }}-${{ matrix.mode }}
+          name: game-${{ matrix.jar }}-${{ matrix.java }}-${{ matrix.mode }}
           path: out
           retention-days: 3
 
   launcher:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, macos-15]
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     timeout-minutes: 15
     steps:
       - name: Checkout source
@@ -73,37 +122,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: FzClient-project/launcher/package-lock.json
 
-      - name: Get the released launcher
+      - name: Start the launcher from this branch and look at its pages
+        working-directory: FzClient-project/launcher
         run: |
-          sw_vers
-          curl -fL -o "$RUNNER_TEMP/app.dmg" https://github.com/yotuki17/FzClient/releases/latest/download/FzClient-Launcher-mac-arm64.dmg
-          hdiutil attach "$RUNNER_TEMP/app.dmg" -nobrowse -readonly -mountpoint "$RUNNER_TEMP/dmg"
-          ls -la "$RUNNER_TEMP/dmg"
-          cp -R "$RUNNER_TEMP/dmg/FzClient Launcher.app" /Applications/
-          hdiutil detach "$RUNNER_TEMP/dmg"
-          codesign -dvvv "/Applications/FzClient Launcher.app" 2>&1 | head -40
-          codesign --verify --deep --strict --verbose=2 "/Applications/FzClient Launcher.app"
-          spctl --assess --type execute -vv "/Applications/FzClient Launcher.app" || true
-
-      - name: Start it and look at the window
-        run: |
-          mkdir -p out
-          "/Applications/FzClient Launcher.app/Contents/MacOS/FzClient Launcher" --enable-logging --remote-debugging-port=9222 '--remote-allow-origins=*' > out/launcher-output.log 2>&1 &
-          sleep 6
-          screencapture -x -t jpg out/launcher-06s.jpg || true
-          sleep 9
-          screencapture -x -t jpg out/launcher-15s.jpg || true
-          node FzClient-project/launcher/build/macSmokeCdp.js out 9222 || true
-          screencapture -x -t jpg out/launcher-end.jpg || true
-          cp "$HOME/Library/Application Support/FzClient Launcher/launcher.log" out/ || true
-          ls -la "$HOME/Library/Application Support/FzClient Launcher" > out/userdata.txt || true
-          pkill -x "FzClient Launcher" || true
+          npm ci
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          npx electron . --enable-logging --remote-debugging-port=9222 '--remote-allow-origins=*' > "$GITHUB_WORKSPACE/out/launcher-output.log" 2>&1 &
+          sleep 15
+          screencapture -x -t jpg "$GITHUB_WORKSPACE/out/launcher-15s.jpg" || true
+          node build/macSmokeCdp.js "$GITHUB_WORKSPACE/out" 9222 || true
+          screencapture -x -t jpg "$GITHUB_WORKSPACE/out/launcher-end.jpg" || true
+          cp "$HOME/Library/Application Support/FzClient Launcher/launcher.log" "$GITHUB_WORKSPACE/out/" || true
+          pkill -f "electron" || true
 
       - name: Keep the pictures and logs
         if: always()
         uses: actions/upload-artifact@v4.3.0
         with:
-          name: launcher-${{ matrix.os }}
+          name: launcher-source
           path: out
           retention-days: 3
