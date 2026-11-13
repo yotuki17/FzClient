@@ -18,4 +18,4 @@ must be updated in the same commit before tagging:
 
 Before tagging, grep for the previous version number (`git grep -n "X.Y.(Z-1)"`) to catch anything new.
 The installer name is fixed: `FzClient-Launcher-Setup.exe` (never put a version in download links).
-The Mac download name is fixed too: `FzClient-Launcher-mac-arm64.dmg` (Apple Silicon, ad-hoc signed, built on a macos-14 runner).
+The Mac download name is fixed too: `FzClient-Launcher-mac-arm64.dmg` (Apple Silicon, ad-hoc signed, built on a macos-latest runner).

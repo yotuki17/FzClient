@@ -14,7 +14,7 @@
 タグを push すると `.github/workflows/release.yml` が動き、次をやります：
 - `mod`: MOD をタグのバージョンでビルドして、次の 2 つに渡す
 - `windows`: Windows 版ランチャーをビルドする（`npm run dist`、fzclient.jar / fzclient.json もここで作る）
-- `mac`: Mac（Apple Silicon）版ランチャーをビルドする（`npm run dist:mac`、macos-14、Apple の署名なし＝ad-hoc 署名）
+- `mac`: Mac（Apple Silicon）版ランチャーをビルドする（`npm run dist:mac`、macos-latest、Apple の署名なし＝ad-hoc 署名）
 - `publish`: 全部そろってから Release を 1 回だけ作って、次の 10 個を上げる：
   `FzClient-Launcher-Setup.exe` / `.exe.blockmap` / `latest.yml` / `fzclient.jar` / `fzclient.json` /
   `FzClient-Launcher-mac-arm64.dmg` / `.dmg.blockmap` / `FzClient-Launcher-mac-arm64.zip` / `.zip.blockmap` / `latest-mac.yml`
