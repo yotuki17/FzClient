@@ -16,12 +16,18 @@ public class Crosshair extends HudElement {
 
     public static final String[] TYPES = {
             "シェブロン ^", "十字", "十字＋点", "点", "円", "円＋点", "四隅", "X", "T字", "カッコ [ ]",
-            "隙間なし十字", "細い十字", "4つの点", "ひし形", "三角"};
+            "隙間なし十字", "細い十字", "4つの点", "ひし形", "三角", "自作"};
+    /** The "hand-made" type (drawn from {@link #custom}). */
+    public static final int CUSTOM = 15;
 
     private final ChoiceSetting type;
     private final ColorSetting color, outlineColor, targetColor;
     private final SliderSetting length, thickness, gap, spread;
-    private final BoolSetting dot, outline, whiteCore, targetOn;
+    private final BoolSetting dot, outline, whiteCore, targetOn, invert;
+    private final SliderSetting opacity;
+    private final dev.fzkc.fzhud.config.PixelGridSetting custom;
+    /** True while drawing a picture for the settings (always plain colour, never see-through). */
+    private boolean picture;
 
     /** 0 = normal colour, 1 = "over a player" colour; eased so the colour fades instead of snapping. */
     private float tint;
@@ -30,6 +36,7 @@ public class Crosshair extends HudElement {
     public Crosshair() {
         super("crosshair", "Crosshair", "画面中央の照準（種類を選べる）", 0.5f, 0.5f, CENTER);
         type = add(new ChoiceSetting("type", "種類", 0, TYPES));
+        custom = add(new dev.fzkc.fzhud.config.PixelGridSetting("custom", "自作クロスヘア（種類で「自作」を選ぶと使われる）", 15));
         color = add(new ColorSetting("color", "色", 0xFF22C55E));
         targetOn = add(new BoolSetting("targetcolor", "プレイヤーに重なると色を変える", true));
         targetColor = add(new ColorSetting("targetcolorc", "重なった時の色", 0xFFFF5555));
@@ -41,6 +48,22 @@ public class Crosshair extends HudElement {
         whiteCore = add(new BoolSetting("white", "線の中を白くする（シェブロン）", true));
         outline = add(new BoolSetting("outline", "黒いフチをつける", true));
         outlineColor = add(new ColorSetting("outlinecolor", "フチの色", 0xFF0B1416));
+        invert = add(new BoolSetting("invert", "後ろの色を反転して見せる（バニラ風）", false));
+        opacity = add(new SliderSetting("opacity", "不透明度", 10, 100, 5, 100, "%"));
+    }
+
+    /** The crosshair colour as RGB (white while it is chroma), for the editor grid. */
+    public int colorRgb() {
+        return color.chroma ? 0xFFFFFF : color.rgb;
+    }
+
+    /** Switches to the hand-made type (opening the editor). */
+    public void useCustom() {
+        type.index = CUSTOM;
+    }
+
+    public dev.fzkc.fzhud.config.PixelGridSetting customGrid() {
+        return custom;
     }
 
     @Override public float width() { return SIZE; }
@@ -95,34 +118,52 @@ public class Crosshair extends HudElement {
         GlStateManager.pushMatrix();
         GlStateManager.translate(cx - SIZE / 2f * scale, cy - SIZE / 2f * scale, 0f);
         GlStateManager.scale(scale, scale, 1f);
-        shape(t, color.get(), alpha);
+        picture = true;
+        try {
+            shape(t, color.get(), alpha);
+        } finally {
+            picture = false;
+        }
         GlStateManager.popMatrix();
     }
 
     private void shape(int t, int base, float alpha) {
-        int col = R.alpha(base, alpha);
-        int out = R.alpha(outlineColor.get(), alpha * 0.85f);
-        if (t == 0) {
-            chevron(col, out, alpha);
-            return;
+        boolean inv = !picture && invert.get();
+        float op = picture ? 1f : (float) (opacity.get() / 100.0);
+        int col, out;
+        if (inv) {
+            // like the game's own crosshair: what is behind is turned to its opposite colour; a grey of strength
+            // "opacity" mixes between the background (0) and fully inverted (1). No outline (it would invert too).
+            int v = Math.round(255 * op * alpha);
+            col = 0xFF000000 | v << 16 | v << 8 | v;
+            out = 0;
+            R.invert = true;
+        } else {
+            col = R.alpha(base, alpha * op);
+            out = R.alpha(outlineColor.get(), alpha * 0.85f * op);
         }
-        pixelShape(t, col, out);
+        try {
+            if (t == 0) chevron(col, out, alpha * op, inv);
+            else pixelShape(t, col, out, inv);
+        } finally {
+            R.invert = false;
+        }
     }
 
     /** The chevron "^" (drawn turned, so it is not snapped to pixels). */
-    private void chevron(int col, int out, float alpha) {
+    private void chevron(int col, int out, float alpha, boolean inv) {
         float c = SIZE / 2f, th = thickness.get(), len = length.get();
         for (int side = -1; side <= 1; side += 2) {
             GlStateManager.pushMatrix();
             GlStateManager.translate(c, c, 0f);
             GlStateManager.rotate(side * -spread.get(), 0f, 0f, 1f);
             R.rect(-th, 1.5f, th * 2, len + 1.5f, col);
-            if (whiteCore.get()) R.rect(-th / 3f, 2.2f, th * 2 / 3f, len, R.alpha(0xFFFFFFFF, alpha));
+            if (whiteCore.get() && !inv) R.rect(-th / 3f, 2.2f, th * 2 / 3f, len, R.alpha(0xFFFFFFFF, alpha));
             GlStateManager.popMatrix();
         }
         if (dot.get()) {
             R.rect(c - 1.5f, c - 1.5f, 3f, 3f, col);
-            R.rect(c - 0.5f, c - 0.5f, 1f, 1f, out);
+            if (!inv) R.rect(c - 0.5f, c - 0.5f, 1f, 1f, out);
         }
     }
 
@@ -138,7 +179,7 @@ public class Crosshair extends HudElement {
         if (w > 0 && h > 0) parts.add(new int[]{x, y, w, h});
     }
 
-    private void pixelShape(int type, int col, int out) {
+    private void pixelShape(int type, int col, int out, boolean inv) {
         Minecraft mc = Minecraft.getMinecraft();
         float sf = new net.minecraft.client.gui.ScaledResolution(mc).getScaleFactor();
         MATRIX.clear();
@@ -160,21 +201,87 @@ public class Crosshair extends HudElement {
         GlStateManager.pushMatrix();
         GlStateManager.translate((cx / sf - tx) / sx, (cy / sf - ty) / sy, 0f);
         GlStateManager.scale(1f / (sf * sx), 1f / (sf * sy), 1f);
-        R.batchBegin();
-        if (outline.get()) {
-            int o = Math.max(1, Math.round(px * 0.5f));
-            for (int[] r : parts) R.batchRect(r[0] - o, r[1] - o, r[2] + o * 2, r[3] + o * 2, out);
-        }
-        for (int[] r : parts) R.batchRect(r[0], r[1], r[2], r[3], col);
-        R.batchEnd();
+        draw(col, out, outline.get() && !inv ? Math.max(1, Math.round(px * 0.5f)) : 0);
         GlStateManager.popMatrix();
+    }
+
+    /**
+     * Draws the parts as one shape: overlaps are merged first (so see-through and inverted crosshairs have no darker
+     * spots where two pieces cross), and the outline is only the ring around it, never under it.
+     */
+    private void draw(int col, int out, int o) {
+        if (parts.isEmpty()) return;
+        int x0 = Integer.MAX_VALUE, y0 = Integer.MAX_VALUE, x1 = Integer.MIN_VALUE, y1 = Integer.MIN_VALUE;
+        for (int[] r : parts) {
+            x0 = Math.min(x0, r[0]);
+            y0 = Math.min(y0, r[1]);
+            x1 = Math.max(x1, r[0] + r[2]);
+            y1 = Math.max(y1, r[1] + r[3]);
+        }
+        x0 -= o;
+        y0 -= o;
+        x1 += o;
+        y1 += o;
+        int w = x1 - x0, h = y1 - y0;
+        if (w <= 0 || h <= 0 || (long) w * h > 400000L) return;
+        boolean[] fill = new boolean[w * h];
+        for (int[] r : parts) {
+            for (int y = r[1]; y < r[1] + r[3]; y++) {
+                int row = (y - y0) * w;
+                for (int x = r[0]; x < r[0] + r[2]; x++) fill[row + x - x0] = true;
+            }
+        }
+        R.batchBegin();
+        if (o > 0) {
+            boolean[] ring = new boolean[w * h];
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    if (!fill[y * w + x]) continue;
+                    for (int dy = -o; dy <= o; dy++) {
+                        int yy = y + dy;
+                        if (yy < 0 || yy >= h) continue;
+                        for (int dx = -o; dx <= o; dx++) {
+                            int xx = x + dx;
+                            if (xx >= 0 && xx < w && !fill[yy * w + xx]) ring[yy * w + xx] = true;
+                        }
+                    }
+                }
+            }
+            runs(ring, w, h, x0, y0, out);
+        }
+        runs(fill, w, h, x0, y0, col);
+        R.batchEnd();
+    }
+
+    /** One rectangle per run of set pixels in each row. */
+    private static void runs(boolean[] grid, int w, int h, int x0, int y0, int argb) {
+        for (int y = 0; y < h; y++) {
+            int start = -1;
+            for (int x = 0; x <= w; x++) {
+                boolean on = x < w && grid[y * w + x];
+                if (on && start < 0) start = x;
+                else if (!on && start >= 0) {
+                    R.batchRect(x0 + start, y0 + y, x - start, 1, argb);
+                    start = -1;
+                }
+            }
+        }
     }
 
     private void build(int type, int t, int l, int g, int lo, int hi, float px) {
         switch (type) {
+            case CUSTOM: { // hand-made: one cell = one crosshair unit, the middle cell on the centre
+                int u = Math.max(1, Math.round(px)), c = custom.size / 2, base = -(u / 2);
+                for (int y = 0; y < custom.size; y++) {
+                    for (int x = 0; x < custom.size; x++) {
+                        if (custom.get(x, y)) add(base + (x - c) * u, base + (y - c) * u, u, u);
+                    }
+                }
+                break;
+            }
             case 1: case 2: // cross (+ dot)
                 bars(t, l, g, lo, hi);
-                if (type == 2) add(lo, lo, t, t);
+                if (type == 2 || g == 0) add(lo, lo, t, t);   // no gap: a solid middle
                 break;
             case 3: { // dot
                 int e = Math.max(1, t / 2);

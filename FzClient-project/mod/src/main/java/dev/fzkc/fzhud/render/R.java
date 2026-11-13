@@ -61,13 +61,17 @@ public final class R {
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
+    /** While true, rectangles turn what is behind them to its opposite colour (the game's own crosshair blend). */
+    public static boolean invert;
+
     private static void begin(int argb) {
         argb = solid(argb);
         GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
         GlStateManager.disableAlpha();
         GlStateManager.disableCull();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        if (invert) GlStateManager.tryBlendFuncSeparate(775, 769, 1, 0);
+        else GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.color(((argb >> 16) & 0xFF) / 255f, ((argb >> 8) & 0xFF) / 255f,
                 (argb & 0xFF) / 255f, ((argb >>> 24) & 0xFF) / 255f);
     }

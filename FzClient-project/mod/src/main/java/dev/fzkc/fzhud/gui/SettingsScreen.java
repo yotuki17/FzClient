@@ -607,6 +607,19 @@ public class SettingsScreen extends FzScreen {
             }
         } else if (s instanceof ColorSetting) {
             drawColorRow((ColorSetting) s, y, rx, mx, my, o);
+        } else if (s instanceof dev.fzkc.fzhud.config.PixelGridSetting) {
+            // a small picture of the hand-made crosshair and the button that opens the editor
+            dev.fzkc.fzhud.config.PixelGridSetting pg = (dev.fzkc.fzhud.config.PixelGridSetting) s;
+            float bw = gridBtnW();
+            boolean on = over && Ui.within(mx, my, rx - bw, y + 5, bw, 18);
+            Ui.button(rx - bw, y + 5, bw, 18, "作る・編集", Math.max(hv * 0.5f, on ? 1f : 0f), o);
+            float cell = 18f / pg.size, tx = rx - bw - 8 - 18, ty = y + 5;
+            R.rect(tx - 1, ty - 1, 20, 20, R.alpha(0xFF0A1012, o));
+            for (int gy = 0; gy < pg.size; gy++) {
+                for (int gx = 0; gx < pg.size; gx++) {
+                    if (pg.get(gx, gy)) R.rect(tx + gx * cell, ty + gy * cell, cell, cell, R.alpha(0xFFFFFFFF, o));
+                }
+            }
         }
     }
 
@@ -620,7 +633,12 @@ public class SettingsScreen extends FzScreen {
         }
         if (s instanceof TextSetting) return textW();
         if (s instanceof ColorSetting) return colorCtlW((ColorSetting) s);
+        if (s instanceof dev.fzkc.fzhud.config.PixelGridSetting) return gridBtnW() + 8 + 18;
         return 0;
+    }
+
+    private float gridBtnW() {
+        return Math.max(80, R.width("作る・編集") + 20);
     }
 
     private float colorCtlW(ColorSetting c) {
@@ -894,6 +912,17 @@ public class SettingsScreen extends FzScreen {
             }
         } else if (s instanceof ColorSetting) {
             if (button == 0 && mx >= rx - colorCtlW((ColorSetting) s)) openColor((ColorSetting) s);
+        } else if (s instanceof dev.fzkc.fzhud.config.PixelGridSetting) {
+            if (button == 0 && mx >= rx - gridBtnW() - 8 - 18) {
+                dev.fzkc.fzhud.config.PixelGridSetting pg = (dev.fzkc.fzhud.config.PixelGridSetting) s;
+                for (Module m : all()) {
+                    if (m instanceof dev.fzkc.fzhud.hud.Crosshair && ((dev.fzkc.fzhud.hud.Crosshair) m).customGrid() == pg) {
+                        UiSound.hit();
+                        ((dev.fzkc.fzhud.hud.Crosshair) m).useCustom();
+                        mc.displayGuiScreen(new CrosshairEditor(pg, (dev.fzkc.fzhud.hud.Crosshair) m, this));
+                    }
+                }
+            }
         }
     }
 

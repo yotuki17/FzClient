@@ -97,6 +97,39 @@ public class DevTest {
             if ((w - 310) % 6 == 4) shot(mc, "xh_" + i);
         }
         if (type != null && w == 310 + type.options.length * 6) type.index = setType;
+        // the crosshair editor, then the see-through (inverted) look in the world
+        int e0 = 310 + (type == null ? 0 : type.options.length * 6) + 10;
+        dev.fzkc.fzhud.hud.Crosshair ch = null;
+        for (dev.fzkc.fzhud.hud.HudElement e : dev.fzkc.fzhud.FzHud.elements) {
+            if (e instanceof dev.fzkc.fzhud.hud.Crosshair) ch = (dev.fzkc.fzhud.hud.Crosshair) e;
+        }
+        if (ch == null || type == null) return;
+        dev.fzkc.fzhud.config.BoolSetting inv = null;
+        dev.fzkc.fzhud.config.SliderSetting op = null;
+        for (dev.fzkc.fzhud.config.Setting s : ch.settings) {
+            if (s.key.equals("invert")) inv = (dev.fzkc.fzhud.config.BoolSetting) s;
+            if (s.key.equals("opacity")) op = (dev.fzkc.fzhud.config.SliderSetting) s;
+        }
+        if (w == e0) mc.displayGuiScreen(new dev.fzkc.fzhud.gui.CrosshairEditor(ch.customGrid(), ch, null));
+        if (w == e0 + 15) shot(mc, "set_editor");
+        if (w == e0 + 20) {
+            mc.displayGuiScreen(null);
+            setType = type.index;
+            type.index = dev.fzkc.fzhud.hud.Crosshair.CUSTOM;
+        }
+        if (w == e0 + 26) shot(mc, "xh_custom");
+        if (w == e0 + 30 && inv != null) inv.value = true;
+        if (w == e0 + 36) shot(mc, "xh_inv_custom");
+        if (w == e0 + 40) type.index = 1;
+        if (w == e0 + 46) shot(mc, "xh_inv_cross");
+        if (w == e0 + 50 && op != null) op.set(50);
+        if (w == e0 + 56) shot(mc, "xh_inv_cross_50");
+        if (w == e0 + 60 && inv != null) inv.value = false;
+        if (w == e0 + 66) shot(mc, "xh_cross_50");
+        if (w == e0 + 70) {
+            if (op != null) op.set(100);
+            type.index = setType;
+        }
     }
 
     private dev.fzkc.fzhud.gui.StatsScreen pv;

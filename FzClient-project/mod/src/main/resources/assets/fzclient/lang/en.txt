@@ -1162,3 +1162,15 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 4つの点	Four dots
 ひし形	Diamond
 三角	Triangle
+自作クロスヘア（種類で「自作」を選ぶと使われる）	Your own crosshair (used when Style is Custom)
+作る・編集	Create / edit
+後ろの色を反転して見せる（バニラ風）	Invert what is behind (like vanilla)
+不透明度	Opacity
+クロスヘアを作る	Make a crosshair
+左クリックで塗る・右クリックで消す（ドラッグもできる）	Left click paints, right click erases (drag works too)
+上下左右に対称	Symmetric
+すべて消す	Clear all
+塗りを反転	Invert pixels
+開いた時に戻す	Undo changes
+拡大	Zoomed
+実際の大きさ	Real size

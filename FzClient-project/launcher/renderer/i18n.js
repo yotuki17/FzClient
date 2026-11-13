@@ -139,6 +139,8 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：クロスヘアを自分で作れるように（ドットで塗るだけ）': 'NEW: make your own crosshair by painting pixels',
+  'NEW：クロスヘアをバニラ風の反転表示・不透明度に対応': 'NEW: vanilla style inverted crosshair and an opacity slider',
   'NEW：クロスヘアを 15 種類に（四隅・ひし形・4つの点など）': 'NEW: 15 crosshair styles (corners, diamond, four dots and more)',
   '改善：クロスヘアを画面のピクセルに合わせてくっきり表示': 'Better: crosshairs snap to screen pixels for sharp lines',
   'NEW：クロスヘアの種類を絵で見て選べるように': 'NEW: pick a crosshair style from pictures',
