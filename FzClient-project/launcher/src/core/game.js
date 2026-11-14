@@ -341,6 +341,10 @@ class Game {
     const mods = path.join(this.gameDir, 'mods');
     if (fs.existsSync(path.join(mods, 'FzClientOpt.jar.disabled'))) return;
     const target = path.join(mods, 'FzClientOpt.jar');
+    // a copy put in by hand ("FzClientOpt-1.0.0.jar") would load twice: Forge stops with "Duplicate mods"
+    for (const f of fs.readdirSync(mods)) {
+      if (/^fzclientopt-.*\.jar$/i.test(f)) fs.renameSync(path.join(mods, f), path.join(mods, f + '.old'));
+    }
     const want = fs.readFileSync(opt);
     const same = fs.existsSync(target) && crypto.createHash('sha1').update(fs.readFileSync(target)).digest('hex')
       === crypto.createHash('sha1').update(want).digest('hex');
@@ -412,7 +416,9 @@ class Game {
     const gameArgs = forge.minecraftArguments.split(' ').map(a => a.replace(/\$\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)));
     // a Mac always starts the game in its window (see startInWindow)
     if (MAC) this.startInWindow();
-    if (opts.fullscreen && !MAC) gameArgs.push('--fullscreen');
+    // Forge (FMLTweaker) reads the game's arguments as "--name value" pairs and drops a "--fullscreen" with nothing
+    // after it, so the setting never reached the game: the word after it makes it a pair (the game ignores the word)
+    if (opts.fullscreen && !MAC) gameArgs.push('--fullscreen', 'true');
     else if (opts.width && opts.height) gameArgs.push('--width', String(opts.width), '--height', String(opts.height));
 
     const mem = Math.max(1024, opts.memoryMb || 3072);

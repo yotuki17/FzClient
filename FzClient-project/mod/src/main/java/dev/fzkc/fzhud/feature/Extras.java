@@ -274,6 +274,14 @@ public final class Extras {
         lastShown = msg;
     }
 
+    /**
+     * Another feature (romaji conversion) shows a changed copy of the line printed last: stacking keeps working
+     * with the copy that is really in the chat.
+     */
+    public static void shownAs(IChatComponent old, IChatComponent now) {
+        if (old != null && lastShown == old) lastShown = now;
+    }
+
     /** Removes the newest chat line if it is the one we printed last (for "(x2)" stacking). */
     @SuppressWarnings("unchecked")
     private static boolean removeNewest(IChatComponent shown) {

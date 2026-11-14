@@ -65,9 +65,28 @@ public class CommandSuggest {
         }
     }
 
+    /** Hypixel by its address or, behind a proxy with another address, by the brand the server reports. */
     private static boolean onHypixel() {
-        ServerData sd = Minecraft.getMinecraft().getCurrentServerData();
-        return sd != null && sd.serverIP != null && sd.serverIP.toLowerCase(Locale.ROOT).contains("hypixel");
+        return dev.fzkc.fzhud.stats.Stats.onHypixel();
+    }
+
+    private static final String SRC_HISTORY = "履歴";
+
+    /** First words of the commands you sent, newest first (the chat's own sent-message history). */
+    private static List<String> usedCommands() {
+        List<String> out = new ArrayList<>();
+        try {
+            List<String> sent = Minecraft.getMinecraft().ingameGUI.getChatGUI().getSentMessages();
+            for (int i = sent.size() - 1; i >= 0 && out.size() < 40; i--) {
+                String s = sent.get(i);
+                if (s == null || !s.startsWith("/") || s.length() < 2) continue;
+                int sp = s.indexOf(' ');
+                String name = (sp < 0 ? s.substring(1) : s.substring(1, sp)).toLowerCase(Locale.ROOT);
+                if (!name.isEmpty() && !out.contains(name)) out.add(name);
+            }
+        } catch (Throwable ignored) {
+        }
+        return out;
     }
 
     /**
@@ -85,17 +104,22 @@ public class CommandSuggest {
         if (text.indexOf(' ') >= 0) return arguments(text);
         String prefix = text.substring(1).toLowerCase(Locale.ROOT);
 
-        // all candidates in priority order: your history, client commands, Hypixel commands
+        // all candidates in priority order: your history, Hypixel commands, client commands.
+        // (Client commands used to come first: with a few mods installed they filled every row and /p, /party...
+        // never showed.)
+        boolean hypixel = Modules.cmdHypixel.get() && onHypixel();
+        java.util.Set<String> client = new java.util.TreeSet<>();
+        for (String n : ClientCommandHandler.instance.getCommands().keySet()) client.add(n.toLowerCase(Locale.ROOT));
+        java.util.Set<String> hy = new java.util.HashSet<>(java.util.Arrays.asList(HYPIXEL));
         Map<String, String> all = new LinkedHashMap<>();
-        List<String> client = new ArrayList<>(ClientCommandHandler.instance.getCommands().keySet());
-        Collections.sort(client);
-        for (String n : client) {
-            String name = n.toLowerCase(Locale.ROOT);
-            if (!all.containsKey(name)) all.put(name, SRC_MOD);
+        // what is typed exactly, when it is a known command, comes first
+        if (client.contains(prefix)) all.put(prefix, SRC_MOD);
+        else if (hypixel && hy.contains(prefix)) all.put(prefix, SRC_HYPIXEL);
+        for (String n : usedCommands()) {
+            if (!all.containsKey(n)) all.put(n, client.contains(n) ? SRC_MOD : hy.contains(n) ? SRC_HYPIXEL : SRC_HISTORY);
         }
-        if (Modules.cmdHypixel.get() && onHypixel()) {
-            for (String n : HYPIXEL) if (!all.containsKey(n)) all.put(n, SRC_HYPIXEL);
-        }
+        if (hypixel) for (String n : HYPIXEL) if (!all.containsKey(n)) all.put(n, SRC_HYPIXEL);
+        for (String n : client) if (!all.containsKey(n)) all.put(n, SRC_MOD);
 
         int max = (int) Modules.cmdRows.get();
         // names that start with what is typed first, then names that merely contain it

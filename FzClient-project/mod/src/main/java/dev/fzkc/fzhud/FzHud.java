@@ -198,6 +198,7 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.ServerListTweaks());
         MinecraftForge.EVENT_BUS.register(new PartyRelay());
         MinecraftForge.EVENT_BUS.register(new CommandSuggest());
+        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.Romaji());   // romaji typed in the chat goes out as Japanese
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.chat.KnownNames());   // names for the command suggestions
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.Cosmetics());   // capes and auras (sync)
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.cosmetic.AuraFx());      // aura sprites, drawn after the world
@@ -226,6 +227,10 @@ public class FzHud {
         MinecraftForge.EVENT_BUS.register(extras);
         FMLCommonHandler.instance().bus().register(extras);
         MinecraftForge.EVENT_BUS.register(this);
+        // last of all the chat handlers (LOWEST, registered last): every other feature sees the line as it came
+        dev.fzkc.fzhud.chat.RomajiIncoming romajiIn = new dev.fzkc.fzhud.chat.RomajiIncoming();
+        MinecraftForge.EVENT_BUS.register(romajiIn);   // other people's romaji as Japanese
+        FMLCommonHandler.instance().bus().register(romajiIn);   // its tick (lines held too long go out)
         FMLCommonHandler.instance().bus().register(this);
     }
 

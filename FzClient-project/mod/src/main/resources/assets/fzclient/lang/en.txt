@@ -455,6 +455,11 @@ Webhook URL（人に見せない）	Webhook URL (keep it private)
 雲を描かない	Do not draw clouds
 メニュー中のFPS上限（240で無制限）	FPS limit in menus (240 = no limit)
 コマンド候補	Command suggestions
+ローマ字変換	Romaji to Japanese
+ローマ字を日本語にして送る（arigatou → ありがとう）	Send romaji as Japanese (arigatou → ありがとう)
+ほかの人のローマ字も日本語で表示（こんにちは(konnitiha)）	Show other players' romaji as Japanese (こんにちは(konnitiha))
+漢字にも変換する（Googleの日本語変換を使う）	Also convert to kanji (uses Google Japanese input)
+大文字を入れるとそのまま送信	Add a capital letter to send as typed
 コマンドの候補を出す（Tab決定・↑↓選択）	Show command suggestions (Tab = accept, Up/Down = pick)
 Hypixelの主なコマンドも候補に入れる	Include common Hypixel commands
 候補の最大数	Max suggestions

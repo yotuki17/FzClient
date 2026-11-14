@@ -596,6 +596,11 @@ public final class Modules {
     public static final BoolSetting imeAuto = chat.add(new BoolSetting("imeauto", "[別窓] チャットを開いたら入力欄を出す", true));
     public static final BoolSetting imeSendDirect = chat.add(new BoolSetting("imesend", "[別窓] Enterで直接送信（OFFは入力のみ）", true));
 
+    public static final HeaderSetting chatHeadRomaji = chat.add(new HeaderSetting("h_romaji", "ローマ字変換"));
+    public static final BoolSetting romajiOn = chat.add(new BoolSetting("romaji", "ローマ字を日本語にして送る（arigatou → ありがとう）", true));
+    public static final BoolSetting romajiIncoming = chat.add(new BoolSetting("romajiin", "ほかの人のローマ字も日本語で表示（こんにちは(konnitiha)）", true));
+    public static final BoolSetting romajiKanji = chat.add(new BoolSetting("romajikanji", "漢字にも変換する（Googleの日本語変換を使う）", true));
+
     public static final HeaderSetting chatHeadCmd = chat.add(new HeaderSetting("h_cmd", "コマンド候補"));
     public static final BoolSetting cmdSuggestOn = chat.add(new BoolSetting("cmdsuggest", "コマンドの候補を出す（Tab決定・↑↓選択）", true));
     public static final BoolSetting cmdHypixel = chat.add(new BoolSetting("cmdhypixel", "Hypixelの主なコマンドも候補に入れる", true));

@@ -33,7 +33,7 @@ public final class ChatExtras {
         if (event.phase == TickEvent.Phase.END) FzChat.install();
     }
 
-    private static boolean tabsOn() {
+    static boolean tabsOn() {
         return FzChat.active() && Modules.chatTabs.get();
     }
 
