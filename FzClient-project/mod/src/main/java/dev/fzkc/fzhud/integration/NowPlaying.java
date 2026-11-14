@@ -37,6 +37,20 @@ public final class NowPlaying {
     /** Changes whenever the song (or the app) changes. */
     public static int songId() { return (spotify() ? Spotify.songId : MediaSession.songId) * 4 + source; }
 
+    /**
+     * Whose mark the HUD shows: {@link #SPOTIFY}, {@link #YOUTUBE_MUSIC}, {@link #APPLE_MUSIC}, or -1 (a plain note).
+     * The picked app; with "any app", the app that is playing.
+     */
+    public static int brand() {
+        if (source != ANY) return source;
+        if (!MediaSession.running) return -1;
+        String app = MediaSession.app.toLowerCase(java.util.Locale.ROOT);
+        if (app.contains("spotify")) return SPOTIFY;
+        if (app.contains("youtube") || app.contains("ytm")) return YOUTUBE_MUSIC;
+        if (app.contains("applemusic") || app.contains("appleinc") || app.contains("itunes")) return APPLE_MUSIC;
+        return -1;
+    }
+
     /** What the HUD says when the app isn't open. */
     public static String appName() {
         return source == ANY ? "音楽アプリ" : NAMES[source];

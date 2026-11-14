@@ -16,7 +16,7 @@ import net.minecraft.client.Minecraft;
 public class SpotifyHud extends HudElement {
     private final SliderSetting maxWidth;
     private final ChoiceSetting source;
-    private final BoolSetting showArtist, hideWhenClosed, hideWhenPaused, albumArt, progressBar;
+    private final BoolSetting showArtist, hideWhenClosed, hideWhenPaused, albumArt, progressBar, appMark;
     private final Anim barAnim = new Anim(0f, 6f);
     private final ColorSetting titleColor, artistColor, iconColor;
     private final Anim slide = new Anim(1f, 8f);
@@ -38,8 +38,15 @@ public class SpotifyHud extends HudElement {
         hideWhenPaused = add(new BoolSetting("hidepaused", "一時停止中は隠す", false));
         titleColor = add(new ColorSetting("titlecolor", "曲名の色", 0xFFFFFFFF));
         artistColor = add(new ColorSetting("artistcolor", "アーティストの色", 0xFF9DB4B8));
+        appMark = add(new BoolSetting("appmark", "アプリのマークを表示", true));
         iconColor = add(new ColorSetting("iconcolor", "アイコンの色", 0xFF1ED760));
     }
+
+    /** Marks by {@link NowPlaying} source: Spotify, YouTube Music, Apple Music. */
+    private static final net.minecraft.util.ResourceLocation[] MARKS = {
+            new net.minecraft.util.ResourceLocation("fzclient", "textures/music/spotify.png"),
+            new net.minecraft.util.ResourceLocation("fzclient", "textures/music/ytmusic.png"),
+            new net.minecraft.util.ResourceLocation("fzclient", "textures/music/apple.png")};
 
     @Override
     public boolean active() {
@@ -117,9 +124,29 @@ public class SpotifyHud extends HudElement {
                 R.rect(3 + artSize / 2f + 1, cy - 4, 2, 8, pc);
             }
         } else {
-            // icon: ♪ while playing, ‖ while paused
+            // icon: the app's mark (dimmed with ‖ while paused), or ♪ / ‖ without one
+            int brand = appMark.get() ? NowPlaying.brand() : -1;
             int ic = R.alpha(on ? iconColor.get() : 0xFF9DB4B8, alpha);
-            if (on) {
+            if (brand >= 0) {
+                Minecraft mc = Minecraft.getMinecraft();
+                mc.getTextureManager().bindTexture(MARKS[brand]);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
+                net.minecraft.client.renderer.GlStateManager.enableBlend();
+                net.minecraft.client.renderer.GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+                // dimmed (paused / fading): no alpha test, or the soft edges and the whole faint mark get cut away
+                net.minecraft.client.renderer.GlStateManager.disableAlpha();
+                net.minecraft.client.renderer.GlStateManager.color(1f, 1f, 1f, alpha * (on ? 1f : 0.35f));
+                float size = 12;
+                net.minecraft.client.gui.Gui.drawScaledCustomSizeModalRect(5, (int) (cy - size / 2f), 0, 0, 64, 64, (int) size, (int) size, 64, 64);
+                net.minecraft.client.renderer.GlStateManager.enableAlpha();
+                net.minecraft.client.renderer.GlStateManager.color(1f, 1f, 1f, 1f);
+                if (!on) {
+                    int pc = R.alpha(0xFFFFFFFF, alpha);
+                    R.rect(8, cy - 3, 2, 6, pc);
+                    R.rect(12, cy - 3, 2, 6, pc);
+                }
+            } else if (on) {
                 R.text("♪", 7, cy - 4, ic);
             } else {
                 R.rect(7, cy - 4, 2, 8, ic);

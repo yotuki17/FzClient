@@ -139,6 +139,8 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：音楽HUDにアプリのマーク（Spotify・YouTube Music・Apple Music）': 'NEW: the music HUD shows the app logo (Spotify, YouTube Music, Apple Music)',
+  'NEW：3Dスキンが一人称の手（袖）にも付くように': 'NEW: 3D skin layers on your first-person arm (sleeves) too',
   'NEW：音楽HUDが YouTube Music・Apple Music にも対応（設定で選べる）': 'NEW: the music HUD also works with YouTube Music and Apple Music (pick in its settings)',
   'NEW：ローマ字のチャットを日本語に変換（自分の送信もほかの人の発言も）': 'NEW: romaji chat becomes Japanese (what you send and what others say)',
   '修正：コマンド候補に /p などが出ないことがあった問題': 'Fix: command suggestions sometimes missed /p and other Hypixel commands',

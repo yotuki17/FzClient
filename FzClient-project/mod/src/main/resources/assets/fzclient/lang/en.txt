@@ -1184,3 +1184,4 @@ VCの参加者を表示（Discordのオーバーレイ風）	Shows who is in you
 開いた時に戻す	Undo changes
 拡大	Zoomed
 実際の大きさ	Real size
+アプリのマークを表示	Show the app logo

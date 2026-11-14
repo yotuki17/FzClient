@@ -70,4 +70,41 @@ public abstract class MixinModelPlayer {
         // put the flags back for the first-person arm and the next frame
         for (int i = 0; i < 6; i++) wear[i].showModel = fzhud$was[i];
     }
+
+    // ---- first-person arm (and both arms when holding a map): the sleeve as cubes too
+
+    @Inject(require = 0, method = "renderRightArm()V", at = @At("HEAD"), cancellable = true)
+    private void fzhud$rightArm3D(CallbackInfo ci) {
+        ModelPlayer self = (ModelPlayer) (Object) this;
+        if (fzhud$arm(self.bipedRightArm, self.bipedRightArmwear, SkinLayers3D.RIGHT_ARM)) ci.cancel();
+    }
+
+    @Inject(require = 0, method = "renderLeftArm()V", at = @At("HEAD"), cancellable = true)
+    private void fzhud$leftArm3D(CallbackInfo ci) {
+        ModelPlayer self = (ModelPlayer) (Object) this;
+        if (fzhud$arm(self.bipedLeftArm, self.bipedLeftArmwear, SkinLayers3D.LEFT_ARM)) ci.cancel();
+    }
+
+    /** Draws the arm with a 3D sleeve; false = leave it to the game (off, or the skin can't be read). */
+    @Unique
+    private boolean fzhud$arm(ModelRenderer arm, ModelRenderer sleeve, int part) {
+        if (!SkinLayers3D.active(true, 0)) return false;
+        Minecraft mc = Minecraft.getMinecraft();
+        AbstractClientPlayer p = mc.thePlayer;
+        if (p == null) return false;
+        // only your own arm (the model of your renderer); anything else drawing an arm is left as it is
+        Object r = mc.getRenderManager().getEntityRenderObject(p);
+        if (!(r instanceof net.minecraft.client.renderer.entity.RenderPlayer)
+                || ((net.minecraft.client.renderer.entity.RenderPlayer) r).getMainModel() != (Object) this) return false;
+        float scale = 0.0625f;
+        boolean slim = "slim".equals(p.getSkinType());
+        arm.render(scale);
+        if (!sleeve.showModel || sleeve.isHidden) return true;   // sleeves turned off in the skin settings
+        GlStateManager.pushMatrix();
+        sleeve.postRender(scale);
+        boolean ok = SkinLayers3D.draw(p.getLocationSkin(), slim, part, scale);
+        GlStateManager.popMatrix();
+        if (!ok) sleeve.render(scale);
+        return true;
+    }
 }
