@@ -1,16 +1,21 @@
 package dev.fzkc.fzhud.hud;
 
-import dev.fzkc.fzhud.integration.Spotify;
+import dev.fzkc.fzhud.integration.NowPlaying;
 import dev.fzkc.fzhud.config.BoolSetting;
+import dev.fzkc.fzhud.config.ChoiceSetting;
 import dev.fzkc.fzhud.config.ColorSetting;
 import dev.fzkc.fzhud.config.SliderSetting;
 import dev.fzkc.fzhud.render.Anim;
 import dev.fzkc.fzhud.render.R;
 import net.minecraft.client.Minecraft;
 
-/** Now playing on Spotify (song, artist, playing / paused). */
+/**
+ * Now playing (song, artist, playing / paused): Spotify, YouTube Music, Apple Music or any app (see {@link NowPlaying}).
+ * Still "spotify" inside (its saved position and settings stay).
+ */
 public class SpotifyHud extends HudElement {
     private final SliderSetting maxWidth;
+    private final ChoiceSetting source;
     private final BoolSetting showArtist, hideWhenClosed, hideWhenPaused, albumArt, progressBar;
     private final Anim barAnim = new Anim(0f, 6f);
     private final ColorSetting titleColor, artistColor, iconColor;
@@ -21,13 +26,15 @@ public class SpotifyHud extends HudElement {
     private float fitMax = -1;
 
     public SpotifyHud(float defX, float defY) {
-        super("spotify", "Spotify", "Spotifyで再生中の曲（Windows・Spotifyアプリ）", defX, defY, LEFT, false);
+        super("spotify", "Music", "再生中の曲（Spotify・YouTube Music・Apple Music など／Windows）", defX, defY, LEFT, false);
         withBackground();
+        source = add(new ChoiceSetting("source", "音楽アプリ", NowPlaying.SPOTIFY, NowPlaying.NAMES));
+        instance = this;
         maxWidth = add(new SliderSetting("maxwidth", "最大の幅", 80, 300, 10, 160, ""));
         showArtist = add(new BoolSetting("artist", "アーティスト名を表示", true));
         albumArt = add(new BoolSetting("albumart", "曲のジャケット画像を表示", true));
         progressBar = add(new BoolSetting("progress", "曲の進み具合のバーを表示", true));
-        hideWhenClosed = add(new BoolSetting("hideclosed", "Spotifyを開いていない時は隠す", true));
+        hideWhenClosed = add(new BoolSetting("hideclosed", "音楽アプリを開いていない時は隠す", true));
         hideWhenPaused = add(new BoolSetting("hidepaused", "一時停止中は隠す", false));
         titleColor = add(new ColorSetting("titlecolor", "曲名の色", 0xFFFFFFFF));
         artistColor = add(new ColorSetting("artistcolor", "アーティストの色", 0xFF9DB4B8));
@@ -36,9 +43,17 @@ public class SpotifyHud extends HudElement {
 
     @Override
     public boolean active() {
-        Spotify.keepAlive();
-        if (hideWhenClosed.get() && !Spotify.running) return false;
-        return !hideWhenPaused.get() || Spotify.playing;
+        NowPlaying.source = source.get();
+        NowPlaying.keepAlive();
+        if (hideWhenClosed.get() && !NowPlaying.running()) return false;
+        return !hideWhenPaused.get() || NowPlaying.playing();
+    }
+
+    private static SpotifyHud instance;
+
+    /** Every tick: the music keys follow the setting even while the HUD is hidden or off. */
+    public static void sync() {
+        if (instance != null) NowPlaying.source = instance.source.get();
     }
 
     @Override public float width() { return lastW; }
@@ -46,16 +61,18 @@ public class SpotifyHud extends HudElement {
 
     @Override
     public void draw(float alpha, boolean preview) {
-        Spotify.keepAlive();
-        String song = Spotify.title, by = Spotify.artist;
-        boolean on = Spotify.playing;
+        NowPlaying.source = source.get();
+        NowPlaying.keepAlive();
+        String song = NowPlaying.title(), by = NowPlaying.artist();
+        boolean on = NowPlaying.playing();
         if (song.isEmpty()) {
-            song = preview ? "Song Title" : (Spotify.running ? "Spotify" : "Spotifyが開いていません");
+            song = preview ? "Song Title" : (NowPlaying.running() ? dev.fzkc.fzhud.util.Lang.t(NowPlaying.appName())
+                    : dev.fzkc.fzhud.util.Lang.t(NowPlaying.appName()) + dev.fzkc.fzhud.util.Lang.t("が開いていません"));
             by = preview ? "Artist" : "";
             on = preview;
         }
-        if (Spotify.songId != lastSong) {
-            lastSong = Spotify.songId;
+        if (NowPlaying.songId() != lastSong) {
+            lastSong = NowPlaying.songId();
             slide.snap(0f);
         }
         float s = slide.update(1f);
@@ -71,8 +88,9 @@ public class SpotifyHud extends HudElement {
         String t = fitSong, a = fitBy;
         // cover art (looked up by song name); while it loads / if none is found the ♪ icon is shown
         net.minecraft.util.ResourceLocation art = null;
-        if (albumArt.get() && !Spotify.title.isEmpty()) {
-            dev.fzkc.fzhud.integration.AlbumArt.want(Spotify.artist, Spotify.title);
+        // only with an artist: without one the search can't run and the last song's cover would stay
+        if (albumArt.get() && !NowPlaying.title().isEmpty() && !NowPlaying.artist().isEmpty()) {
+            dev.fzkc.fzhud.integration.AlbumArt.want(NowPlaying.artist(), NowPlaying.title());
             art = dev.fzkc.fzhud.integration.AlbumArt.current();
         }
         float artSize = height() - 6;
@@ -120,9 +138,8 @@ public class SpotifyHud extends HudElement {
 
         // how far into the song: a thin bar under the text
         if (progressBar.get()) {
-            float p = preview && Spotify.title.isEmpty() ? 0.4f
-                    : dev.fzkc.fzhud.integration.SpotifyTimeline.progress(Spotify.songId, Spotify.playing,
-                    dev.fzkc.fzhud.integration.AlbumArt.currentLengthMs());
+            float p = preview && NowPlaying.title().isEmpty() ? 0.4f
+                    : NowPlaying.progress(dev.fzkc.fzhud.integration.AlbumArt.currentLengthMs());
             float barY = height() - 6, bw = lastW - tx - 8;
             if (p >= 0f) {
                 // ease only small steps (a new song / seeking jumps straight there)

@@ -127,7 +127,7 @@ public class FzHud {
         elements.add(new ArmorStatus(0.995f, 0.72f));
         elements.add(new ServerDisplay(0.002f, 0.975f));
         elements.add(new Coordinates(0.002f, 0.30f));
-        if (dev.fzkc.fzhud.util.Os.WIN) elements.add(new SpotifyHud(0.002f, 0.90f));   // reads Spotify's Windows window
+        if (dev.fzkc.fzhud.util.Os.WIN) elements.add(new SpotifyHud(0.002f, 0.90f));   // music HUD: Spotify's window, or Windows' media controls
         elements.add(new ItemCounter(0.995f, 0.55f));
         elements.add(new TargetHud(0.54f, 0.55f));
         if (dev.fzkc.fzhud.util.Os.WIN) elements.add(new DiscordVcHud(0.002f, 0.60f));   // Discord's Windows pipe
@@ -300,7 +300,7 @@ public class FzHud {
         Tracker.tick();
         Gameplay.tick(toggleSneakKey);
         TntTimer.tick();
-        Spotify.tick();
+        dev.fzkc.fzhud.integration.NowPlaying.tick();   // music keys (Spotify / YouTube Music / Apple Music)
         dev.fzkc.fzhud.integration.FzUsers.tick();   // who else uses FzClient (logo next to their names)
         Branding.tick();
         DiscordRpc.tick();

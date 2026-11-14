@@ -297,6 +297,11 @@ www.hypixel.net の行を隠す	Hide the www.hypixel.net line
 [ ] で囲む	Wrap in [ ]
 シングルプレイでは隠す	Hide in singleplayer
 Spotifyで再生中の曲（Windows・Spotifyアプリ）	Now playing on Spotify (Windows app)
+再生中の曲（Spotify・YouTube Music・Apple Music など／Windows）	Now playing (Spotify, YouTube Music, Apple Music and more / Windows)
+音楽アプリ	Music app
+自動（再生中のアプリ）	Auto (whatever is playing)
+音楽アプリを開いていない時は隠す	Hide when the music app is closed
+が開いていません	 is not open
 最大の幅	Max width
 アーティスト名を表示	Show artist
 Spotifyを開いていない時は隠す	Hide when Spotify is closed
