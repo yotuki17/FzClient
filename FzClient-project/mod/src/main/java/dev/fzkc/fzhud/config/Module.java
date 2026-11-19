@@ -6,7 +6,7 @@ import java.util.List;
 /** A toggleable feature with its own settings page. HUD elements are modules too. */
 public class Module {
     public enum Category {
-        HUD("HUD"), PVP("PvP"), VISUAL("Visual"), SERVER("Server"), UTILITY("Utility");
+        HUD("HUD"), PVP("PvP"), VISUAL("Visual"), SERVER("Server"), HYPIXEL("Hypixel"), UTILITY("Utility");
 
         public final String label;
 

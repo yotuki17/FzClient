@@ -114,8 +114,10 @@ public final class BedwarsAlerts {
             boolean looksLikeDeath = low.endsWith(".") || low.endsWith("final kill!");
             if (!looksLikeDeath || !wasFalling(victim)) return;
         }
-        boolean me = victim.equalsIgnoreCase(mc.thePlayer.getName());
-        boolean mate = me || sameTeam(mc, info);
+        NetworkPlayerInfo self = mc.thePlayer.sendQueue.getPlayerInfo(mc.thePlayer.getUniqueID());
+        boolean me = victim.equalsIgnoreCase(mc.thePlayer.getName()) || info == self
+                || self != null && self.getGameProfile() != null && victim.equalsIgnoreCase(self.getGameProfile().getName());
+        boolean mate = me || sameTeam(mc, self, info);
         int who = Modules.bwVoidSound.get();   // 0 off, 1 everyone, 2 teammates, 3 enemies
         if (who == 1 || who == 2 && mate || who == 3 && !mate) ChatAlerts.play(mate ? 0.7f : 1.0f);
         if (Modules.bwVoidParty.get() && mate && (!me || Modules.bwVoidPartySelf.get())) {
@@ -128,8 +130,20 @@ public final class BedwarsAlerts {
         }
     }
 
-    private static boolean sameTeam(Minecraft mc, NetworkPlayerInfo info) {
-        ScorePlayerTeam mine = mc.theWorld.getScoreboard().getPlayersTeam(mc.thePlayer.getName());
+    /**
+     * Same Bed Wars team: by the colour and letter in front of the name in the tab list ("§cR "), because Hypixel
+     * gives every player a scoreboard team of their own (the team's name never matches anyone else's). Only when
+     * there is no such prefix, by the scoreboard team.
+     */
+    private static boolean sameTeam(Minecraft mc, NetworkPlayerInfo self, NetworkPlayerInfo info) {
+        // by UUID: when nicked, the tab list shows the nick, not the account name
+        String mineKey = dev.fzkc.fzhud.stats.Denick.teamKey(self);
+        String theirKey = dev.fzkc.fzhud.stats.Denick.teamKey(info);
+        if (mineKey != null && theirKey != null && mineKey.startsWith("p:") && theirKey.startsWith("p:")) {
+            return mineKey.equals(theirKey);
+        }
+        ScorePlayerTeam mine = self != null ? self.getPlayerTeam() : null;
+        if (mine == null) mine = mc.theWorld.getScoreboard().getPlayersTeam(mc.thePlayer.getName());
         ScorePlayerTeam theirs = info.getPlayerTeam();
         return mine != null && theirs != null && mine.getRegisteredName().equals(theirs.getRegisteredName());
     }

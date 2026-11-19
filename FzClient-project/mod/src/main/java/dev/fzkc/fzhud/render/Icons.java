@@ -156,7 +156,8 @@ public final class Icons {
             case 2: return "cat_pvp";
             case 3: return "cat_visual";
             case 4: return "cat_server";
-            case 5: return "cat_utility";
+            case 5: return "menu_hypixel";
+            case 6: return "cat_utility";
             default: return "cat_all";
         }
     }

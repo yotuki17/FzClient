@@ -50,6 +50,52 @@ public class DevTest {
         else if ("denick".equals(MODE)) denick(w);
         else if ("denickshare".equals(MODE)) denickShare(w);
         else if ("settings".equals(MODE)) settings(mc, w);
+        else if ("mods".equals(MODE)) mods(mc, w);
+    }
+
+    private int modsStyle = -1;
+    private float modsSize = 100;
+    private int modsSide;
+
+    /** The mods screen in each style: the Hypixel category (sidebar), and the dashboard home with its tiles. */
+    private void mods(Minecraft mc, int w) {
+        if (w == 40) modsStyle = Modules.uiStyle.index;
+        for (int s = 0; s < 3; s++) {
+            int b = 40 + s * 40;
+            if (w == b) {
+                Modules.uiStyle.index = s;
+                dev.fzkc.fzhud.gui.ModsScreen.devShow(s == 2 ? 0 : 5, s == 2);
+                mc.displayGuiScreen(new dev.fzkc.fzhud.gui.ModsScreen(null));
+            }
+            if (w == b + 20) shot(mc, "mods_" + s);
+        }
+        if (w == 170) {
+            dev.fzkc.fzhud.gui.ModsScreen.devShow(6, false);
+            mc.displayGuiScreen(new dev.fzkc.fzhud.gui.ModsScreen(null));
+        }
+        if (w == 190) shot(mc, "mods_2_utility");
+        // a smaller menu: the tab row has to shrink to stay clear of the buttons
+        if (w == 200) {
+            modsSize = Modules.uiSize.get();
+            Modules.uiSize.set(85);
+            dev.fzkc.fzhud.gui.ModsScreen.devShow(5, false);
+            mc.displayGuiScreen(new dev.fzkc.fzhud.gui.ModsScreen(null));
+        }
+        if (w == 220) shot(mc, "mods_2_small");
+        // the left sidebar in a short window: all 7 rows above the Presets button
+        if (w == 230) {
+            Modules.uiSize.set(modsSize);
+            modsSide = Modules.uiSidebarSide.index;
+            Modules.uiSidebarSide.index = 0;
+            Modules.uiStyle.index = 1;
+            mc.displayGuiScreen(new dev.fzkc.fzhud.gui.ModsScreen(null));
+        }
+        if (w == 250) shot(mc, "mods_1_sidebar");
+        if (w == 260) {
+            Modules.uiSidebarSide.index = modsSide;
+            Modules.uiStyle.index = modsStyle;
+            mc.displayGuiScreen(null);
+        }
     }
 
     private dev.fzkc.fzhud.gui.SettingsScreen set;

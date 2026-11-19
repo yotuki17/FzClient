@@ -470,7 +470,7 @@ public final class Denick {
      * their own (for the name colour), so the team's name says nothing; the colour and letter in front ("§cR ") do.
      * Falls back to the scoreboard team's name when the prefix has neither.
      */
-    static String teamKey(NetworkPlayerInfo i) {
+    public static String teamKey(NetworkPlayerInfo i) {
         net.minecraft.scoreboard.ScorePlayerTeam t = i == null ? null : i.getPlayerTeam();
         if (t == null) return null;
         String p = t.getColorPrefix();

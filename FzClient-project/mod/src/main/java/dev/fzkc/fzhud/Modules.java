@@ -189,7 +189,7 @@ public final class Modules {
     public static final BoolSetting cosOthers = cosmetics.add(new BoolSetting("others", "ほかの FzClient ユーザーのコスメを表示", true));
 
     // ---- Party detector (waiting lobbies)
-    public static final Module partyDetect = new Module("partydetect", "Party Detector", Category.SERVER,
+    public static final Module partyDetect = new Module("partydetect", "Party Detector", Category.HYPIXEL,
             "待機ロビーで同時に入ってきた人たち（パーティっぽい）をチャットで知らせる", true);
     public static final SliderSetting partyDetectGap = partyDetect.add(new SliderSetting("gap2", "入ってくる時の間隔（これより近いと同時）", 20, 500, 10, 100, "ms"));
     public static final SliderSetting partyDetectQuitGap = partyDetect.add(new SliderSetting("quitgap", "抜ける時の間隔（これより近いと同時）", 20, 1000, 10, 400, "ms"));
@@ -197,16 +197,16 @@ public final class Modules {
     public static final BoolSetting partyDetectSound = partyDetect.add(new BoolSetting("sound", "見つけた時に音を鳴らす", true));
 
     // ---- Party warp: brings in party members the queue left behind
-    public static final Module partyWarp = new Module("partywarp", "Party Warp", Category.SERVER,
+    public static final Module partyWarp = new Module("partywarp", "Party Warp", Category.HYPIXEL,
             "キューで入れなかったパーティメンバーを、数秒後に /p warp で入れ直す（リーダーの時だけ）", true);
     public static final SliderSetting partyWarpDelay = partyWarp.add(new SliderSetting("delay", "入ってから確認するまでの時間", 1, 6, 0.5, 2.5, "秒"));
 
     // ---- Requeue: /rq joins the same game again
-    public static final Module requeue = new Module("requeue", "Requeue", Category.SERVER,
+    public static final Module requeue = new Module("requeue", "Requeue", Category.HYPIXEL,
             "/rq と打つと、同じゲームにもう一度入る（Hypixel）", true);
 
     // ---- Overlay: player stats in the tab list and chat, /fzstats, tags, denick (id kept as "playerstats" for saved settings)
-    public static final Module stats = new Module("playerstats", "Overlay", Category.PVP,
+    public static final Module stats = new Module("playerstats", "Overlay", Category.HYPIXEL,
             "タブとチャットに統計とタグを表示・/pv で詳しい統計・デニック", true);
     public static final dev.fzkc.fzhud.config.PageSetting statsPageTab = stats.add(new dev.fzkc.fzhud.config.PageSetting("p_tab", "タブリスト"));
     public static final HeaderSetting statsHeadTab = stats.add(new HeaderSetting("h_tab", "表示"));
@@ -386,7 +386,7 @@ public final class Modules {
     public static final SliderSetting kbFovTime = overlays.add(new SliderSetting("kbfovtime", "広げている時間", 0.2, 1.5, 0.05, 0.5, "秒"));
 
     // ---- Height Limit (learned per game and map from "Build height limit reached!")
-    public static final Module heightLimit = new Module("heightlimit", "Height Limit", Category.SERVER,
+    public static final Module heightLimit = new Module("heightlimit", "Height Limit", Category.HYPIXEL,
             "高さ上限までのブロック数を表示（一度上限に当たるとマップごとに覚える）", true);
     public static final BoolSetting heightLimitText = heightLimit.add(new BoolSetting("text", "照準の下に「上限まで」を表示", true));
     public static final BoolSetting heightLimitAlways = heightLimit.add(new BoolSetting("always", "遠くてもいつも表示", false));
@@ -396,7 +396,7 @@ public final class Modules {
     public static final BoolSetting heightLimitShare = heightLimit.add(new BoolSetting("share", "高さ上限をほかの FzClient ユーザーと共有する（行ったことのないマップもわかる）", true));
 
     // ---- Auto GG (Hypixel: every game with an end summary — Bed Wars, Duels, Sky Wars...)
-    public static final Module autoGG = new Module("autogg", "Auto GG", Category.SERVER,
+    public static final Module autoGG = new Module("autogg", "Auto GG", Category.HYPIXEL,
             "ゲーム終了時に自動でgg", false);
     public static final TextSetting autoGGText = autoGG.add(new TextSetting("text", "送る言葉", "gg", 40));
     public static final SliderSetting autoGGDelay = autoGG.add(new SliderSetting("delay", "送るまでの時間", 0, 5, 0.05, 1, "秒"));

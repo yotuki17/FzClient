@@ -60,6 +60,12 @@ public class ModsScreen extends FzScreen {
     private int cursor;
     private final Map<Object, Anim> anims = new HashMap<Object, Anim>();
 
+    /** Dev check (DevTest "mods"): which category or the dashboard home the next screen opens on. */
+    public static void devShow(int category, boolean onHome) {
+        cat = category;
+        home = onHome;
+    }
+
     public ModsScreen(GuiScreen parent) {
         this.parent = parent;
     }
@@ -165,7 +171,10 @@ public class ModsScreen extends FzScreen {
         return counts[c];
     }
 
-    private float catY(int i) { return py() + 56 + i * 25; }
+    /** Rows get closer together in a short window so the last one stays above the Presets button. */
+    private float catStep() { return Math.max(14, Math.min(25, (presetBtnY() - 4 - (py() + 56)) / CLIENT_CAT)); }
+
+    private float catY(int i) { return py() + 56 + i * catStep(); }
 
     private float editBtnY() { return py() + H() - 62; }
 
@@ -187,6 +196,15 @@ public class ModsScreen extends FzScreen {
         return 2;
     }
 
+    /** Below 1 when even names only do not fit: the tabs and their text shrink so the row never runs under the buttons. */
+    private float tabScale() {
+        if (tabDetail() < 2) return 1;
+        float need = 0;
+        for (int i = 0; i < CLIENT_CAT; i++) need += tabW(i, 2);
+        float room = cw() - actionsW() - 12 - 4 * CLIENT_CAT;
+        return need <= room ? 1 : Math.max(0.5f, room / need);
+    }
+
     private float tabW(int i, int detail) {
         float w = R.width(dev.fzkc.fzhud.util.Lang.t(CATS[i])) + 14;
         if (detail == 0) w += 16;
@@ -195,11 +213,12 @@ public class ModsScreen extends FzScreen {
     }
 
     private float[] catRect(int i) {
-        if (!top()) return new float[]{sx() + 8, catY(i), SW - 16, 23};
+        if (!top()) return new float[]{sx() + 8, catY(i), SW - 16, Math.min(23, catStep() - 2)};
         int d = tabDetail();
+        float s = tabScale();
         float x = x0();
-        for (int j = 0; j < i; j++) x += tabW(j, d) + 4;
-        return new float[]{x, py() + TAB_Y, tabW(i, d), TAB_H};
+        for (int j = 0; j < i; j++) x += tabW(j, d) * s + 4;
+        return new float[]{x, py() + TAB_Y, tabW(i, d) * s, TAB_H};
     }
 
     private String editLabel() {
@@ -272,14 +291,16 @@ public class ModsScreen extends FzScreen {
             R.rounded(r[0], r[1], r[2], r[3], Ui.rad(4f), R.alpha(R.lerpColor(0x00000000, Ui.accentA(0x30), h), o));
             if (sel) {
                 if (top()) R.rounded(r[0] + 6, r[1] + r[3] - 3, r[2] - 12, 2, 1f, R.alpha(Ui.accent, o));
-                else R.rounded(r[0], r[1] + 5, 3, 14, 1.5f, R.alpha(Ui.accent, o));
+                else R.rounded(r[0], r[1] + (r[3] - 14) / 2f, 3, 14, 1.5f, R.alpha(Ui.accent, o));
             }
             float tx = r[0] + (top() ? 7 : 9);
             if (icons) {
                 Icons.draw(catIcon(i), tx, r[1] + (r[3] - 12) / 2f, 12, R.alpha(sel ? Ui.accent : 0xFF9DB4B8, o));
                 tx += top() ? 16 : 17;
             }
-            R.text(CATS[i], tx, r[1] + (r[3] - 8) / 2f, R.alpha(sel ? Ui.text : Ui.textA(0xC0), o));
+            float ts = top() ? tabScale() : 1;
+            if (ts < 1) R.textScaled(CATS[i], r[0] + 7 * ts, r[1] + (r[3] - 8 * ts) / 2f, ts, R.alpha(sel ? Ui.text : Ui.textA(0xC0), o));
+            else R.text(CATS[i], tx, r[1] + (r[3] - 8) / 2f, R.alpha(sel ? Ui.text : Ui.textA(0xC0), o));
             if (detail <= 1) {
                 String cs = String.valueOf(count(i));
                 R.text(cs, r[0] + r[2] - (top() ? 7 : 8) - R.width(cs), r[1] + (r[3] - 8) / 2f, R.alpha(Ui.MUTED, o));
@@ -356,8 +377,8 @@ public class ModsScreen extends FzScreen {
 
     // ================================================================== dashboard home
 
-    /** Tile colours: すべて, HUD, PvP, Visual, Server, Utility. */
-    private static final int[] TILE = {0xFF4CAF50, 0xFFA23CBF, 0xFF2D9CEB, 0xFFEF5350, 0xFFE73370, 0xFF4C5BC0};
+    /** Tile colours: すべて, HUD, PvP, Visual, Server, Hypixel, Utility. */
+    private static final int[] TILE = {0xFF4CAF50, 0xFFA23CBF, 0xFF2D9CEB, 0xFFEF5350, 0xFFE73370, 0xFFF0A020, 0xFF4C5BC0};
     private static final float TILE_H = 56;
     private final Anim recentScroll = new Anim(0f, 16f);
     private float recentScrollTarget;
@@ -365,10 +386,10 @@ public class ModsScreen extends FzScreen {
     private float[] homeRect() { return new float[]{x0(), py() + 12, R.width(dev.fzkc.fzhud.util.Lang.t("‹ ホーム")) + 18, 20}; }
     private float rightW() { return Math.max(150, Math.min(200, cw() * 0.3f)); }
     private float mainW() { return cw() - rightW() - 12; }
-    private float tileW() { return (mainW() - 16) / 3f; }
+    private float tileW() { return (mainW() - 24) / 4f; }
 
     private float[] tileRect(int i) {
-        int c = i % 3, r = i / 3;
+        int c = i % 4, r = i / 4;   // 4 across: すべて and the 6 categories fit in 2 rows
         return new float[]{x0() + c * (tileW() + 8), py() + 46 + r * (TILE_H + 8), tileW(), TILE_H};
     }
 

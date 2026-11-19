@@ -88,7 +88,9 @@ public final class Stats {
 
     /** Something that is switched on needs to know which game this is. */
     private static boolean wantLocation() {
-        return Modules.stats.enabled || Modules.requeue.enabled || Modules.performance.enabled && Modules.perfLobbyPlayers.get() < 100;
+        return Modules.stats.enabled || Modules.requeue.enabled || Modules.performance.enabled && Modules.perfLobbyPlayers.get() < 100
+                // the Bed Wars void alerts only run in a Bed Wars game
+                || Modules.chat.enabled && (Modules.bwVoidSound.get() != 0 || Modules.bwVoidParty.get());
     }
 
     public static void init() {
