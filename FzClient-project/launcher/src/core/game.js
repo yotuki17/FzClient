@@ -219,15 +219,145 @@ class Game {
     await this.installMojangJava(progress);
   }
 
-  /** Downloads the newest Temurin 8 JRE once (checked with its SHA-256). False when that does not work. */
+  /** Downloads Temurin's package (checked with its SHA-256) and unpacks it into tmp; returns the folder with the Java. */
+  async unpackTemurin(pkg, progress, tmp, zipFile) {
+    progress('Java 8', 0, 1, 0, pkg.size || 0);
+    await download(pkg.link, zipFile);
+    const got = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
+    if (got !== String(pkg.checksum).toLowerCase()) throw new Error('checksum mismatch');
+    fs.rmSync(tmp, { recursive: true, force: true });
+    if (MAC) {
+      // macOS' own tar keeps the programs runnable (adm-zip would drop that)
+      fs.mkdirSync(tmp, { recursive: true });
+      const t = spawnSync('/usr/bin/tar', ['-xzf', zipFile, '-C', tmp], { encoding: 'utf8' });
+      if (t.status !== 0) throw new Error('tar: ' + (t.stderr || t.status));
+    } else {
+      new AdmZip(zipFile).extractAllTo(tmp, true);
+    }
+    // the archive holds one folder ("jdk8u512-b09-jre") with bin/javaw.exe (Mac: Contents/Home/bin/java) inside
+    if (fs.existsSync(Game.javaBin(tmp))) return tmp;
+    const sub = fs.readdirSync(tmp).map(n => path.join(tmp, n)).find(p => fs.existsSync(Game.javaBin(p)));
+    if (!sub) throw new Error('java not in the archive');
+    return sub;
+  }
+
+  /** True when a program from this folder is running (or when that can't be told, to be safe). */
+  javaInUse(dir) {
+    try {
+      const want = path.resolve(dir).toLowerCase() + path.sep;
+      let paths;
+      if (MAC) {
+        const r = spawnSync('/bin/ps', ['-axo', 'comm='], { encoding: 'utf8' });
+        if (r.status !== 0) return true;
+        paths = r.stdout.split('\n');
+      } else {
+        const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+          // UTF-8 out, so a Japanese user name in the path compares right
+          '[Console]::OutputEncoding = [Text.Encoding]::UTF8; (Get-CimInstance Win32_Process).ExecutablePath'],{ encoding: 'utf8', windowsHide: true, timeout: 15000 });
+        if (r.status !== 0) return true;
+        paths = r.stdout.split(/\r?\n/);
+      }
+      return paths.some(p => p.trim().toLowerCase().startsWith(want));
+    } catch {
+      return true;
+    }
+  }
+
+  /** "jdk8u512-b09" -> a number that grows with every Temurin 8 release (0 when it can't be read). */
+  static temurinBuild(name) {
+    const m = /8u(\d+)-b(\d+)/.exec(String(name || ''));
+    return m ? Number(m[1]) * 1000 + Number(m[2]) : 0;
+  }
+
+  /**
+   * Fetches a newer Temurin 8 release (security fixes) into temurin-8.new, in the background while the game
+   * plays: nothing waits for it. Checked at most every 6 hours (also after a failure, so a broken download is not
+   * repeated on every start). The next start puts it in place (applyTemurinUpdate).
+   */
+  async updateTemurin() {
+    if (Game.temurinUpdating) return;
+    const dir = this.temurinDir;
+    const stamp = path.join(dir, '.fz-checked');
+    try { if (Date.now() - fs.statSync(stamp).mtimeMs < 6 * 3600 * 1000) return; } catch {}
+    Game.temurinUpdating = true;
+    const next = dir + '.new', tmp = dir + '.dl';
+    const zipFile = path.join(this.root, 'runtime', MAC ? 'temurin-8-update.tar.gz' : 'temurin-8-update.zip');
+    try {
+      const list = await getJson(TEMURIN_8);
+      try { fs.writeFileSync(stamp, String(Date.now())); } catch {}
+      let have = '';
+      try { have = fs.readFileSync(path.join(dir, '.fz-ok'), 'utf8').trim(); } catch {}
+      const latest = list && list[0] && list[0].release_name;
+      const pkg = list && list[0] && list[0].binary && list[0].binary.package;
+      if (!latest || !pkg || !pkg.link || !pkg.checksum) return;
+      if (Game.temurinBuild(latest) <= Game.temurinBuild(have)) return;
+      if (this.javaReady(next) && Game.temurinBuild(fs.readFileSync(path.join(next, '.fz-ok'), 'utf8')) >= Game.temurinBuild(latest)) return;
+      this.log('[java] downloading Temurin ' + latest + ' (now ' + have + '), used from the next start');
+      const home = await this.unpackTemurin(pkg, () => {}, tmp, zipFile);
+      fs.rmSync(next, { recursive: true, force: true });
+      fs.renameSync(home, next);
+      fs.writeFileSync(path.join(next, '.fz-ok'), latest);
+      this.log('[java] Temurin ' + latest + ' is ready for the next start');
+    } catch (e) {
+      this.log('[java] Temurin update failed (tried again later): ' + (e && e.message));
+      try { fs.rmSync(next, { recursive: true, force: true }); } catch {}
+    } finally {
+      for (const p of [tmp, zipFile]) { try { fs.rmSync(p, { recursive: true, force: true }); } catch {} }
+      Game.temurinUpdating = false;
+    }
+  }
+
+  /**
+   * Puts a downloaded newer Temurin (temurin-8.new) in place, before the game starts. Only when no program runs
+   * from the current one (a game still open would break if its files moved). If the swap can't finish, the old
+   * Java goes back. Quick: two folder renames.
+   */
+  applyTemurinUpdate() {
+    const dir = this.temurinDir, next = dir + '.new', old = dir + '.old';
+    if (Game.temurinUpdating || !fs.existsSync(next)) return;
+    try {
+      const build = d => Game.temurinBuild(fs.readFileSync(path.join(d, '.fz-ok'), 'utf8'));
+      if (!this.javaReady(next) || build(next) <= build(dir)) {
+        fs.rmSync(next, { recursive: true, force: true });
+        return;
+      }
+      if (this.javaInUse(dir)) {
+        this.log('[java] a game is still running on the old Temurin: the update waits for the next start');
+        return;
+      }
+      fs.rmSync(old, { recursive: true, force: true });
+      fs.renameSync(dir, old);
+      try {
+        fs.renameSync(next, dir);
+      } catch (e) {
+        fs.renameSync(old, dir);
+        throw e;
+      }
+      try { fs.rmSync(old, { recursive: true, force: true }); } catch {}
+      this.log('[java] now using Temurin ' + fs.readFileSync(path.join(dir, '.fz-ok'), 'utf8'));
+    } catch (e) {
+      this.log('[java] Temurin update not put in place (next start): ' + (e && e.message));
+    }
+  }
+
+  /** Downloads the newest Temurin 8 JRE (checked with its SHA-256) and keeps it up to date. False when it can't. */
   async installTemurin(progress) {
     const dir = this.temurinDir;
     // the game did not start with it once: stay on Mojang's Java (delete .fz-failed to try again)
     if (fs.existsSync(path.join(dir, '.fz-failed'))) return false;
+    // left over from an update that was cut off: the old Java goes back if the new one never took its place
+    try {
+      if (!fs.existsSync(dir) && this.javaReady(dir + '.old')) fs.renameSync(dir + '.old', dir);
+      else fs.rmSync(dir + '.old', { recursive: true, force: true });
+    } catch {}
     if (this.javaReady(dir)) {
-      this.runtimeDir = dir;
-      this.ensureNamedJava();
-      return true;
+      this.applyTemurinUpdate();
+      if (this.javaReady(dir)) {
+        this.runtimeDir = dir;
+        this.ensureNamedJava();
+        this.updateTemurin().catch(() => {});   // in the background: the game does not wait
+        return true;
+      }
     }
     const zipFile = path.join(this.root, 'runtime', MAC ? 'temurin-8.tar.gz' : 'temurin-8.zip');
     const tmp = dir + '.tmp';
@@ -235,26 +365,7 @@ class Game {
       const list = await getJson(TEMURIN_8);
       const pkg = list && list[0] && list[0].binary && list[0].binary.package;
       if (!pkg || !pkg.link || !pkg.checksum) throw new Error('no Temurin 8 package');
-      progress('Java 8', 0, 1, 0, pkg.size || 0);
-      await download(pkg.link, zipFile);
-      const got = crypto.createHash('sha256').update(fs.readFileSync(zipFile)).digest('hex');
-      if (got !== String(pkg.checksum).toLowerCase()) throw new Error('checksum mismatch');
-      fs.rmSync(tmp, { recursive: true, force: true });
-      if (MAC) {
-        // macOS' own tar keeps the programs runnable (adm-zip would drop that)
-        fs.mkdirSync(tmp, { recursive: true });
-        const t = spawnSync('/usr/bin/tar', ['-xzf', zipFile, '-C', tmp], { encoding: 'utf8' });
-        if (t.status !== 0) throw new Error('tar: ' + (t.stderr || t.status));
-      } else {
-        new AdmZip(zipFile).extractAllTo(tmp, true);
-      }
-      // the archive holds one folder ("jdk8u512-b09-jre") with bin/javaw.exe (Mac: Contents/Home/bin/java) inside
-      let home = tmp;
-      if (!fs.existsSync(Game.javaBin(home))) {
-        const sub = fs.readdirSync(tmp).map(n => path.join(tmp, n)).find(p => fs.existsSync(Game.javaBin(p)));
-        if (!sub) throw new Error('java not in the archive');
-        home = sub;
-      }
+      const home = await this.unpackTemurin(pkg, progress, tmp, zipFile);
       fs.rmSync(dir, { recursive: true, force: true });
       fs.renameSync(home, dir);
       fs.writeFileSync(path.join(dir, '.fz-ok'), list[0].release_name || 'ok');
