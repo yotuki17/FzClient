@@ -208,7 +208,25 @@ class Game {
 
   javaReady(dir) {
     return fs.existsSync(path.join(dir, '.fz-ok')) && fs.existsSync(Game.javaBin(dir))
-      && !fs.existsSync(path.join(dir, '.fz-failed'));
+      && !this.temurinBlocked(dir);
+  }
+
+  /**
+   * True while a Java is set aside after failing to start the game (.fz-failed). Only for a day: then it is tried
+   * again, so one bad start (a mod, a full disk, a game closed at once) does not keep the old Java for good.
+   */
+  temurinBlocked(dir) {
+    const mark = path.join(dir, '.fz-failed');
+    let age;
+    try { age = Date.now() - fs.statSync(mark).mtimeMs; } catch { return false; }
+    if (age < Game.FAILED_FOR) return true;
+    try {
+      fs.rmSync(mark, { force: true });
+      fs.rmSync(path.join(dir, '.fz-fails'), { force: true });
+    } catch { return true; }
+    this.log('[java] trying Temurin again (set aside ' + Math.round(age / 3600000) + ' h ago)');
+    this.unblocked = true;   // installTemurin brings over a GPU choice made for Mojang's Java in the meantime
+    return false;
   }
 
   /** Temurin 8 when it can be had (FZ_MOJANG_JAVA=1 keeps Mojang's), else Mojang's Java 8. */
@@ -343,8 +361,8 @@ class Game {
   /** Downloads the newest Temurin 8 JRE (checked with its SHA-256) and keeps it up to date. False when it can't. */
   async installTemurin(progress) {
     const dir = this.temurinDir;
-    // the game did not start with it once: stay on Mojang's Java (delete .fz-failed to try again)
-    if (fs.existsSync(path.join(dir, '.fz-failed'))) return false;
+    // the game failed to start with it twice in a row: Mojang's Java for a day (temurinBlocked)
+    if (this.temurinBlocked(dir)) return false;
     // left over from an update that was cut off: the old Java goes back if the new one never took its place
     try {
       if (!fs.existsSync(dir) && this.javaReady(dir + '.old')) fs.renameSync(dir + '.old', dir);
@@ -355,6 +373,9 @@ class Game {
       if (this.javaReady(dir)) {
         this.runtimeDir = dir;
         this.ensureNamedJava();
+        // back from a day on Mojang's Java: the GPU set for it (最適化 page) goes with the game
+        if (this.unblocked && !MAC) this.copyGpuChoice(path.join(this.legacyDir, 'bin', 'FzClient.exe'), this.javaExe());
+        this.unblocked = false;
         this.updateTemurin().catch(() => {});   // in the background: the game does not wait
         return true;
       }
@@ -563,21 +584,46 @@ class Game {
       ps.on('error', e => this.log('[launch] affinity: ' + e.message));
       ps.on('close', code => this.log('[launch] affinity 0x' + Number(opts.affinityMask).toString(16) + (code ? ' failed (' + code + ')' : ' set')));
     }
+    // the last lines the game printed, for the log when it fails to start
+    let tail = '';
+    const keep = d => { tail = (tail + d.toString()).slice(-1500); };
     if (this.runtimeDir === this.temurinDir) {
-      // a game that ends with an error within a minute and a half on Temurin: Mojang's Java from the next start
+      // a game that ends with an error within a minute and a half on Temurin, twice in a row: Mojang's Java for a
+      // day (one failure can be anything: a mod, a full disk). A start that gets past that resets the count.
       const started = Date.now();
+      const dir = this.temurinDir, fails = path.join(dir, '.fz-fails');
+      const ok = setTimeout(() => { try { fs.rmSync(fails, { force: true }); } catch {} }, Game.FAST_FAIL);
       // a Mac: a Java that crashes ends on a signal (SIGABRT / SIGSEGV), not an exit code; "停止" in the launcher
       // (child.fzStopped) is not a crash
       child.on('exit', (code, signal) => {
-        if ((code || signal) && !child.fzStopped && Date.now() - started < 90000) {
-          try { fs.writeFileSync(path.join(this.temurinDir, '.fz-failed'), 'exit ' + (code || signal)); } catch {}
-          this.log('[java] the game ended (' + (code || signal) + ') soon after starting on Temurin: Mojang Java 8 next time');
+        clearTimeout(ok);
+        if (!(code || signal) || child.fzStopped || Date.now() - started >= Game.FAST_FAIL) {
+          try { fs.rmSync(fails, { force: true }); } catch {}
+          return;
+        }
+        // "in a row" = the last failure was a few minutes ago (a good start the launcher did not see to its
+        // 90 seconds, because it was closed, then never reset the count)
+        let n = 0;
+        try {
+          if (Date.now() - fs.statSync(fails).mtimeMs < Game.IN_A_ROW) n = parseInt(fs.readFileSync(fails, 'utf8'), 10) || 0;
+        } catch {}
+        n++;
+        try { fs.writeFileSync(fails, String(n)); } catch {}
+        // no secrets in the log: the session line, and the token itself (not an offline account's "0")
+        let text = tail.replace(/\(Session ID is[^)\n]*\)?/g, '(Session ID is ***)');
+        if (acc.accessToken && acc.accessToken.length > 8) text = text.split(acc.accessToken).join('***');
+        const last = text.trim().split(/\r?\n/).slice(-6).join(' | ');
+        this.log('[java] the game ended (' + (code || signal) + ') soon after starting on Temurin (' + n + ' in a row)'
+          + (last ? ': ' + last : ''));
+        if (n >= 2) {
+          try { fs.writeFileSync(path.join(dir, '.fz-failed'), 'exit ' + (code || signal)); } catch {}
+          this.log('[java] Mojang Java 8 for the next day, then Temurin again');
         }
       });
     }
     const onLog = opts.onLog || (() => {});
-    child.stdout.on('data', d => onLog(d.toString()));
-    child.stderr.on('data', d => onLog(d.toString()));
+    child.stdout.on('data', d => { keep(d); onLog(d.toString()); });
+    child.stderr.on('data', d => { keep(d); onLog(d.toString()); });
     return child;
   }
 }
@@ -594,5 +640,10 @@ function checkRosetta() {
   e.rosetta = true;
   throw e;
 }
+
+/** How long a Java that failed to start the game is set aside, and how soon an exit counts as failing to start. */
+Game.FAILED_FOR = 24 * 3600 * 1000;
+Game.FAST_FAIL = 90000;
+Game.IN_A_ROW = 15 * 60 * 1000;
 
 module.exports = { Game, MC_VERSION, FORGE_VERSION, MAC };
