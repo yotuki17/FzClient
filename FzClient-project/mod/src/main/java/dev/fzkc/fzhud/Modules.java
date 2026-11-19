@@ -89,6 +89,16 @@ public final class Modules {
     public static final SliderSetting satOpacity = saturation.add(new SliderSetting("opacity", "枠の濃さ", 10, 100, 1, 90, "%"));
     public static final ColorSetting satColor = saturation.add(new ColorSetting("colorhex", "枠の色", 0xFFFFD84A));
 
+    // ---- F3 Screen
+    public static final Module debugScreen = new Module("debugscreen", "F3 Screen", Category.VISUAL,
+            "F3（デバッグ画面）をパネルにまとめて見やすくする", true);
+    public static final BoolSetting debugSimple = debugScreen.add(new BoolSetting("simple", "よく使う行だけ表示（座標・向き・FPS など）", false));
+    public static final BoolSetting debugRight = debugScreen.add(new BoolSetting("right", "右側（メモリ・PC・ブロック情報）を表示", true));
+    public static final BoolSetting debugColor = debugScreen.add(new BoolSetting("color", "項目名と FPS に色を付ける", true));
+    public static final BoolSetting debugShadow = debugScreen.add(new BoolSetting("shadow", "文字に影を付ける", true));
+    public static final SliderSetting debugScale = debugScreen.add(new SliderSetting("scale", "文字の大きさ", 50, 100, 5, 100, "%"));
+    public static final SliderSetting debugBg = debugScreen.add(new SliderSetting("bg", "背景の濃さ", 0, 100, 5, 70, "%"));
+
     // ---- Motion Blur
     public static final Module motionBlur = new Module("motionblur", "Motion Blur", Category.VISUAL,
             "画面に残像をつける", true);
@@ -678,6 +688,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, itemPos, rawInput, dropLock, partyDetect, partyWarp, requeue, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, nameHider, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, debugScreen, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, itemPos, rawInput, dropLock, partyDetect, partyWarp, requeue, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, nameHider, branding, menuSound, language, glassUi, theme));
 
 }

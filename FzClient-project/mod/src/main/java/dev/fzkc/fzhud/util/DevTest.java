@@ -51,6 +51,29 @@ public class DevTest {
         else if ("denickshare".equals(MODE)) denickShare(w);
         else if ("settings".equals(MODE)) settings(mc, w);
         else if ("mods".equals(MODE)) mods(mc, w);
+        else if ("f3".equals(MODE)) f3(mc, w);
+    }
+
+    /** F3 Screen: the panels, the short version smaller, and vanilla F3 to compare. */
+    private void f3(Minecraft mc, int w) {
+        if (w == 60) {
+            mc.gameSettings.showDebugInfo = true;
+            Modules.debugScreen.enabled = true;
+        }
+        if (w == 100) shot(mc, "f3_panels");
+        if (w == 110) {
+            Modules.debugSimple.value = true;
+            Modules.debugScale.set(80);
+        }
+        if (w == 140) shot(mc, "f3_simple");
+        if (w == 150) Modules.debugScreen.enabled = false;
+        if (w == 180) shot(mc, "f3_vanilla");
+        if (w == 190) {
+            Modules.debugSimple.value = false;
+            Modules.debugScale.set(100);
+            Modules.debugScreen.enabled = true;
+            mc.gameSettings.showDebugInfo = false;
+        }
     }
 
     private int modsStyle = -1;

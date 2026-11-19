@@ -118,7 +118,7 @@ public final class Icons {
 
     /** Draws the icon for a module id (or "cat_xxx"); unknown ids get a plain circle. */
     public static void draw(String key, float x, float y, float size, int argb) {
-        Integer i = INDEX.get(key);
+        Integer i = INDEX.get("debugscreen".equals(key) ? "coords" : key);
         if (i == null) i = INDEX.get("fallback");
         if (((argb >>> 24) & 0xFF) == 0) return;
         int c = R.solid(argb);

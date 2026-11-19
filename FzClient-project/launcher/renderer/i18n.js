@@ -139,6 +139,8 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：F3 を見やすく（パネル表示・よく使う行だけ・文字の大きさ）': 'NEW: easier to read F3 (panels, only the useful lines, text size)',
+  'NEW：Mac でも Discord に「プレイ中」が出るように': 'NEW: Discord shows Playing FzClient on a Mac too',
   '修正：一度起動に失敗すると古い Java のまま戻らなかった問題（最新の Java 8 に戻ります）': 'Fix: one failed start no longer keeps the old Java for good (back to the newest Java 8)',
   '修正：Bed Wars で味方が奈落に落ちてもパーティーチャットが送られなかった問題': 'Fix: Bed Wars party chat now goes out when a teammate falls into the void',
   'NEW：Mods に「Hypixel」カテゴリ（Hypixel 専用の機能をまとめた）': 'NEW: a Hypixel category in Mods (the Hypixel-only features together)',

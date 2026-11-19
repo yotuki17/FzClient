@@ -180,7 +180,8 @@ public class FzHud {
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Requeue());   // /rq joins the same game again
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.feature.Requeue.Command());
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Snaplook());   // hold a key to look behind you
-        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.HotbarMouse());   // hotbar keys on mouse buttons in inventories
+        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.HotbarMouse());
+        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.DebugScreen());   // F3 in tidy panels   // hotbar keys on mouse buttons in inventories
         Object partyWarp = new dev.fzkc.fzhud.chat.PartyWarp();   // /p warp for party members the queue left behind
         MinecraftForge.EVENT_BUS.register(partyWarp);
         FMLCommonHandler.instance().bus().register(partyWarp);
