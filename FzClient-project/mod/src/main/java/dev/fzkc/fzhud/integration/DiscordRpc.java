@@ -11,14 +11,14 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.util.EnumChatFormatting;
 
-import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
- * Discord Rich Presence ("FzClient をプレイ中"), talking to the Discord app over its local pipe.
+ * Discord Rich Presence ("FzClient をプレイ中"), talking to the Discord app over its local pipe (Windows) or
+ * socket (Mac), see DiscordIpc.
  * No extra library or DLL. Uses FzClient's own Discord application (built in, nothing to set up).
  * Everything network-ish happens on a background thread; the game only hands over the text.
  * <p>
@@ -67,9 +67,9 @@ public final class DiscordRpc {
             log("off (the Discord module is switched off)");
             return;
         }
-        if (!System.getProperty("os.name", "").toLowerCase().startsWith("windows")) {
+        if (!DiscordIpc.supported()) {
             wantedClientId = "";
-            log("not supported on this system (" + System.getProperty("os.name", "?") + "), Windows only");
+            log("not supported on this system (" + System.getProperty("os.name", "?") + "), Windows and Mac only");
             return;
         }
         wantedClientId = id;
@@ -128,7 +128,7 @@ public final class DiscordRpc {
     // ---- worker -------------------------------------------------------------------------------------
 
     private static void run() {
-        RandomAccessFile pipe = null;
+        DiscordIpc.Conn pipe = null;
         String connectedId = null, sentKey = null;
         long retryAt = 0;
         while (true) {
@@ -143,7 +143,7 @@ public final class DiscordRpc {
                 if (pipe != null && !id.equals(connectedId)) { close(pipe); pipe = null; sentKey = null; }
                 if (pipe == null) {
                     if (System.currentTimeMillis() < retryAt) { Thread.sleep(1000L); continue; }
-                    pipe = open();
+                    pipe = DiscordIpc.open();
                     if (pipe == null) {
                         // Discord not running (or it is the browser version, or running as administrator)
                         log("could not find Discord's pipe (is the Discord desktop app open? it must be started "
@@ -192,17 +192,7 @@ public final class DiscordRpc {
         }
     }
 
-    private static RandomAccessFile open() {
-        for (int i = 0; i < 10; i++) {
-            try {
-                return new RandomAccessFile("\\\\.\\pipe\\discord-ipc-" + i, "rw");
-            } catch (Exception ignored) {
-            }
-        }
-        return null;
-    }
-
-    private static void write(RandomAccessFile pipe, int op, String json) throws Exception {
+    private static void write(DiscordIpc.Conn pipe, int op, String json) throws Exception {
         byte[] data = json.getBytes(UTF8);
         byte[] frame = new byte[8 + data.length];
         le(frame, 0, op);
@@ -211,7 +201,7 @@ public final class DiscordRpc {
         pipe.write(frame);
     }
 
-    private static String read(RandomAccessFile pipe) throws Exception {
+    private static String read(DiscordIpc.Conn pipe) throws Exception {
         byte[] head = new byte[8];
         pipe.readFully(head);
         int op = (head[0] & 0xFF) | (head[1] & 0xFF) << 8 | (head[2] & 0xFF) << 16 | (head[3] & 0xFF) << 24;
@@ -239,10 +229,7 @@ public final class DiscordRpc {
         }
     }
 
-    private static void close(RandomAccessFile f) {
-        try {
-            f.close();
-        } catch (Exception ignored) {
-        }
+    private static void close(DiscordIpc.Conn f) {
+        f.close();
     }
 }
