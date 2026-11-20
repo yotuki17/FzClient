@@ -215,26 +215,14 @@ public class AccountScreen extends FzScreen {
 
     // ------------------------------------------------------------------ faces
 
-    private static final Map<String, ResourceLocation> SKINS = new HashMap<String, ResourceLocation>();
-    private static final java.util.Set<String> REQUESTED = new java.util.HashSet<String>();
-
     private void face(String uuid, String name, float x, float y, float size, float alpha) {
         UUID id = null;
         try {
             id = UUID.fromString(uuid.replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5"));
         } catch (Exception ignored) {
         }
-        if (id != null && REQUESTED.add(uuid)) {
-            final String key = uuid;
-            try {
-                mc.getSkinManager().loadProfileTextures(new GameProfile(id, name), (type, loc, tex) -> {
-                    if (type == com.mojang.authlib.minecraft.MinecraftProfileTexture.Type.SKIN) SKINS.put(key, loc);
-                }, false);
-            } catch (Throwable ignored) {
-            }
-        }
-        ResourceLocation tex = SKINS.get(uuid);
-        if (tex == null) tex = id != null ? DefaultPlayerSkin.getDefaultSkin(id) : DefaultPlayerSkin.getDefaultSkinLegacy();
+        // from the Mojang profile (asked again when Mojang did not answer); the default skin until it has come
+        ResourceLocation tex = id != null ? dev.fzkc.fzhud.cosmetic.SkinCache.mojang(id, name).skin : DefaultPlayerSkin.getDefaultSkinLegacy();
         R.rect(x - 1, y - 1, size + 2, size + 2, R.alpha(0x60000000, alpha));
         mc.getTextureManager().bindTexture(tex);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);

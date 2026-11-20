@@ -192,4 +192,64 @@ async function cape(token, id) {
   return shape(await api(token, 'DELETE', PROFILE + '/capes/active'));
 }
 
-module.exports = { list, add, update, remove, addFromPlayer, current, apply, reset, cape, checkSkin };
+// ---------------------------------------------------------------- faces for the account list / home screen
+// The picture comes from the player's real skin (Mojang's session server), not from a third-party head service: those
+// keep answering with Steve for a while after a hiccup. The last skin that came is kept on disk, so a Mojang outage
+// still shows the right face.
+const FACE_FOR = 5 * 60 * 1000;
+const faceMemo = new Map();   // uuid -> { at, p: Promise<{ skin } | { none: true } | null> }
+const facesDir = () => path.join(app.getPath('userData'), 'faces');
+
+/** The skin PNG (data URL) a player wears: { skin }, { none: true } for the default skin, or null (unknown). */
+function skinOf(uuid) {
+  const id = String(uuid || '').replace(/-/g, '').toLowerCase();
+  if (!/^[0-9a-f]{32}$/.test(id)) return Promise.resolve(null);
+  const m = faceMemo.get(id);
+  if (m && Date.now() - m.at < FACE_FOR) return m.p;
+  const keep = path.join(facesDir(), id + '.png');
+  const slimMark = path.join(facesDir(), id + '.slim');   // there when the kept skin has thin arms
+  const kept = () => {
+    try { return { skin: dataUrl(fs.readFileSync(keep)), slim: fs.existsSync(slimMark) }; } catch { return null; }
+  };
+  const p = (async () => {
+    try {
+      const res = await net.fetch('https://sessionserver.mojang.com/session/minecraft/profile/' + id);
+      if (res.status === 204 || res.status === 404) return { none: true };   // not a Mojang account (offline)
+      if (!res.ok) return kept();
+      const prof = await res.json();
+      const prop = (prof.properties || []).find(x => x.name === 'textures');
+      const tex = prop ? JSON.parse(Buffer.from(prop.value, 'base64').toString('utf8')).textures || {} : {};
+      if (!tex.SKIN) {
+        for (const f of [keep, slimMark]) try { fs.unlinkSync(f); } catch { /* none kept */ }
+        return { none: true };
+      }
+      const buf = await download(tex.SKIN.url);
+      checkSkin(buf);
+      const slim = !!(tex.SKIN.metadata && tex.SKIN.metadata.model === 'slim');
+      try {
+        fs.mkdirSync(facesDir(), { recursive: true });
+        fs.writeFileSync(keep, buf);
+        if (slim) fs.writeFileSync(slimMark, ''); else try { fs.unlinkSync(slimMark); } catch { /* was not slim */ }
+      } catch { /* shown anyway */ }
+      return { skin: dataUrl(buf), slim, fresh: true };
+    } catch {
+      return kept();   // offline or Mojang down: the last one that came
+    }
+  })();
+  faceMemo.set(id, { at: Date.now(), p });
+  // a failed look-up (nothing, or only the kept copy) is asked again after half a minute, not five
+  p.then(r => {
+    if (r && (r.none || r.fresh)) return;
+    const now = faceMemo.get(id);
+    if (now && now.p === p) now.at = Date.now() - FACE_FOR + 30000;
+  });
+  return p;
+}
+
+/** Forgets what skinOf knows (the account's skin was just changed). */
+function forgetFace(uuid) {
+  if (uuid) faceMemo.delete(String(uuid).replace(/-/g, '').toLowerCase());
+  else faceMemo.clear();
+}
+
+module.exports = { list, add, update, remove, addFromPlayer, current, apply, reset, cape, checkSkin, skinOf, forgetFace };

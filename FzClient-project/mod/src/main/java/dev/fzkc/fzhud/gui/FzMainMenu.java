@@ -64,9 +64,6 @@ public class FzMainMenu extends FzScreen {
     private float introT = -1f;
     private long lastFrame;
 
-    /** Your own skin's face for the footer (falls back to Steve/Alex until it has downloaded). */
-    private static ResourceLocation skin;
-    private static boolean skinRequested;
 
     // ---------------------------------------------------------------- favourite servers (left side)
 
@@ -599,39 +596,10 @@ public class FzMainMenu extends FzScreen {
     private float accountY() { return vh - 24; }
     private float accountW(String name) { return 28 - 6 + R.width(name) + 6; }
 
-    /** The session the profile below belongs to. */
-    private static net.minecraft.util.Session profileOf;
-    private static com.mojang.authlib.GameProfile sessionProfile;
-
     /** The player's head (face + hat layer) from their skin, with a thin frame. */
     private void drawFace(float y, float alpha) {
-        // Session.getProfile() parses the UUID text and builds a new profile on every call: do it once per session
-        net.minecraft.util.Session session = mc.getSession();
-        if (session != profileOf) {
-            profileOf = session;
-            sessionProfile = null;
-            skin = null;              // another account: load its skin
-            skinRequested = false;
-            try {
-                sessionProfile = session.getProfile();
-            } catch (Throwable ignored) {
-            }
-        }
-        com.mojang.authlib.GameProfile profile = sessionProfile;
-        if (!skinRequested && profile != null && profile.getId() != null) {
-            skinRequested = true;
-            try {
-                mc.getSkinManager().loadProfileTextures(profile, (type, loc, texture) -> {
-                    if (type == com.mojang.authlib.minecraft.MinecraftProfileTexture.Type.SKIN) skin = loc;
-                }, false);
-            } catch (Throwable ignored) {
-            }
-        }
-        ResourceLocation tex = skin != null ? skin
-                : profile != null && profile.getId() != null
-                ? net.minecraft.client.resources.DefaultPlayerSkin.getDefaultSkin(profile.getId())
-                : net.minecraft.client.resources.DefaultPlayerSkin.getDefaultSkinLegacy();
-
+        // the same skin as the player model (asked again when Mojang did not answer at start-up)
+        ResourceLocation tex = dev.fzkc.fzhud.cosmetic.PlayerPreview.ownSkin();
         R.rect((float) 10 - 1, y - 1, (float) 13 + 2, (float) 13 + 2, R.alpha(0x60000000, alpha));
         mc.getTextureManager().bindTexture(tex);
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);

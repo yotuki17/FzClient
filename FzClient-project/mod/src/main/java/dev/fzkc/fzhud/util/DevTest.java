@@ -52,6 +52,14 @@ public class DevTest {
         else if ("settings".equals(MODE)) settings(mc, w);
         else if ("mods".equals(MODE)) mods(mc, w);
         else if ("f3".equals(MODE)) f3(mc, w);
+        else if ("skin".equals(MODE)) skin(w);
+    }
+
+    /** SkinCache: a real player's skin from Mojang (a public profile), logged when it came. */
+    private void skin(int w) {
+        java.util.UUID id = java.util.UUID.fromString("1bfa795e-1b25-4dd2-bba6-57a4c0d1a858");
+        dev.fzkc.fzhud.cosmetic.SkinCache.Skin sk = dev.fzkc.fzhud.cosmetic.SkinCache.mojang(id, "Fzkc");
+        if (w % 20 == 0) System.out.println("[FzClient] skintest w=" + w + " skin=" + sk.skin + " slim=" + sk.slim + " cape=" + sk.cape);
     }
 
     /** F3 Screen: the panels, the short version smaller, and vanilla F3 to compare. */

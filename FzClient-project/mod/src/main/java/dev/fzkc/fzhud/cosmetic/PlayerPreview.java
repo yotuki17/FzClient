@@ -17,63 +17,65 @@ import org.lwjgl.opengl.GL11;
 
 /**
  * Your own player drawn as a model (skin + cape), without needing a world: works on the title screen too.
- * The skin comes from your account (loaded once in the background); until then the default skin is shown.
+ * The skin comes from your account (SkinCache, asked again when Mojang did not answer); until then the default skin
+ * is shown.
  */
 public final class PlayerPreview {
     private static final ModelPlayer WIDE = new ModelPlayer(0f, false), SLIM = new ModelPlayer(0f, true);
     private static volatile ResourceLocation skin;
     /** The account's own Mojang cape, shown when no FzClient cape is worn. */
     private static volatile ResourceLocation ownCape;
-    private static volatile boolean slim, asked;
+    private static volatile boolean slim;
     private static final CapeCloth.Sim PREVIEW_CAPE = new CapeCloth.Sim();
     /** A shoulder pet to draw on the preview (set around a draw call by the Cosmetics page), or null. */
     public static String shoulderPet;
 
     private PlayerPreview() {}
 
+    /** The session the skin below belongs to (another account logged in: its own skin). */
+    private static net.minecraft.util.Session sessionOf;
+    private static GameProfile sessionProfile;
+
+    /** Your account's profile (Session.getProfile() builds a new one on every call: once per session). */
+    private static GameProfile profile() {
+        Minecraft mc = Minecraft.getMinecraft();
+        net.minecraft.util.Session s = mc.getSession();
+        if (s != sessionOf) {
+            sessionOf = s;
+            sessionProfile = null;
+            try {
+                sessionProfile = s == null ? null : s.getProfile();
+            } catch (Throwable ignored) {
+            }
+        }
+        return sessionProfile;
+    }
+
     private static void loadSkin() {
         Minecraft mc = Minecraft.getMinecraft();
+        GameProfile p = profile();
+        SkinCache.Skin own = p == null || p.getId() == null ? null : SkinCache.mojang(p.getId(), p.getName());
+        // the Mojang cape comes only from the profile (in a world getLocationCape() would answer with the FzClient
+        // cape while one is worn)
+        ownCape = own == null ? null : own.cape;
         if (mc.thePlayer != null) {
             skin = mc.thePlayer.getLocationSkin();
             slim = "slim".equals(mc.thePlayer.getSkinType());
+        } else if (own != null) {
+            skin = own.skin;
+            slim = own.slim;
+        } else {
+            skin = null;
         }
-        // the account's textures are looked up once in any case: the Mojang cape comes only from there (in a world
-        // getLocationCape() would answer with the FzClient cape while one is worn)
-        if (asked || mc.getSession() == null) return;
-        asked = true;
-        final GameProfile profile = mc.getSession().getProfile();
-        if (profile == null || profile.getId() == null) return;
-        slim = "slim".equals(DefaultPlayerSkin.getSkinType(profile.getId()));
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final Minecraft mc = Minecraft.getMinecraft();
-                    final GameProfile full = mc.getSessionService().fillProfileProperties(profile, false);
-                    mc.addScheduledTask(new Runnable() {
-                        @Override
-                        public void run() {
-                            mc.getSkinManager().loadProfileTextures(full, new SkinManager.SkinAvailableCallback() {
-                                @Override
-                                public void skinAvailable(MinecraftProfileTexture.Type type, ResourceLocation location, MinecraftProfileTexture texture) {
-                                    if (type == MinecraftProfileTexture.Type.CAPE) {
-                                        ownCape = location;
-                                        return;
-                                    }
-                                    if (type != MinecraftProfileTexture.Type.SKIN || Minecraft.getMinecraft().thePlayer != null) return;
-                                    slim = "slim".equals(texture.getMetadata("model"));
-                                    skin = location;
-                                }
-                            }, false);
-                        }
-                    });
-                } catch (Throwable ignored) {
-                    // offline: keep the default skin
-                }
-            }
-        }, "FzClient-Skin");
-        t.setDaemon(true);
-        t.start();
+    }
+
+    /** Your own skin texture (the default one until the real one has come), for a face on the title screen. */
+    public static ResourceLocation ownSkin() {
+        loadSkin();
+        ResourceLocation s = skin;
+        if (s != null) return s;
+        GameProfile p = profile();
+        return p != null && p.getId() != null ? DefaultPlayerSkin.getDefaultSkin(p.getId()) : DefaultPlayerSkin.getDefaultSkinLegacy();
     }
 
     /**
@@ -83,12 +85,7 @@ public final class PlayerPreview {
      */
     public static void draw(float x, float footY, float size, float yaw, ResourceLocation cape, float age) {
         Minecraft mc = Minecraft.getMinecraft();
-        loadSkin();
-        ResourceLocation s = skin;
-        if (s == null) {
-            GameProfile p = mc.getSession() == null ? null : mc.getSession().getProfile();
-            s = p != null && p.getId() != null ? DefaultPlayerSkin.getDefaultSkin(p.getId()) : DefaultPlayerSkin.getDefaultSkinLegacy();
-        }
+        ResourceLocation s = ownSkin();
         drawSkin(s, slim, x, footY, size, yaw, cape != null ? cape : ownCape, age);
     }
 

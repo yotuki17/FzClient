@@ -130,6 +130,7 @@ public final class DiscordRpc {
     private static void run() {
         DiscordIpc.Conn pipe = null;
         String connectedId = null, sentKey = null;
+        long sentAt = 0;
         long retryAt = 0;
         while (true) {
             try {
@@ -161,7 +162,9 @@ public final class DiscordRpc {
                 }
                 String key = wantedKey;
                 JsonObject act = wantedActivity;
-                if (act != null && !key.equals(sentKey)) {
+                // sent again now and then even when nothing changed: a Discord that was restarted meanwhile gets it
+                // too (the old connection fails on that write and is opened again)
+                if (act != null && (!key.equals(sentKey) || System.currentTimeMillis() - sentAt > 30000L)) {
                     JsonObject args = new JsonObject();
                     args.addProperty("pid", pid());
                     args.add("activity", act);
@@ -174,6 +177,7 @@ public final class DiscordRpc {
                     // an error here ("evt":"ERROR") is the reason the status does not show up
                     log("status sent, Discord answered: " + cut(reply));
                     sentKey = key;
+                    sentAt = System.currentTimeMillis();
                     Thread.sleep(4000L); // Discord allows about 5 updates per 20 seconds
                 } else {
                     Thread.sleep(1000L);

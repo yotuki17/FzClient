@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('fz', {
   skins: {
     list: () => ipcRenderer.invoke('skins:list'),
     current: () => ipcRenderer.invoke('skins:current'),
+    of: uuid => ipcRenderer.invoke('skins:of', uuid),
     addFile: variant => ipcRenderer.invoke('skins:addFile', variant),
     addData: (base64, name, variant) => ipcRenderer.invoke('skins:addData', base64, name, variant),
     addPlayer: name => ipcRenderer.invoke('skins:addPlayer', name),

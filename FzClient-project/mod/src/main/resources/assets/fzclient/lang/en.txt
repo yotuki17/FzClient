@@ -1189,3 +1189,4 @@ F3（デバッグ画面）をパネルにまとめて見やすくする	F3 debug
 よく使う行だけ表示（座標・向き・FPS など）	Only the useful lines (position, facing, FPS...)
 右側（メモリ・PC・ブロック情報）を表示	Show the right side (memory, PC, block info)
 項目名と FPS に色を付ける	Colour the item names and FPS
+文字の大きさ	Text size

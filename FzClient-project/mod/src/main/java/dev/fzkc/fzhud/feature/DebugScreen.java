@@ -1,7 +1,6 @@
 package dev.fzkc.fzhud.feature;
 
 import dev.fzkc.fzhud.Modules;
-import dev.fzkc.fzhud.gui.Ui;
 import dev.fzkc.fzhud.render.R;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -24,10 +23,10 @@ import java.util.regex.Pattern;
 public final class DebugScreen {
     /** Left-side lines that only matter for debugging the game itself ("よく使う行だけ" leaves them out). */
     private static final String[] TECH_LEFT = {"Minecraft ", "C:", "E:", "P:", "Client Chunk", "MultiplayerChunkCache",
-            "Chunk:", "Local Difficulty", "Shaders", "[Shaders]", "Debug:", "For help", "Integrated server", "Dimension:"};
+            "Chunk:", "Chunk-relative", "Local Difficulty", "Shader", "[Shaders]"};
     private static final Pattern FPS = Pattern.compile("^(\\d+)(/\\d+)? fps");
     /** "minecraft:stone" heading the looked-at block on the right side. */
-    private static final Pattern BLOCK_ID = Pattern.compile("^[a-z0-9_.-]+:[a-z0-9_/.-]+$");
+    private static final Pattern BLOCK_ID = Pattern.compile("^[a-z0-9_.-]+:[A-Za-z0-9_/.-]+$");   // 1.8.9 mods keep capitals
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onText(RenderGameOverlayEvent.Text event) {
@@ -152,7 +151,9 @@ public final class DebugScreen {
         int colon = l.indexOf(": ");
         if (colon > 0 && colon <= 24) {
             String name = l.substring(0, colon + 1);
-            x = fr.drawString(name, x, y, Ui.accent | 0xFF000000, shadow);
+            // the accent picked in the settings, worked out here (Ui.accent is whatever the last menu left there)
+            int accent = 0xFF000000 | (R.solid(Modules.uiAccent.get()) & 0xFFFFFF);
+            x = fr.drawString(name, x, y, accent, shadow);
             fr.drawString(l.substring(colon + 1), x, y, white, shadow);
             return;
         }

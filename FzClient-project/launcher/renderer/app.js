@@ -29,7 +29,70 @@ function el(tag, cls, html) {
   return e;
 }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const face = uuid => `https://mc-heads.net/avatar/${uuid}/64`;
+const headService = uuid => `https://mc-heads.net/avatar/${uuid}/64`;
+// Faces are cut out of the player's real skin (asked from Mojang by the launcher, which keeps the last one on disk).
+// The head service is only for players with the default skin: it keeps showing Steve for a while after a hiccup.
+const faces = new Map();   // uuid -> data URL of the 64x64 face
+function cutFace(png) {
+  return new Promise(ok => {
+    const im = new Image();
+    im.onload = () => {
+      // the skin unscaled, to read its pixels the way Minecraft does
+      const src = document.createElement('canvas');
+      src.width = 64;
+      src.height = im.naturalHeight === 32 ? 32 : 64;
+      const sg = src.getContext('2d');
+      sg.drawImage(im, 0, 0);
+      const face = sg.getImageData(8, 8, 8, 8);
+      for (let i = 3; i < face.data.length; i += 4) face.data[i] = 255;   // the face layer is always solid
+      // an old 64x32 skin whose hat area has no see-through pixel: Minecraft leaves that layer out
+      let hat = true;
+      if (src.height === 32) {
+        const area = sg.getImageData(32, 0, 32, 16).data;
+        hat = false;
+        for (let i = 3; i < area.length; i += 4) if (area[i] < 128) { hat = true; break; }
+      }
+      const small = document.createElement('canvas');
+      small.width = small.height = 8;
+      const g8 = small.getContext('2d');
+      g8.putImageData(face, 0, 0);
+      if (hat) g8.drawImage(src, 40, 8, 8, 8, 0, 0, 8, 8);
+      const c = document.createElement('canvas');
+      c.width = c.height = 64;
+      const g = c.getContext('2d');
+      g.imageSmoothingEnabled = false;
+      g.drawImage(small, 0, 0, 64, 64);
+      ok(c.toDataURL('image/png'));
+    };
+    im.onerror = () => ok(null);
+    im.src = png;
+  });
+}
+/** Shows the player's face in img (nothing while it is unknown, e.g. offline with nothing kept). */
+async function setFace(img, uuid) {
+  img.dataset.uuid = uuid || '';
+  if (!uuid) { img.removeAttribute('src'); img.classList.remove('ok'); return; }
+  const known = faces.get(uuid);
+  if (known) img.src = known; else { img.removeAttribute('src'); img.classList.remove('ok'); }
+  let url = null;
+  // offline accounts (name-based UUID, version 3) have no Mojang profile: the head service shows their default skin
+  if (uuid.replace(/-/g, '')[12] !== '4') url = headService(uuid);
+  else {
+    try {
+      const r = await fz.skins.of(uuid);
+      if (r && r.skin) url = await cutFace(r.skin);
+      else if (r && r.none) url = headService(uuid);
+    } catch { /* keep what is shown */ }
+  }
+  if (img.dataset.uuid !== uuid) return;
+  if (!url) {
+    // Mojang did not answer and nothing is kept yet: ask again in a while (while this picture is still shown)
+    setTimeout(() => { if (img.isConnected && img.dataset.uuid === uuid) setFace(img, uuid); }, 45000);
+    return;
+  }
+  if (!url.startsWith('https:')) faces.set(uuid, url);
+  if (img.getAttribute('src') !== url) img.src = url;
+}
 
 // ---------------------------------------------------------------- theme (home screen picker)
 // <html data-theme> switches the colour variables in style.css. Kept in the settings, and in localStorage too so
@@ -127,11 +190,12 @@ async function loadAccounts() {
   if (a) {
     img.onload = () => img.classList.add('ok');
     img.onerror = () => img.classList.remove('ok');
-    img.src = face(a.uuid);
+    setFace(img, a.uuid);
     $('acctInit').textContent = a.name[0].toUpperCase();
     $('who').textContent = a.name + (a.type === 'offline' ? t('（オフライン）') : '');
   } else {
     img.classList.remove('ok');
+    setFace(img, null);
     $('acctInit').textContent = '?';
     $('who').textContent = t('アカウント未設定');
   }
@@ -142,14 +206,15 @@ async function loadAccounts() {
   hf.onload = () => hf.classList.add('ok');
   hf.onerror = () => hf.classList.remove('ok');   // no network: no broken picture
   hf.classList.remove('ok');
-  if (a) hf.src = face(a.uuid); else hf.removeAttribute('src');
+  setFace(hf, a ? a.uuid : null);
   homeSkin(a);
   const list = $('acctList');
   list.innerHTML = '';
   if (!accounts.list.length) list.appendChild(el('div', 'empty', t('まだアカウントがありません')));
   for (const acc of accounts.list) {
     const row = el('div', 'card acc-row' + (a && acc.uuid === a.uuid ? ' sel' : ''),
-      `<img class="acc-face" src="${face(acc.uuid)}" alt=""><div><b>${esc(acc.name)}</b><small>${acc.type === 'msa' ? 'Microsoft' : t('オフライン')}</small></div><button class="rm" title="${t('削除')}">✕</button>`);
+      `<img class="acc-face" alt=""><div><b>${esc(acc.name)}</b><small>${acc.type === 'msa' ? 'Microsoft' : t('オフライン')}</small></div><button class="rm" title="${t('削除')}">✕</button>`);
+    setFace(row.querySelector('.acc-face'), acc.uuid);
     row.onclick = async ev => {
       if (ev.target.classList.contains('rm')) { await fz.accounts.remove(acc.uuid); toast(t('{0} を削除しました', acc.name)); }
       else await fz.accounts.select(acc.uuid);
@@ -199,6 +264,9 @@ async function homeSkin(a, again) {
   if (busy) { homeSkinFor = null; none(); setTimeout(() => { if (!busy && homeSkinFor === null) homeSkin(current()); }, 15000); return; }
   let skin = null;
   try { const cur = await fz.skins.current(); if (cur && cur.skin && cur.skin.image) skin = cur.skin; } catch { /* offline */ }
+  if (!skin) {   // the account could not be asked: the skin Mojang shows for it (or the last one kept)
+    try { const r = await fz.skins.of(a.uuid); if (r && r.skin) skin = { image: r.skin, variant: r.slim ? 'slim' : 'classic' }; } catch { /* nothing */ }
+  }
   if (homeSkinFor !== key) return;   // switched account meanwhile
   const v = skin && homeViewerReady();
   if (!v) { none(); if (!skin) homeSkinFor = null; return; }   // no skin (offline): try again next time
@@ -1107,6 +1175,17 @@ $('skinApply').onclick = async () => {
     skinCur = await fz.skins.apply(skinSel.id, skinSel.variant);
     toast(t('スキンを {0} にしました（ゲームには次に入ったときから反映されます）', skinSel.name));
     homeSkin(current(), true);
+    // the faces at once from the skin just put on (Mojang may still answer with the old one for a moment)
+    const me = current();
+    if (me && skinCur && skinCur.skin && skinCur.skin.image) {
+      const url = await cutFace(skinCur.skin.image);
+      if (url) {
+        faces.set(me.uuid, url);
+        for (const im of [$('acctFace'), $('homeFace'), ...document.querySelectorAll('.acc-face')]) {
+          if (im.dataset.uuid === me.uuid) im.src = url;
+        }
+      }
+    }
     skinBusy = false;
     skinSel = null;
     await loadSkins();

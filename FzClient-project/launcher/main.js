@@ -727,8 +727,15 @@ ipcMain.handle('skins:addData', (e, base64, name, variant) => skins.add(Buffer.f
 ipcMain.handle('skins:addPlayer', (e, name) => skins.addFromPlayer(String(name || '').trim()));
 ipcMain.handle('skins:update', (e, id, patch) => skins.update(id, { name: patch && patch.name, variant: patch && patch.variant }));
 ipcMain.handle('skins:remove', (e, id) => skins.remove(id));
-ipcMain.handle('skins:apply', async (e, id, variant) => skins.apply((await msaAccount()).accessToken, id, variant));
-ipcMain.handle('skins:reset', async () => skins.reset((await msaAccount()).accessToken));
+ipcMain.handle('skins:apply', async (e, id, variant) => {
+  const acc = await msaAccount();
+  try { return await skins.apply(acc.accessToken, id, variant); } finally { skins.forgetFace(acc.uuid); }
+});
+ipcMain.handle('skins:reset', async () => {
+  const acc = await msaAccount();
+  try { return await skins.reset(acc.accessToken); } finally { skins.forgetFace(acc.uuid); }
+});
+ipcMain.handle('skins:of', (e, uuid) => skins.skinOf(uuid));
 ipcMain.handle('skins:cape', async (e, id) => skins.cape((await msaAccount()).accessToken, id || null));
 
 // ---------------------------------------------------------------- PC optimisation
