@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：ゲームの起動を速く（Forge の二重の読み込みを省く）': 'NEW: the game starts faster (skips what Forge loads twice)',
   '修正：ランチャーの顔やタイトル画面のスキンがスティーブになることがあった問題': 'Fix: the launcher face and the title screen skin sometimes showed Steve',
   '修正：Discord を再起動すると「プレイ中」が戻らなかった問題': 'Fix: Playing FzClient now comes back after Discord is restarted',
   'NEW：F3 を見やすく（パネル表示・よく使う行だけ・文字の大きさ）': 'NEW: easier to read F3 (panels, only the useful lines, text size)',

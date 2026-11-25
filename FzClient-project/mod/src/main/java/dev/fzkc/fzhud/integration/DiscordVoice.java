@@ -138,6 +138,7 @@ public final class DiscordVoice {
         String cid = "", secret = "";
         boolean on = hud != null && hud.enabled
                 && System.getProperty("os.name", "").toLowerCase().startsWith("windows");
+        if (System.getProperty("fzclient.discordipc") != null) on = false;   // a test: never the real Discord
         if (on) cid = sharedId();
         String key = cid.isEmpty() ? "" : cid;
 

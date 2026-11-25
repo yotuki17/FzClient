@@ -443,6 +443,8 @@ public final class Modules {
     public static final BoolSetting optGlErrors = optimize.add(new BoolSetting("glerrors", "GL エラーの確認を省く（毎フレームの待ちが減る）", true));
     public static final BoolSetting optFont = optimize.add(new BoolSetting("font", "文字の描画を使い回す（同じ文字を毎フレーム作り直さない）", true));
     public static final BoolSetting optSky = optimize.add(new BoolSetting("sky", "空の色を毎フレーム計算し直さない（Forge の不具合を直す）", true));
+    /** Needed before the settings are loaded: FastStart reads it straight from the file. */
+    public static final BoolSetting optFastStart = optimize.add(new BoolSetting("faststart", "起動を速くする（Forge の二重の読み込みを省く・次の起動から）", true));
     public static final SliderSetting optTileDist = optimize.add(new SliderSetting("tiledist", "チェスト・看板・頭などの描画距離（64 = いつも通り）", 8, 64, 4, 64, "m"));
     public static final SliderSetting optParticles = optimize.add(new SliderSetting("maxparticles", "パーティクルの上限（4000 = いつも通り）", 200, 4000, 200, 4000, ""));
     public static final BoolSetting optNoParticles = optimize.add(new BoolSetting("noparticles", "パーティクルを完全に消す", false));

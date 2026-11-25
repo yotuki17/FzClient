@@ -27,6 +27,10 @@ public class DevTest {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
         int t = ++ticks;
+        if ("models".equals(MODE)) {
+            if (t == 60) models(mc);
+            return;
+        }
         if (t == 200 && mc.theWorld == null) {
             java.io.File[] dirs = new java.io.File(mc.mcDataDir, "saves").listFiles();
             if (dirs != null) {
@@ -53,6 +57,70 @@ public class DevTest {
         else if ("mods".equals(MODE)) mods(mc, w);
         else if ("f3".equals(MODE)) f3(mc, w);
         else if ("skin".equals(MODE)) skin(w);
+    }
+
+    /** FastStart: everything loaded at the title screen, one line each (to compare a start with and without it). */
+    private void models(Minecraft mc) {
+        try (java.io.PrintWriter w = new java.io.PrintWriter(System.getProperty("fzclient.dump", "models.txt"), "UTF-8")) {
+            net.minecraft.client.resources.model.ModelManager mm = mc.getRenderItem().getItemModelMesher().getModelManager();
+            for (java.lang.reflect.Field f : mm.getClass().getDeclaredFields()) {
+                f.setAccessible(true);
+                Object o = f.get(mm);
+                if (!(o instanceof net.minecraft.util.RegistrySimple)) continue;
+                for (Object k : ((net.minecraft.util.RegistrySimple<?, ?>) o).getKeys()) {
+                    w.println("model " + k + " " + model(mm.getModel((net.minecraft.client.resources.model.ModelResourceLocation) k), mm));
+                }
+            }
+            for (net.minecraft.block.Block b : net.minecraft.block.Block.blockRegistry) {
+                for (net.minecraft.block.state.IBlockState s : b.getBlockState().getValidStates()) {
+                    w.println("state " + s + " " + model(mm.getBlockModelShapes().getModelForState(s), mm));
+                }
+            }
+            for (net.minecraft.item.Item i : net.minecraft.item.Item.itemRegistry) {
+                for (int m = 0; m < 16; m++) {
+                    w.println("item " + net.minecraft.item.Item.itemRegistry.getNameForObject(i) + " " + m + " "
+                            + model(mc.getRenderItem().getItemModelMesher().getItemModel(new ItemStack(i, 1, m)), mm));
+                }
+            }
+            for (java.lang.reflect.Field f : net.minecraft.client.renderer.texture.TextureMap.class.getDeclaredFields()) {
+                f.setAccessible(true);
+                Object o = java.lang.reflect.Modifier.isStatic(f.getModifiers()) ? null : f.get(mc.getTextureMapBlocks());
+                if (o instanceof java.util.Map) {
+                    for (Object e : ((java.util.Map<?, ?>) o).values()) if (e != null) w.println("sprite " + f.getName() + " " + e);
+                }
+                if (o instanceof java.util.List) w.println("list " + f.getName() + " " + ((java.util.List<?>) o).size());
+            }
+            for (java.lang.reflect.Field f : net.minecraft.client.audio.SoundHandler.class.getDeclaredFields()) {
+                f.setAccessible(true);
+                Object o = java.lang.reflect.Modifier.isStatic(f.getModifiers()) ? null : f.get(mc.getSoundHandler());
+                if (!(o instanceof net.minecraft.client.audio.SoundRegistry)) continue;
+                for (Object k : ((net.minecraft.client.audio.SoundRegistry) o).getKeys()) {
+                    net.minecraft.client.audio.SoundEventAccessorComposite c = mc.getSoundHandler().getSound((net.minecraft.util.ResourceLocation) k);
+                    w.println("sound " + k + " " + c.getWeight() + " " + c.getSoundCategory());
+                }
+            }
+            LOG.info("models dumped");
+        } catch (Throwable e) {
+            LOG.error("models", e);
+        }
+        mc.shutdown();
+    }
+
+    private static String model(net.minecraft.client.resources.model.IBakedModel m, net.minecraft.client.resources.model.ModelManager mm) {
+        if (m == null) return "null";
+        int h = 1, n = 0;
+        try {
+            java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> q = new java.util.ArrayList<>(m.getGeneralQuads());
+            for (net.minecraft.util.EnumFacing f : net.minecraft.util.EnumFacing.values()) q.addAll(m.getFaceQuads(f));
+            for (net.minecraft.client.renderer.block.model.BakedQuad b : q) {
+                h = h * 31 + java.util.Arrays.hashCode(b.getVertexData());
+                n++;
+            }
+        } catch (Throwable e) {
+            return m.getClass().getName() + " " + e.getClass().getSimpleName();
+        }
+        return m.getClass().getSimpleName() + " " + n + " " + h + " " + (m == mm.getMissingModel()) + " "
+                + (m.getParticleTexture() == null ? null : m.getParticleTexture().getIconName());
     }
 
     /** SkinCache: a real player's skin from Mojang (a public profile), logged when it came. */

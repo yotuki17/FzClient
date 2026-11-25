@@ -38,7 +38,7 @@ public final class Config {
     }
 
     /** Settings from before the rename (FzHUD) are picked up once if there is no FzClient file yet. */
-    private static File readFile() {
+    public static File readFile() {
         File f = file();
         if (f.exists()) return f;
         File tmp = new File(f.getParentFile(), f.getName() + ".tmp"); // a save that was cut off half-way
