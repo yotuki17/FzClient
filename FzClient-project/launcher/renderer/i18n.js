@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  '修正：影MOD（シェーダー）を使うとヒットボックス・ヘイロー・TNT タイマーの背景が出なかった問題': 'Fix: with shaders on, hitboxes, halos and the TNT timer background did not show',
   'NEW：MOD をドラッグ＆ドロップで追加': 'NEW: add mods by drag and drop',
   '修正：起動直後にリプレイが真っ黒・短くなることがあった問題': 'Fix: replays right after the start could be black or short',
   'NEW：ゲームの起動を速く（Forge の二重の読み込みを省く）': 'NEW: the game starts faster (skips what Forge loads twice)',

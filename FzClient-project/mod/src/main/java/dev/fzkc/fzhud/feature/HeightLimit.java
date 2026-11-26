@@ -162,6 +162,7 @@ public class HeightLimit {
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.depthMask(false);
+        boolean shaders = dev.fzkc.fzhud.util.ShaderLines.begin();   // else a shader pack hides the plane
         GL11.glColor4f(cr, cg, cb, a);
         GL11.glBegin(GL11.GL_QUADS);
         GL11.glVertex3d(x0, y, z0);
@@ -179,6 +180,7 @@ public class HeightLimit {
             GL11.glVertex3d(x1, y, z0 + i);
         }
         GL11.glEnd();
+        if (shaders) dev.fzkc.fzhud.util.ShaderLines.end();
         GL11.glColor4f(1f, 1f, 1f, 1f);
         GlStateManager.depthMask(true);
         GlStateManager.disableBlend();

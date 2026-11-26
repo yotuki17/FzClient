@@ -78,7 +78,11 @@ public final class TntTimer {
             GlStateManager.rotate(rm.playerViewX * (mc.gameSettings.thirdPersonView == 2 ? -1 : 1), 1f, 0f, 0f);
             GlStateManager.scale(-sc, -sc, sc);
             int w = fr.getStringWidth(text) / 2;
-            if ((bg >>> 24) > 0) R.rounded(-w - 3, -2, w * 2 + 6, 12, 3f, bg);
+            if ((bg >>> 24) > 0) {
+                boolean shaders = dev.fzkc.fzhud.util.ShaderLines.begin();   // else a shader pack hides the background
+                R.rounded(-w - 3, -2, w * 2 + 6, 12, 3f, bg);
+                if (shaders) dev.fzkc.fzhud.util.ShaderLines.end();
+            }
             fr.drawString(text, -w, 0, color, shadow);
             GlStateManager.popMatrix();
         }

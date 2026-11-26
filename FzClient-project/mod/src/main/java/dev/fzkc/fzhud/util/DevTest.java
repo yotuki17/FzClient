@@ -57,6 +57,7 @@ public class DevTest {
         else if ("mods".equals(MODE)) mods(mc, w);
         else if ("f3".equals(MODE)) f3(mc, w);
         else if ("skin".equals(MODE)) skin(w);
+        else if ("hitbox".equals(MODE)) hitbox(mc, w);
     }
 
     /** FastStart: everything loaded at the title screen, one line each (to compare a start with and without it). */
@@ -548,6 +549,42 @@ public class DevTest {
             Modules.tagSelf.value = false;
             dev.fzkc.fzhud.Config.save();
             LOG.info("namehider done");
+        }
+    }
+
+    /** Hitboxes around a pig in front and around the player (F5): hitbox_1st.png, hitbox_f5.png; then quits. */
+    private void hitbox(Minecraft mc, int w) {
+        if (w == 40) {
+            Modules.hitbox.enabled = true;
+            Modules.hitboxPlayersOnly.value = false;
+            Modules.hitboxSelf.value = true;
+            Modules.tnt.enabled = true;
+            Modules.cosHalo.index = 1;
+            Modules.cosmetics.enabled = true;
+            mc.thePlayer.rotationPitch = 10f;
+            final MinecraftServer server = MinecraftServer.getServer();
+            final float yaw = mc.thePlayer.rotationYaw;
+            server.addScheduledTask(() -> {
+                net.minecraft.world.WorldServer ws = server.worldServers[0];
+                EntityPlayerMP p = server.getConfigurationManager().playerEntityList.get(0);
+                double rad = Math.toRadians(yaw);
+                net.minecraft.entity.passive.EntityPig pig = new net.minecraft.entity.passive.EntityPig(ws);
+                pig.setLocationAndAngles(p.posX - Math.sin(rad) * 3, p.posY, p.posZ + Math.cos(rad) * 3, 0f, 0f);
+                pig.setNoAI(true);
+                ws.spawnEntityInWorld(pig);
+                net.minecraft.entity.item.EntityTNTPrimed tnt = new net.minecraft.entity.item.EntityTNTPrimed(ws, p.posX - Math.sin(rad + 0.5) * 4, p.posY + 1, p.posZ + Math.cos(rad + 0.5) * 4, null);
+                tnt.fuse = 2000;
+                tnt.motionX = tnt.motionY = tnt.motionZ = 0;
+                ws.spawnEntityInWorld(tnt);
+            });
+        }
+        if (w == 90) shot(mc, "hitbox_1st");
+        if (w == 95) mc.gameSettings.thirdPersonView = 2;
+        if (w == 130) shot(mc, "hitbox_f5");
+        if (w == 135) {
+            mc.gameSettings.thirdPersonView = 0;
+            LOG.info("hitbox done");
+            mc.shutdown();
         }
     }
 }

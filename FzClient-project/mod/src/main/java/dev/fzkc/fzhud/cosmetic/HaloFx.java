@@ -43,7 +43,7 @@ public final class HaloFx {
         double cy = v.lastTickPosY + (v.posY - v.lastTickPosY) * pt;
         double cz = v.lastTickPosZ + (v.posZ - v.lastTickPosZ) * pt;
         float t = (mc.theWorld.getTotalWorldTime() + pt) / 20f;
-        boolean begun = false;
+        boolean begun = false, shaders = false;
         // by index, without copying the list every frame (nothing changes it while a frame is drawn)
         java.util.List<EntityPlayer> all = mc.theWorld.playerEntities;
         for (int i = 0; i < all.size(); i++) {
@@ -54,6 +54,7 @@ public final class HaloFx {
             if (p.getDistanceSqToEntity(v) > 48 * 48) continue;
             if (!begun) {
                 begin(mc);
+                shaders = dev.fzkc.fzhud.util.ShaderLines.begin();   // else a shader pack hides the ring
                 begun = true;
             }
             double x = p.lastTickPosX + (p.posX - p.lastTickPosX) * pt - cx;
@@ -62,6 +63,7 @@ public final class HaloFx {
             double z = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * pt - cz;
             ring(e.halo, x, y, z, t);
         }
+        if (shaders) dev.fzkc.fzhud.util.ShaderLines.end();
         if (begun) end(mc);
     }
 
@@ -74,7 +76,7 @@ public final class HaloFx {
             else GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             float in = glow ? R_IN - .05f : R_IN, out = glow ? R_OUT + .05f : R_OUT;
             int alpha = glow ? 70 : 235;
-            w.begin(GL11.GL_QUAD_STRIP, DefaultVertexFormats.POSITION_COLOR);
+            w.begin(GL11.GL_TRIANGLE_STRIP, DefaultVertexFormats.POSITION_COLOR);   // same shape; shaders mishandle quad strips
             for (int i = 0; i <= SEGMENTS; i++) {
                 float a = i / (float) SEGMENTS;
                 double ang = a * Math.PI * 2 + t * .6;

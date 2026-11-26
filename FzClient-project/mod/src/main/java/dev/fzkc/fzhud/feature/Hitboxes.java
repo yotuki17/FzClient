@@ -85,11 +85,13 @@ public final class Hitboxes {
         GlStateManager.depthFunc(GL11.GL_LEQUAL);
         GlStateManager.depthMask(false);
         GlStateManager.disableTexture2D();
+        boolean shaders = dev.fzkc.fzhud.util.ShaderLines.begin();   // else a shader pack hides the boxes
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GL11.glLineWidth(Modules.hitboxWidth.get());
         tess.draw();
         GL11.glLineWidth(1f);
+        if (shaders) dev.fzkc.fzhud.util.ShaderLines.end();
         GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
         GlStateManager.depthMask(true);
