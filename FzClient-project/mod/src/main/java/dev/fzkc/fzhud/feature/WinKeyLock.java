@@ -1,11 +1,5 @@
 package dev.fzkc.fzhud.feature;
 
-import com.sun.jna.IntegerType;
-import com.sun.jna.Memory;
-import com.sun.jna.Native;
-import com.sun.jna.Pointer;
-import com.sun.jna.WString;
-import com.sun.jna.win32.StdCallLibrary;
 import dev.fzkc.fzhud.Modules;
 import dev.fzkc.fzhud.util.Lang;
 import net.minecraft.client.Minecraft;
@@ -16,67 +10,39 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.Display;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Windows Key Lock: while the game window has the focus, the Windows keys do nothing (no Start menu popping up in a
- * fight). A key switches the lock on and off. Windows only; it is a keyboard hook of this program alone (gone when
- * the game closes), no Windows setting is changed. Win + L still locks the PC: Windows does not let anyone stop that.
+ * Windows Key Lock: while the game window is in front, the Windows keys do nothing (no Start menu popping up in a
+ * fight). A key switches the lock on and off. Windows only.
+ *
+ * The keyboard hook runs in a small process of its own (WinKeyHelper, the game's Java with JNA and this jar): in the
+ * game's process Windows kept dropping it whenever the game's Java paused. That process ends with the game (its
+ * input closes), changes no Windows setting, and Win + L still locks the PC (Windows lets no one stop that).
  */
 public final class WinKeyLock {
     private static final Logger LOG = LogManager.getLogger("FzClient-WinKey");
 
     public static final KeyBinding KEY = new KeyBinding("Windows キーの無効 切り替え", 0, "FzClient");
 
-    /** Pointer-sized integer (WPARAM / LRESULT). */
-    public static class LongPtr extends IntegerType {
-        public LongPtr() { this(0); }
-        public LongPtr(long v) { super(Pointer.SIZE, v); }
-    }
-
-    public interface LowLevelProc extends StdCallLibrary.StdCallCallback {
-        LongPtr callback(int code, LongPtr wParam, Pointer lParam);
-    }
-
-    interface User32 extends StdCallLibrary {
-        Pointer SetWindowsHookExW(int id, LowLevelProc proc, Pointer module, int thread);
-        LongPtr CallNextHookEx(Pointer hook, int code, LongPtr wParam, Pointer lParam);
-        boolean UnhookWindowsHookEx(Pointer hook);
-        int GetMessageW(Pointer msg, Pointer hwnd, int min, int max);
-        LongPtr SetTimer(Pointer hwnd, LongPtr id, int ms, Pointer proc);
-        Pointer GetForegroundWindow();
-        int GetWindowThreadProcessId(Pointer hwnd, Pointer pid);
-    }
-
-    interface Kernel32 extends StdCallLibrary {
-        Pointer GetModuleHandleW(WString name);
-        int GetCurrentThreadId();
-        int GetCurrentProcessId();
-    }
-
-    private static final int WH_KEYBOARD_LL = 13, VK_LWIN = 0x5B, VK_RWIN = 0x5C, LLKHF_UP = 0x80, WM_TIMER = 0x0113;
-    /** How often the hook is put back (see the message loop). */
-    private static final int REHOOK_MS = 2000;
-    private static final LongPtr SWALLOW = new LongPtr(1);
     private static final boolean WINDOWS = System.getProperty("os.name", "").startsWith("Windows");
-    /** Dev check (-Dfzclient.winkeytest): F24 stands in for the Windows key, the focus counts as given, every event is logged. */
     private static final boolean TEST = System.getProperty("fzclient.winkeytest") != null;
+    /** Starts of the helper allowed in one game session (it should never die; don't loop if it can't run). */
+    private static final int MAX_STARTS = 5;
 
-    /** Locked now (the switch key flips it). */
-    private static volatile boolean locked;
-    /** The game window has the focus (set every tick; read on the hook's thread). */
-    private static volatile boolean focused;
-    /** The module is on (read on the hook's thread: once started, the hook stays until the game closes). */
-    private static volatile boolean enabled;
-    /** The hook is installed and its thread is running. */
-    private static volatile boolean hookOk;
-    private static boolean started, failed, startDone;
-    /** Left / right Windows key went down while locked (only then is its key-up swallowed too). Hook thread only. */
-    private static final boolean[] swallowed = new boolean[2];
-    /** Win key presses written to the log (the first few of a session, to see why one got through). */
-    private static int logged;
-    /** Kept here so the callback is never garbage collected while Windows still calls it (set once). */
-    private static LowLevelProc proc;
+    private static boolean locked, startDone, failed;
+    private static Process helper;
+    private static OutputStream helperIn;
+    private static int starts, sent = -1, ticks;
+    private static volatile boolean ready;
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
@@ -89,7 +55,7 @@ public final class WinKeyLock {
         }
         if (!on) startDone = false;
         while (KEY.isPressed()) {
-            if (!on || failed) continue;
+            if (!on) continue;
             locked = !locked;
             LOG.info("Windows key lock " + (locked ? "on" : "off") + " (switch key)");
             if (Modules.winKeyMsg.get() && mc.thePlayer != null) {
@@ -97,124 +63,100 @@ public final class WinKeyLock {
                         + EnumChatFormatting.YELLOW + Lang.t(locked ? "Windows キーを無効にしました" : "Windows キーを使えるようにしました")));
             }
         }
-        focused = Display.isActive();
-        enabled = on;
-        if (on && !started) start();
+        if (failed) return;
+        if (on && (helper == null || ++ticks % 40 == 0 && !alive())) start();
+        int want = on && locked ? 1 : 0;
+        if (helperIn != null && want != sent) send(want);
     }
 
     /** True while the Windows keys are swallowed (for the settings / HUD). */
     public static boolean active() {
-        return Modules.winKey.enabled && locked && hookOk;
+        return Modules.winKey.enabled && locked && ready && alive();
     }
 
-    /**
-     * Started once, the first time the module is on; the hook then stays until the game closes and does nothing
-     * while the module is off (no start / stop races, and the callback is never freed while installed).
-     */
-    private static void start() {
-        started = true;
-        final User32 user32;
-        final Kernel32 kernel32;
+    private static boolean alive() {
+        if (helper == null) return false;
         try {
-            user32 = (User32) Native.loadLibrary("user32", User32.class);
-            kernel32 = (Kernel32) Native.loadLibrary("kernel32", Kernel32.class);
+            helper.exitValue();
+            return false;
+        } catch (IllegalThreadStateException running) {
+            return true;
+        }
+    }
+
+    private static void send(int v) {
+        try {
+            helperIn.write((v + "\n").getBytes(StandardCharsets.UTF_8));
+            helperIn.flush();
+            sent = v;
+        } catch (Exception e) {
+            helperIn = null;   // it died; started again on a later tick
+        }
+    }
+
+    private static void start() {
+        if (starts++ >= MAX_STARTS) {
+            failed = true;
+            LOG.warn("Windows key lock: the helper keeps stopping, giving up for this session");
+            return;
+        }
+        try {
+            String javaHome = System.getProperty("java.home");
+            File java = new File(javaHome, "bin/javaw.exe");
+            if (!java.isFile()) java = new File(javaHome, "bin/java.exe");
+            String cp = jarOf(com.sun.jna.Native.class) + File.pathSeparator + jarOf(WinKeyHelper.class);
+            List<String> cmd = new ArrayList<String>();
+            cmd.add(java.getAbsolutePath());
+            cmd.add("-Xms8m");   // with -Xmx: a big -Xms from _JAVA_OPTIONS would stop it starting
+            cmd.add("-Xmx24m");
+            cmd.add("-XX:+UseSerialGC");
+            if (TEST) cmd.add("-Dfzclient.winkeytest");
+            cmd.add("-cp");
+            cmd.add(cp);
+            cmd.add(WinKeyHelper.class.getName());
+            cmd.add(String.valueOf(pid()));
+            final Process p = new ProcessBuilder(cmd).start();
+            helper = p;
+            helperIn = p.getOutputStream();
+            sent = -1;
+            ready = false;
+            Thread log = new Thread(() -> {
+                try {
+                    BufferedReader r = new BufferedReader(new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8));
+                    String line;
+                    while ((line = r.readLine()) != null) {
+                        if (line.contains("ready")) ready = true;
+                        LOG.info(line);
+                    }
+                } catch (Exception ignored) {
+                    // ended
+                }
+                LOG.info("Windows key lock: helper ended");
+            }, "FzClient-WinKey");
+            log.setDaemon(true);
+            log.start();
+            p.getInputStream().close();   // it writes nothing there
         } catch (Throwable t) {
             failed = true;
             LOG.warn("Windows key lock unavailable: " + t);
-            return;
         }
-        final int me = kernel32.GetCurrentProcessId();
-        Thread thread = new Thread(() -> {
-            final Pointer[] hook = new Pointer[1];
-            final Memory pid = new Memory(4);
-            proc = new LowLevelProc() {   // a class, not a lambda: JNA looks the method up by reflection
-                @Override
-                public LongPtr callback(int code, LongPtr wParam, Pointer lParam) {
-                    try {
-                        if (code >= 0 && lParam != null) {
-                            int vk = lParam.getInt(0);
-                            int side = vk == VK_LWIN || TEST && vk == 0x87 ? 0 : vk == VK_RWIN ? 1 : -1;
-                            if (TEST && side >= 0) LOG.info("winkey event vk=" + vk + " flags=" + lParam.getInt(8) + " enabled=" + enabled + " locked=" + locked + " focused=" + focused);
-                            if (side >= 0) {
-                                boolean up = (lParam.getInt(8) & LLKHF_UP) != 0;
-                                if (!up) {
-                                    // the window in front is the game's own (asked of Windows right now, not the
-                                    // game's idea of its focus, which borderless / full screen can get wrong)
-                                    boolean front = TEST || ours(user32, pid, me);
-                                    boolean swallow = enabled && locked && front;
-                                    if (!swallowed[side] && logged < 30 && enabled) {   // not every auto-repeat
-                                        logged++;
-                                        LOG.info("Windows key: game in front=" + front + " locked=" + locked + " -> " + (swallow ? "swallowed" : "passed"));
-                                    }
-                                    swallowed[side] = swallow;
-                                    if (swallow) return SWALLOW;
-                                } else if (swallowed[side]) {
-                                    // only the key-up of a key-down we swallowed: Windows never saw it go down.
-                                    // A key-up of a key-down Windows did see always goes through (no stuck Win).
-                                    swallowed[side] = false;
-                                    return SWALLOW;
-                                }
-                            }
-                        }
-                    } catch (Throwable ignored) {
-                        // pass the key on
-                    }
-                    return user32.CallNextHookEx(hook[0], code, wParam, lParam);
-                }
-            };
-            hook[0] = user32.SetWindowsHookExW(WH_KEYBOARD_LL, proc, kernel32.GetModuleHandleW(null), 0);
-            if (hook[0] == null) {
-                failed = true;
-                LOG.warn("Windows key lock: the keyboard hook was refused");
-                return;
-            }
-            hookOk = true;
-            LOG.info("Windows key lock ready");
-            Pointer game = dev.fzkc.fzhud.util.Win32Window.hwnd();
-            if (game != null) {
-                pid.setInt(0, 0);
-                user32.GetWindowThreadProcessId(game, pid);
-                LOG.info("Windows key lock: game window is this process = " + (pid.getInt(0) == me) + ", in front = " + ours(user32, pid, me));
-            }
-            Pointer module = kernel32.GetModuleHandleW(null);
-            Memory msg = new Memory(64);
-            // Windows silently drops a keyboard hook that once answers too slowly (Java pauses for garbage collection,
-            // world loading...), and then the Windows key works again with no sign of it. So while the module is on the
-            // hook is put back every 2 seconds: a new one first, then the old one goes.
-            user32.SetTimer(null, new LongPtr(0), REHOOK_MS, null);
-            int timers = 0;
-            int r;
-            while ((r = user32.GetMessageW(msg, null, 0, 0)) > 0) {
-                if (msg.getInt(Pointer.SIZE) != WM_TIMER) continue;   // MSG: hwnd, then message
-                timers++;
-
-                if (TEST && timers == 3) {
-                    user32.UnhookWindowsHookEx(hook[0]);   // as if Windows had dropped it
-                    LOG.info("winkey test: hook dropped");
-                    continue;
-                }
-                if (!enabled) continue;
-                Pointer fresh = user32.SetWindowsHookExW(WH_KEYBOARD_LL, proc, module, 0);
-                if (TEST) LOG.info("winkey rehook " + timers + " -> " + fresh);
-                if (fresh != null) {
-                    user32.UnhookWindowsHookEx(hook[0]);
-                    hook[0] = fresh;
-                }
-            }
-            LOG.warn("Windows key lock: message loop ended (" + r + ")");
-            hookOk = false;
-            user32.UnhookWindowsHookEx(hook[0]);
-        }, "FzClient-WinKey");
-        thread.setDaemon(true);
-        thread.start();
     }
 
-    /** The foreground window belongs to this process (the game). */
-    private static boolean ours(User32 user32, Pointer pid, int me) {
-        Pointer fg = user32.GetForegroundWindow();
-        if (fg == null) return false;
-        pid.setInt(0, 0);
-        user32.GetWindowThreadProcessId(fg, pid);
-        return pid.getInt(0) == me;
+    /** The jar (or folder) a class was loaded from. */
+    private static String jarOf(Class<?> c) throws Exception {
+        URL u = c.getProtectionDomain().getCodeSource().getLocation();
+        String s = u.toString();
+        if (s.startsWith("jar:")) {
+            s = s.substring(4);
+            int bang = s.indexOf("!/");
+            if (bang >= 0) s = s.substring(0, bang);
+        }
+        return new File(new URL(s).toURI()).getAbsolutePath();
+    }
+
+    /** This process's id ("1234@host"). */
+    private static int pid() {
+        String n = java.lang.management.ManagementFactory.getRuntimeMXBean().getName();
+        return Integer.parseInt(n.substring(0, n.indexOf('@')));
     }
 }

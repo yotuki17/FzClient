@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  '修正：Windows キーの無効化が効かなかった問題（別のプロセスで動かすように）': 'Fix: the Windows key lock did not work (it now runs in a process of its own)',
   '修正：全画面・枠なしで Windows キーの無効化が効かなかった問題': 'Fix: the Windows key lock did not work in full screen or borderless',
   '修正：Windows キーの無効化が効かないことがあった問題': 'Fix: the Windows key lock sometimes stopped working',
   '修正：ランチャー以外で起動した時に操作設定を開くと落ちることがあった問題': 'Fix: opening Controls could crash the game when started outside the launcher',
