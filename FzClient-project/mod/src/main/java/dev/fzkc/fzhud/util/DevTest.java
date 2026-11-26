@@ -59,6 +59,7 @@ public class DevTest {
         else if ("skin".equals(MODE)) skin(w);
         else if ("hitbox".equals(MODE)) hitbox(mc, w);
         else if ("keys".equals(MODE)) keys(mc, w);
+        else if ("f3win".equals(MODE)) f3win(mc, w);
     }
 
     /** FastStart: everything loaded at the title screen, one line each (to compare a start with and without it). */
@@ -644,6 +645,42 @@ public class DevTest {
             Modules.debugRMods.value = true;
             gs.showDebugInfo = false;
             LOG.info("keys done");
+            mc.shutdown();
+        }
+    }
+
+    /** Chinese detection for the translator, F3 styles and colours, the Windows key hook starting; PASS / FAIL. */
+    private void f3win(Minecraft mc, int w) {
+        if (w == 40) {
+            check("chinese: 这谁在吵架", dev.fzkc.fzhud.chat.Translator.chinese("这谁在吵架"));
+            check("chinese: 你好", dev.fzkc.fzhud.chat.Translator.chinese("你好"));
+            check("japanese: 了解", !dev.fzkc.fzhud.chat.Translator.chinese("了解"));
+            check("japanese: 会議終了", !dev.fzkc.fzhud.chat.Translator.chinese("会議終了"));
+            check("japanese: 草", !dev.fzkc.fzhud.chat.Translator.chinese("草"));
+            Modules.winKey.enabled = true;
+            mc.gameSettings.showDebugInfo = true;
+            Modules.debugScreen.enabled = true;
+            Modules.debugStyle.index = 1;
+        }
+        if (w == 70) shot(mc, "f3_lines");
+        if (w == 75) {
+            check("windows key hook running", dev.fzkc.fzhud.feature.WinKeyLock.active());
+            Modules.debugStyle.index = 2;
+            Modules.debugNameAccent.value = false;
+            Modules.debugNameColor.setHex("#FF9900");
+            Modules.debugTextColor.setHex("#AAFFAA");
+        }
+        if (w == 100) shot(mc, "f3_nobg");
+        if (w == 105) {
+            Modules.debugStyle.index = 0;
+            Modules.debugRadius.value = 0;
+            Modules.debugBgColor.setHex("#3050A0");
+        }
+        if (w == 130) shot(mc, "f3_panel");
+        if (w == 135) {
+            Modules.winKey.enabled = false;
+            mc.gameSettings.showDebugInfo = false;
+            LOG.info("f3win done");
             mc.shutdown();
         }
     }

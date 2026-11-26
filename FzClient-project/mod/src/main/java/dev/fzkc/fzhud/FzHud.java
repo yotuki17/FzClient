@@ -155,6 +155,7 @@ public class FzHud {
         ClientRegistry.registerKeyBinding(imeKey);
         ClientRegistry.registerKeyBinding(Extras.zoomKey);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.Snaplook.KEY);
+        ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.WinKeyLock.KEY);
         ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_OVERLAY);
         if (dev.fzkc.fzhud.util.Os.WIN) {   // the launcher's recorder is Windows only
             ClientRegistry.registerKeyBinding(dev.fzkc.fzhud.feature.LauncherLink.KEY_RECORD);
@@ -180,6 +181,7 @@ public class FzHud {
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Requeue());   // /rq joins the same game again
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.feature.Requeue.Command());
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Snaplook());   // hold a key to look behind you
+        FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.WinKeyLock());   // Windows keys off in the game
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.HotbarMouse());
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.InventoryKeys());   // second keys and Alt + in inventories
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.DebugScreen());   // F3 in tidy panels   // hotbar keys on mouse buttons in inventories

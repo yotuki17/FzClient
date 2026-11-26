@@ -99,6 +99,14 @@ public final class Modules {
     public static final BoolSetting debugShadow = debugScreen.add(new BoolSetting("shadow", "文字に影を付ける", true));
     public static final SliderSetting debugScale = debugScreen.add(new SliderSetting("scale", "文字の大きさ", 50, 100, 5, 100, "%"));
     public static final SliderSetting debugBg = debugScreen.add(new SliderSetting("bg", "背景の濃さ", 0, 100, 5, 70, "%"));
+    public static final ChoiceSetting debugStyle = debugScreen.add(new ChoiceSetting("style", "スタイル", 0,
+            "パネル（まとまりごとに角丸の背景）", "1 行ずつ背景（いつもの F3 風）", "背景なし（文字だけ）"));
+    public static final SliderSetting debugRadius = debugScreen.add(new SliderSetting("radius", "角の丸さ（0で四角）", 0, 8, 0.5, 3, ""));
+    public static final ColorSetting debugBgColor = debugScreen.add(new ColorSetting("bgcolor", "背景の色", 0xFF0B0F14));
+    public static final ColorSetting debugTextColor = debugScreen.add(new ColorSetting("textcolor", "文字の色", 0xFFFFFFFF));
+    public static final BoolSetting debugNameAccent = debugScreen.add(new BoolSetting("nameaccent", "項目名をアクセント色にする", true));
+    public static final ColorSetting debugNameColor = debugScreen.add(new ColorSetting("namecolor", "項目名の色（アクセント色を使わない時）", 0xFF5CE1E6));
+    public static final BoolSetting debugFpsColor = debugScreen.add(new BoolSetting("fpscolor", "FPS を速さで色分け（緑・黄・赤）", true));
     // which lines are shown (DebugScreen sorts every line into one of these)
     public static final dev.fzkc.fzhud.config.PageSetting debugPageLines = debugScreen.add(new dev.fzkc.fzhud.config.PageSetting("p_lines", "表示する行"));
     public static final HeaderSetting debugHeadLeft = debugScreen.add(new HeaderSetting("h_left", "左側"));
@@ -146,6 +154,12 @@ public final class Modules {
     // ---- Borderless fullscreen (F11)
     public static final Module borderless = new Module("borderless", "Borderless", Category.UTILITY,
             "F11を枠なし全画面に", true);
+
+    // ---- Windows key off while the game has the focus
+    public static final Module winKey = new Module("winkey", "Windows Key Lock", Category.UTILITY,
+            "ゲーム中は Windows キーを効かなくする（切り替えキーでオン・オフ）", false);
+    public static final BoolSetting winKeyStart = winKey.add(new BoolSetting("start", "起動した時から無効にしておく", true));
+    public static final BoolSetting winKeyMsg = winKey.add(new BoolSetting("msg", "切り替えた時にチャットに表示", true));
 
     // ---- Hotbar scroll limits
     public static final Module hotbar = new Module("hotbarscroll", "Hotbar Scroll", Category.PVP,
@@ -715,6 +729,6 @@ public final class Modules {
     }
 
     public static final List<Module> FEATURES = new ArrayList<Module>(Arrays.asList(
-            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, debugScreen, motionBlur, guiScale, borderless, noLoading, timeChanger, hotbar, zoom, snaplook, itemPos, rawInput, dropLock, partyDetect, partyWarp, requeue, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, nameHider, branding, menuSound, language, glassUi, theme));
+            sprint, fullbright, tnt, animations, itemPhysics, nametags, saturation, debugScreen, motionBlur, guiScale, borderless, winKey, noLoading, timeChanger, hotbar, zoom, snaplook, itemPos, rawInput, dropLock, partyDetect, partyWarp, requeue, stats, cosmetics, skinLayers, hitbox, hitDelayFix, blockOutline, launcherKeys, overlays, heightLimit, autoGG, bgFps, performance, optimize, fixes, chat, discord, reconnect, screenshot, lowHp, particles, deathCoords, nameHider, branding, menuSound, language, glassUi, theme));
 
 }

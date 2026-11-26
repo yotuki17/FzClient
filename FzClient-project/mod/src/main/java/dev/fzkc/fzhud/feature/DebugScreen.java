@@ -183,15 +183,28 @@ public final class DebugScreen {
 
     private static void draw(FontRenderer fr, List<List<String>> groups, float edge, boolean alignRight) {
         if (groups.isEmpty()) return;
-        int bg = R.alpha(0xFF0B0F14, (float) (Modules.debugBg.get() / 100.0));
+        int bg = R.alpha(0xFF000000 | (R.solid(Modules.debugBgColor.get()) & 0xFFFFFF), (float) (Modules.debugBg.get() / 100.0));
         boolean shadow = Modules.debugShadow.get();
+        int style = Modules.debugStyle.get();
+        float radius = (float) Modules.debugRadius.get();
         float y = 2;
         for (List<String> g : groups) {
             int width = 0;
             for (String l : g) width = Math.max(width, fr.getStringWidth(l));
             float bw = width + 8, bh = g.size() * 10 + 5;
             float x = alignRight ? edge - bw : edge;
-            R.rounded(x, y, bw, bh, 3f, bg);
+            if (style == 0) {
+                R.rounded(x, y, bw, bh, radius, bg);
+            } else if (style == 1) {
+                // a strip behind each line, as the game draws it
+                float ly = y + 2;
+                for (String l : g) {
+                    float lw = fr.getStringWidth(l) + 4;
+                    float lx = alignRight ? x + bw - 2 - lw : x + 2;
+                    R.rounded(lx, ly, lw, 10, Math.min(radius, 4f), bg);
+                    ly += 10;
+                }
+            }
             GlStateManager.enableBlend();
             GlStateManager.enableTexture2D();
             float ty = y + 3;
@@ -200,35 +213,39 @@ public final class DebugScreen {
                 line(fr, l, tx, ty, shadow);
                 ty += 10;
             }
-            y += bh + 3;
+            y += bh + (style == 0 ? 3 : 0);
         }
     }
 
-    /** One line: "Name: value" with the name in the accent colour (lines that bring their own colours stay). */
+    private static int opaque(int argb) {
+        return 0xFF000000 | (R.solid(argb) & 0xFFFFFF);
+    }
+
+    /** One line: "Name: value" with the name in its colour (lines that bring their own colours stay). */
     private static void line(FontRenderer fr, String l, float x, float y, boolean shadow) {
-        int white = 0xFFFFFFFF;
+        int text = opaque(Modules.debugTextColor.get());
         if (!Modules.debugColor.get() || l.indexOf('§') >= 0) {
-            fr.drawString(l, x, y, 0xFFE0E0E0, shadow);
+            fr.drawString(l, x, y, text, shadow);
             return;
         }
         Matcher fps = FPS.matcher(l);
-        if (fps.find()) {
+        if (fps.find() && Modules.debugFpsColor.get()) {
             int n = Integer.parseInt(fps.group(1));
             int c = n >= 120 ? 0xFF6EE36E : n >= 60 ? 0xFFF0D060 : 0xFFFF6B6B;
             String num = fps.group(1);
             x = fr.drawString(num, x, y, c, shadow);
-            fr.drawString(l.substring(num.length()), x, y, white, shadow);
+            fr.drawString(l.substring(num.length()), x, y, text, shadow);
             return;
         }
         int colon = l.indexOf(": ");
         if (colon > 0 && colon <= 24) {
             String name = l.substring(0, colon + 1);
             // the accent picked in the settings, worked out here (Ui.accent is whatever the last menu left there)
-            int accent = 0xFF000000 | (R.solid(Modules.uiAccent.get()) & 0xFFFFFF);
-            x = fr.drawString(name, x, y, accent, shadow);
-            fr.drawString(l.substring(colon + 1), x, y, white, shadow);
+            int nameColor = opaque(Modules.debugNameAccent.get() ? Modules.uiAccent.get() : Modules.debugNameColor.get());
+            x = fr.drawString(name, x, y, nameColor, shadow);
+            fr.drawString(l.substring(colon + 1), x, y, text, shadow);
             return;
         }
-        fr.drawString(l, x, y, white, shadow);
+        fr.drawString(l, x, y, text, shadow);
     }
 }

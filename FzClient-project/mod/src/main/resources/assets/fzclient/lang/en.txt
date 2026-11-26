@@ -1212,3 +1212,15 @@ Forge・OptiFine・MOD の数	Forge, OptiFine, number of mods
 見ているブロックの情報	The block you look at
 キーを押してください（Ctrl・Shift・Alt と組み合わせ可・マウスのボタンも可・Esc で解除）	Press a key (with Ctrl / Shift / Alt if you like, or a mouse button; Esc clears it)
 キーをクリックして設定・1 つの操作に 2 つまで（例: Alt + X）	Click a key to set it; up to 2 per action (e.g. Alt + X)
+パネル（まとまりごとに角丸の背景）	Panels (rounded background per group)
+1 行ずつ背景（いつもの F3 風）	Background per line (like the usual F3)
+背景なし（文字だけ）	No background (text only)
+項目名をアクセント色にする	Names in the accent color
+項目名の色（アクセント色を使わない時）	Name color (when not using the accent color)
+FPS を速さで色分け（緑・黄・赤）	Color the FPS by speed (green, yellow, red)
+ゲーム中は Windows キーを効かなくする（切り替えキーでオン・オフ）	Windows keys do nothing in the game (a key switches it on and off)
+起動した時から無効にしておく	Locked from the start
+切り替えた時にチャットに表示	Show a chat line when switched
+Windows キーの無効 切り替え	Windows key lock on / off
+Windows キーを無効にしました	Windows keys locked
+Windows キーを使えるようにしました	Windows keys unlocked

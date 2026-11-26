@@ -117,11 +117,35 @@ public final class Translator {
         }
         if (letters < 2) return false;
         switch (Modules.trTarget.get()) {
-            case 0: return kana == 0 && han * 2 < letters;   // Japanese
+            // Japanese: no kana, and either mostly not kanji or kanji that read as Chinese ("这谁在吵架")
+            case 0: return kana == 0 && (han * 2 < letters || chinese(s));
             case 2: return hangul * 2 < letters;              // Korean
             case 3: return han * 2 < letters || kana > 0;     // Chinese
             default: return true;                             // let the service detect it
         }
+    }
+
+    /** Characters Japanese has but hardly ever writes, and that are everyday Chinese (particles, pronouns). */
+    private static final String CHINESE_HINTS = "的了吗呢吧啊们么这哪你她它没说话对谁还给让过";
+    private static final java.nio.charset.CharsetEncoder SJIS = java.nio.charset.Charset.forName("windows-31j").newEncoder();
+
+    /**
+     * Kanji-only text that is Chinese: a character Japanese does not have at all (simplified ones like 这 谁 们,
+     * not in Shift_JIS), or two of the everyday Chinese ones above. "了解" or "草" stays Japanese.
+     */
+    public static boolean chinese(String s) {
+        int hints = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c < 0x4E00 || c > 0x9FFF) continue;
+            boolean known;
+            synchronized (SJIS) {
+                known = SJIS.canEncode(c);
+            }
+            if (!known) return true;
+            if (CHINESE_HINTS.indexOf(c) >= 0) hints++;
+        }
+        return hints >= 2;
     }
 
     private static String target() {
