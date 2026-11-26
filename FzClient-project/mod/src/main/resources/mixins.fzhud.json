@@ -10,6 +10,7 @@
     "MixinEntityRenderer",
     "MixinGuiMainMenu",
     "MixinItemRenderer",
+    "MixinKeyBinding",
     "MixinMinecraft",
     "MixinModelBiped",
     "MixinRenderEntityItem",

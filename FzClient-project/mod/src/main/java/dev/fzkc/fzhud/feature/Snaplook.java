@@ -23,7 +23,7 @@ public class Snaplook {
         Minecraft mc = Minecraft.getMinecraft();
         boolean on = false;
         if (Modules.snaplook.enabled && mc.thePlayer != null && mc.theWorld != null) {
-            boolean down = KEY.getKeyCode() != 0 && mc.currentScreen == null && isDown(KEY.getKeyCode());
+            boolean down = mc.currentScreen == null && KEY.isKeyDown();
             if (TEST) down = test(mc);
             if (Modules.snaplookToggle.get()) {
                 if (down && !wasDown) toggled = !toggled;
@@ -31,7 +31,7 @@ public class Snaplook {
             } else {
                 toggled = false;
                 // a screen opened while holding (chat, inventory): keep looking until the key is let go
-                on = down || active && mc.currentScreen != null && isDown(KEY.getKeyCode());
+                on = down || active && mc.currentScreen != null && held();
             }
             wasDown = down;
         } else {
@@ -49,6 +49,15 @@ public class Snaplook {
             active = false;
             mc.gameSettings.thirdPersonView = before;
         }
+    }
+
+    /** Either of the two keys (with its Ctrl / Shift / Alt) is held right now (while a screen is open). */
+    private static boolean held() {
+        for (int s = 0; s < 2; s++) {
+            int k = KeyCombos.key(KEY, s);
+            if (k != 0 && isDown(k) && (KeyCombos.mods(KEY, s) & ~KeyCombos.held(k)) == 0) return true;
+        }
+        return false;
     }
 
     /** The key (or mouse button, stored as button - 100) is held right now. */

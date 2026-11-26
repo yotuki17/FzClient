@@ -139,6 +139,8 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：キー設定で 1 つの操作に 2 つのキー・Alt＋ などの組み合わせ': 'NEW: two keys per action in Controls, and combinations like Alt + X',
+  'NEW：F3 で表示する行を選べるように・CPU を表示': 'NEW: choose the lines F3 shows, and the CPU line is back',
   '修正：影MOD（シェーダー）を使うとヒットボックス・ヘイロー・TNT タイマーの背景が出なかった問題': 'Fix: with shaders on, hitboxes, halos and the TNT timer background did not show',
   'NEW：MOD をドラッグ＆ドロップで追加': 'NEW: add mods by drag and drop',
   '修正：起動直後にリプレイが真っ黒・短くなることがあった問題': 'Fix: replays right after the start could be black or short',

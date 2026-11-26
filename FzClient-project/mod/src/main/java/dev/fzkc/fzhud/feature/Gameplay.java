@@ -120,18 +120,21 @@ public final class Gameplay {
     }
 
     private static void apply(KeyBinding kb, boolean forced) {
-        int code = kb.getKeyCode();
-        if (code == 0) return;
-        boolean physical;
-        try {
-            physical = code < 0 ? Mouse.isButtonDown(code + 100) : Keyboard.isKeyDown(code);
-        } catch (Exception e) {
-            physical = false;
+        boolean physical = false;
+        for (int s = 0; s < 2; s++) {
+            int code = KeyCombos.key(kb, s);
+            if (code == 0) continue;
+            try {
+                physical |= code < 0 ? Mouse.isButtonDown(code + 100) : Keyboard.isKeyDown(code);
+            } catch (Exception ignored) {
+                // not held then
+            }
         }
+        // the binding itself, not its key code (another action may share the key; the second key counts too)
         if (forced) {
-            KeyBinding.setKeyBindState(code, true);
+            ((dev.fzkc.fzhud.util.KeyPress) kb).fzhud$setPressed(true);
         } else if (!physical && kb.isKeyDown()) {
-            KeyBinding.setKeyBindState(code, false);
+            ((dev.fzkc.fzhud.util.KeyPress) kb).fzhud$setPressed(false);
         }
     }
 

@@ -82,6 +82,10 @@ public final class Config {
             // v2: Nametags now starts OFF because it clashed with other nametag mods
             if (version < 2) Modules.nametags.enabled = false;
 
+            if (root.has("keybinds") && root.get("keybinds").isJsonObject()) {
+                dev.fzkc.fzhud.feature.KeyCombos.load(root.getAsJsonObject("keybinds"));
+            }
+
             JsonObject elements = root.has("elements") ? root.getAsJsonObject("elements") : new JsonObject();
             for (HudElement e : FzHud.elements) {
                 if (!elements.has(e.id)) continue;
@@ -193,6 +197,7 @@ public final class Config {
             elements.add(e.id, o);
         }
         root.add("elements", elements);
+        root.add("keybinds", dev.fzkc.fzhud.feature.KeyCombos.save());   // second keys and Ctrl / Shift / Alt
 
         // nothing changed since the last save -> don't touch the disk (menus save every time they close)
         String json = GSON.toJson(root);

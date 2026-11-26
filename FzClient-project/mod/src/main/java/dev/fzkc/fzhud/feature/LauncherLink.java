@@ -238,26 +238,37 @@ public final class LauncherLink {
         if (id != null) key(id);
     }
 
-    /** Our key while a screen is open (key bindings only work in the game itself). True = it was ours. */
-    public static boolean screenKey(int code, boolean controlsScreen) {
+    /**
+     * Our key while a screen is open (key bindings only work in the game itself). True = it was ours. A held key
+     * repeating (chat, signs) is still ours but does not fire again.
+     */
+    public static boolean screenKey(int code, boolean controlsScreen, boolean repeat) {
         if (controlsScreen) return false;   // binding a key in the controls: the key belongs to that
-        String id = match(code, mods());
+        int held = mods();
+        String id = match(code, held);
         // in a screen only with Ctrl or Alt: a plain key (or Shift + key) is typing there
-        if (id == null || (modsOf(id).get() & 5) == 0) return false;
-        key(id);
+        if (id == null || (matchNeed & 5) == 0) return false;
+        if (!repeat) key(id);
         return true;
     }
 
+    /** The Ctrl / Shift / Alt the last match asked for. */
+    private static int matchNeed;
+
+    /** Both keys of each of our actions count (Controls: key 1 with the overlay's own modifiers, and key 2). */
     private static String match(int code, int held) {
         if (code == 0) return null;
         String best = null;
         int bestBits = -1;
         for (String id : IDS) {
             KeyBinding kb = binding(id);
-            int need = modsOf(id).get();
-            if (kb.getKeyCode() != code || (held & need) != need) continue;
-            int bits = Integer.bitCount(need);
-            if (bits > bestBits) { best = id; bestBits = bits; }
+            for (int s = 0; s < 2; s++) {
+                if (KeyCombos.key(kb, s) != code) continue;
+                int need = s == 0 ? modsOf(id).get() | KeyCombos.mods(kb, 0) : KeyCombos.mods(kb, 1);
+                if ((held & need) != need) continue;
+                int bits = Integer.bitCount(need);
+                if (bits > bestBits) { best = id; bestBits = bits; matchNeed = need; }
+            }
         }
         return best;
     }

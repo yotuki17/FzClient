@@ -33,10 +33,13 @@ public final class DebugScreen {
         Minecraft mc = Minecraft.getMinecraft();
         if (!Modules.debugScreen.enabled || !mc.gameSettings.showDebugInfo || event.isCanceled()) return;
         List<List<String>> left = groups(event.left), right = groups(event.right);
+        addCpu(right);
         if (Modules.debugSimple.get()) {
             left = simpleLeft(left);
             right = simpleRight(right);
         }
+        left = pick(left, true);
+        right = pick(right, false);
         if (!Modules.debugRight.get()) right.clear();
         event.setCanceled(true);   // Forge draws nothing; the panels below take its place
 
@@ -64,6 +67,75 @@ public final class DebugScreen {
         }
         if (!cur.isEmpty()) out.add(cur);
         return out;
+    }
+
+    private static String cpu;
+
+    /** OptiFine puts its Native / GC lines where the game shows the processor: the CPU line comes back here. */
+    private static void addCpu(List<List<String>> right) {
+        for (List<String> g : right) {
+            for (String l : g) if (strip(l).startsWith("CPU:")) return;
+        }
+        if (cpu == null) {
+            try {
+                cpu = "CPU: " + net.minecraft.client.renderer.OpenGlHelper.getCpu();   // "32x AMD Ryzen ..." already
+            } catch (Throwable t) {
+                cpu = "CPU: " + Runtime.getRuntime().availableProcessors() + "x";
+            }
+        }
+        List<String> one = new ArrayList<String>();
+        one.add(cpu);
+        int at = right.size();
+        for (int i = 0; i < right.size(); i++) {
+            if (strip(right.get(i).get(0)).startsWith("Display:")) {
+                at = i;
+                break;
+            }
+        }
+        right.add(at, one);
+    }
+
+    /** Only the kinds of lines switched on in "表示する行". */
+    private static List<List<String>> pick(List<List<String>> in, boolean leftSide) {
+        List<List<String>> out = new ArrayList<List<String>>();
+        for (List<String> g : in) {
+            String first = strip(g.get(0));
+            List<String> keep = new ArrayList<String>();
+            for (String l : g) {
+                if ((leftSide ? leftKind(strip(l)) : rightKind(strip(l), first)).get()) keep.add(l);
+            }
+            if (!keep.isEmpty()) out.add(keep);
+        }
+        return out;
+    }
+
+    private static dev.fzkc.fzhud.config.BoolSetting leftKind(String p) {
+        if (p.startsWith("Minecraft ")) return Modules.debugLVersion;
+        if (FPS.matcher(p).find()) return Modules.debugLFps;
+        if (p.startsWith("C:") || p.startsWith("E:") || p.startsWith("P:") || p.startsWith("MultiplayerChunkCache")
+                || p.startsWith("Client Chunk")) return Modules.debugLRender;
+        if (p.startsWith("XYZ:")) return Modules.debugLXyz;
+        if (p.startsWith("Block:")) return Modules.debugLBlock;
+        if (p.startsWith("Chunk")) return Modules.debugLChunk;
+        if (p.startsWith("Facing:")) return Modules.debugLFacing;
+        if (p.startsWith("Biome:")) return Modules.debugLBiome;
+        if (p.startsWith("Light:")) return Modules.debugLLight;
+        if (p.startsWith("Local Difficulty")) return Modules.debugLDifficulty;
+        if (p.startsWith("Shader") || p.startsWith("[Shaders]")) return Modules.debugLShader;
+        return Modules.debugLOther;
+    }
+
+    /** first = the first line of the panel: the GPU lines under "Display:", the states under the block id. */
+    private static dev.fzkc.fzhud.config.BoolSetting rightKind(String p, String first) {
+        if (BLOCK_ID.matcher(first).matches()) return Modules.debugRTarget;
+        if (first.startsWith("Display:")) return Modules.debugRDisplay;
+        if (p.startsWith("Java:")) return Modules.debugRJava;
+        if (p.startsWith("Mem:") || p.startsWith("Allocated:")) return Modules.debugRMem;
+        if (p.startsWith("Native:") || p.startsWith("GC:")) return Modules.debugRNative;
+        if (p.startsWith("CPU:")) return Modules.debugRCpu;
+        if (p.startsWith("MCP ") || p.startsWith("Powered by Forge") || p.startsWith("Optifine ")
+                || p.contains(" mods loaded")) return Modules.debugRMods;
+        return Modules.debugROther;
     }
 
     private static List<List<String>> simpleLeft(List<List<String>> in) {

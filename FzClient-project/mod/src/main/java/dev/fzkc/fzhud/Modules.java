@@ -92,12 +92,37 @@ public final class Modules {
     // ---- F3 Screen
     public static final Module debugScreen = new Module("debugscreen", "F3 Screen", Category.VISUAL,
             "F3（デバッグ画面）をパネルにまとめて見やすくする", true);
+    public static final dev.fzkc.fzhud.config.PageSetting debugPageLook = debugScreen.add(new dev.fzkc.fzhud.config.PageSetting("p_look", "見た目"));
     public static final BoolSetting debugSimple = debugScreen.add(new BoolSetting("simple", "よく使う行だけ表示（座標・向き・FPS など）", false));
     public static final BoolSetting debugRight = debugScreen.add(new BoolSetting("right", "右側（メモリ・PC・ブロック情報）を表示", true));
     public static final BoolSetting debugColor = debugScreen.add(new BoolSetting("color", "項目名と FPS に色を付ける", true));
     public static final BoolSetting debugShadow = debugScreen.add(new BoolSetting("shadow", "文字に影を付ける", true));
     public static final SliderSetting debugScale = debugScreen.add(new SliderSetting("scale", "文字の大きさ", 50, 100, 5, 100, "%"));
     public static final SliderSetting debugBg = debugScreen.add(new SliderSetting("bg", "背景の濃さ", 0, 100, 5, 70, "%"));
+    // which lines are shown (DebugScreen sorts every line into one of these)
+    public static final dev.fzkc.fzhud.config.PageSetting debugPageLines = debugScreen.add(new dev.fzkc.fzhud.config.PageSetting("p_lines", "表示する行"));
+    public static final HeaderSetting debugHeadLeft = debugScreen.add(new HeaderSetting("h_left", "左側"));
+    public static final BoolSetting debugLVersion = debugScreen.add(new BoolSetting("l_version", "Minecraft のバージョン", true));
+    public static final BoolSetting debugLFps = debugScreen.add(new BoolSetting("l_fps", "FPS", true));
+    public static final BoolSetting debugLRender = debugScreen.add(new BoolSetting("l_render", "描画の詳細（C: E: P: など）", true));
+    public static final BoolSetting debugLXyz = debugScreen.add(new BoolSetting("l_xyz", "座標（XYZ）", true));
+    public static final BoolSetting debugLBlock = debugScreen.add(new BoolSetting("l_block", "足元のブロック（Block）", true));
+    public static final BoolSetting debugLChunk = debugScreen.add(new BoolSetting("l_chunk", "チャンク（Chunk）", true));
+    public static final BoolSetting debugLFacing = debugScreen.add(new BoolSetting("l_facing", "向き（Facing）", true));
+    public static final BoolSetting debugLBiome = debugScreen.add(new BoolSetting("l_biome", "バイオーム（Biome）", true));
+    public static final BoolSetting debugLLight = debugScreen.add(new BoolSetting("l_light", "明るさ（Light）", true));
+    public static final BoolSetting debugLDifficulty = debugScreen.add(new BoolSetting("l_difficulty", "地域の難易度（Local Difficulty）", true));
+    public static final BoolSetting debugLShader = debugScreen.add(new BoolSetting("l_shader", "シェーダー", true));
+    public static final BoolSetting debugLOther = debugScreen.add(new BoolSetting("l_other", "その他（ほかの MOD の行など）", true));
+    public static final HeaderSetting debugHeadRight = debugScreen.add(new HeaderSetting("h_right", "右側"));
+    public static final BoolSetting debugRJava = debugScreen.add(new BoolSetting("r_java", "Java", true));
+    public static final BoolSetting debugRMem = debugScreen.add(new BoolSetting("r_mem", "メモリ（Mem・Allocated）", true));
+    public static final BoolSetting debugRNative = debugScreen.add(new BoolSetting("r_native", "Native・GC（OptiFine）", true));
+    public static final BoolSetting debugRCpu = debugScreen.add(new BoolSetting("r_cpu", "CPU", true));
+    public static final BoolSetting debugRDisplay = debugScreen.add(new BoolSetting("r_display", "画面と GPU（Display）", true));
+    public static final BoolSetting debugRMods = debugScreen.add(new BoolSetting("r_mods", "Forge・OptiFine・MOD の数", true));
+    public static final BoolSetting debugRTarget = debugScreen.add(new BoolSetting("r_target", "見ているブロックの情報", true));
+    public static final BoolSetting debugROther = debugScreen.add(new BoolSetting("r_other", "その他（ほかの MOD の行など）", true));
 
     // ---- Motion Blur
     public static final Module motionBlur = new Module("motionblur", "Motion Blur", Category.VISUAL,

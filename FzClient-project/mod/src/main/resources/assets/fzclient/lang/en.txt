@@ -1191,3 +1191,24 @@ F3（デバッグ画面）をパネルにまとめて見やすくする	F3 debug
 右側（メモリ・PC・ブロック情報）を表示	Show the right side (memory, PC, block info)
 項目名と FPS に色を付ける	Colour the item names and FPS
 文字の大きさ	Text size
+表示する行	Lines shown
+左側	Left side
+右側	Right side
+Minecraft のバージョン	Minecraft version
+描画の詳細（C: E: P: など）	Rendering details (C: E: P: ...)
+座標（XYZ）	Position (XYZ)
+足元のブロック（Block）	Block you stand on (Block)
+チャンク（Chunk）	Chunk
+向き（Facing）	Facing
+バイオーム（Biome）	Biome
+明るさ（Light）	Light
+地域の難易度（Local Difficulty）	Local Difficulty
+シェーダー	Shaders
+その他（ほかの MOD の行など）	Other (lines from other mods...)
+メモリ（Mem・Allocated）	Memory (Mem, Allocated)
+Native・GC（OptiFine）	Native, GC (OptiFine)
+画面と GPU（Display）	Display and GPU
+Forge・OptiFine・MOD の数	Forge, OptiFine, number of mods
+見ているブロックの情報	The block you look at
+キーを押してください（Ctrl・Shift・Alt と組み合わせ可・マウスのボタンも可・Esc で解除）	Press a key (with Ctrl / Shift / Alt if you like, or a mouse button; Esc clears it)
+キーをクリックして設定・1 つの操作に 2 つまで（例: Alt + X）	Click a key to set it; up to 2 per action (e.g. Alt + X)

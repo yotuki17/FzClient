@@ -181,6 +181,7 @@ public class FzHud {
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new dev.fzkc.fzhud.feature.Requeue.Command());
         FMLCommonHandler.instance().bus().register(new dev.fzkc.fzhud.feature.Snaplook());   // hold a key to look behind you
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.HotbarMouse());
+        MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.InventoryKeys());   // second keys and Alt + in inventories
         MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.feature.DebugScreen());   // F3 in tidy panels   // hotbar keys on mouse buttons in inventories
         Object partyWarp = new dev.fzkc.fzhud.chat.PartyWarp();   // /p warp for party members the queue left behind
         MinecraftForge.EVENT_BUS.register(partyWarp);
@@ -380,7 +381,9 @@ public class FzHud {
     public void onOverlayKey(net.minecraftforge.client.event.GuiScreenEvent.KeyboardInputEvent.Pre event) {
         if (!Keyboard.getEventKeyState()) return;
         // binding a key in the controls: Alt+X belongs to that
-        if (dev.fzkc.fzhud.feature.LauncherLink.screenKey(Keyboard.getEventKey(), event.gui instanceof net.minecraft.client.gui.GuiControls)) {
+        int k = Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey();
+        if (dev.fzkc.fzhud.feature.LauncherLink.screenKey(k, event.gui instanceof net.minecraft.client.gui.GuiControls
+                || event.gui instanceof dev.fzkc.fzhud.gui.KeyBindScreen, Keyboard.isRepeatEvent())) {
             event.setCanceled(true);
         }
     }
@@ -450,6 +453,16 @@ public class FzHud {
             Branding.patchBrandings();
             // FzClient's own title screen instead of the vanilla one
             if (Branding.on("custommenu")) event.gui = new dev.fzkc.fzhud.gui.FzMainMenu();
+        }
+        // Controls: two keys per action and Ctrl / Shift / Alt combinations
+        if (event.gui != null && event.gui.getClass() == net.minecraft.client.gui.GuiControls.class) {
+            try {
+                net.minecraft.client.gui.GuiScreen parent = net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(
+                        net.minecraft.client.gui.GuiControls.class, (net.minecraft.client.gui.GuiControls) event.gui, "parentScreen", "field_146496_h");
+                event.gui = new dev.fzkc.fzhud.gui.KeyBindScreen(parent);
+            } catch (Throwable t) {
+                // the game's own screen then
+            }
         }
         if (event.gui instanceof GuiDownloadTerrain && Modules.noLoading.enabled && Modules.noLoadingTerrain.get()) {
             event.gui = null;

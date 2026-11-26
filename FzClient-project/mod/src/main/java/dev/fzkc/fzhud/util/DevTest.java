@@ -58,6 +58,7 @@ public class DevTest {
         else if ("f3".equals(MODE)) f3(mc, w);
         else if ("skin".equals(MODE)) skin(w);
         else if ("hitbox".equals(MODE)) hitbox(mc, w);
+        else if ("keys".equals(MODE)) keys(mc, w);
     }
 
     /** FastStart: everything loaded at the title screen, one line each (to compare a start with and without it). */
@@ -586,5 +587,68 @@ public class DevTest {
             LOG.info("hitbox done");
             mc.shutdown();
         }
+    }
+
+    /** Controls screen (two keys, combinations), key presses through KeyCombos, F3 lines; logs PASS / FAIL. */
+    private void keys(Minecraft mc, int w) {
+        net.minecraft.client.settings.GameSettings gs = mc.gameSettings;
+        if (w == 40) {
+            mc.displayGuiScreen(new net.minecraft.client.gui.GuiControls(null, gs));
+            check("controls screen replaced", mc.currentScreen instanceof dev.fzkc.fzhud.gui.KeyBindScreen);
+            dev.fzkc.fzhud.feature.KeyCombos.set(gs.keyBindJump, 1, org.lwjgl.input.Keyboard.KEY_J, 0);
+            dev.fzkc.fzhud.feature.KeyCombos.set(gs.keyBindDrop, 0, org.lwjgl.input.Keyboard.KEY_Q, dev.fzkc.fzhud.feature.KeyCombos.ALT);
+            dev.fzkc.fzhud.feature.KeyCombos.set(gs.keyBindInventory, 1, org.lwjgl.input.Keyboard.KEY_Q, 0);
+        }
+        if (w == 70) shot(mc, "keys_screen");
+        if (w == 75) {
+            mc.displayGuiScreen(null);
+            int J = org.lwjgl.input.Keyboard.KEY_J, Q = org.lwjgl.input.Keyboard.KEY_Q;
+            KeyBinding.setKeyBindState(J, true);
+            KeyBinding.onTick(J);
+            check("second key holds jump", gs.keyBindJump.isKeyDown());
+            check("second key presses jump", gs.keyBindJump.isPressed());
+            KeyBinding.setKeyBindState(J, false);
+            check("second key lets go of jump", !gs.keyBindJump.isKeyDown());
+            KeyBinding.setKeyBindState(Q, true);
+            KeyBinding.onTick(Q);
+            check("Q without Alt does not drop", !gs.keyBindDrop.isKeyDown() && !gs.keyBindDrop.isPressed());
+            check("Q without Alt opens the inventory key", gs.keyBindInventory.isKeyDown());
+            KeyBinding.setKeyBindState(Q, false);
+            while (gs.keyBindInventory.isPressed()) { }
+            check("names", "Alt + Q".equals(dev.fzkc.fzhud.feature.KeyCombos.name(Q, dev.fzkc.fzhud.feature.KeyCombos.ALT)));
+            int W = gs.keyBindForward.getKeyCode();
+            KeyBinding.setKeyBindState(W, true);
+            check("plain keys still work", gs.keyBindForward.isKeyDown());
+            KeyBinding.setKeyBindState(W, false);
+            // inventory: Hotbar 1 = Alt + E next to Inventory = E; Hotbar 2 has K as its second key
+            int E = gs.keyBindInventory.getKeyCode(), K = org.lwjgl.input.Keyboard.KEY_K;
+            dev.fzkc.fzhud.feature.KeyCombos.set(gs.keyBindsHotbar[0], 0, E, dev.fzkc.fzhud.feature.KeyCombos.ALT);
+            dev.fzkc.fzhud.feature.KeyCombos.set(gs.keyBindsHotbar[1], 1, K, 0);
+            mc.displayGuiScreen(new net.minecraft.client.gui.inventory.GuiInventory(mc.thePlayer));
+            check("inventory: second key is a hotbar key", dev.fzkc.fzhud.feature.InventoryKeys.handle(mc.currentScreen, K));
+            check("inventory: E without Alt is handled", dev.fzkc.fzhud.feature.InventoryKeys.handle(mc.currentScreen, E));
+            check("inventory: E without Alt closes the inventory", mc.currentScreen == null);
+            mc.displayGuiScreen(new net.minecraft.client.gui.inventory.GuiInventory(mc.thePlayer));
+            check("inventory: other keys left to the game", !dev.fzkc.fzhud.feature.InventoryKeys.handle(mc.currentScreen, org.lwjgl.input.Keyboard.KEY_Z));
+            mc.displayGuiScreen(null);
+            for (KeyBinding kb : gs.keyBindings) dev.fzkc.fzhud.feature.KeyCombos.reset(kb);
+            check("reset", dev.fzkc.fzhud.feature.KeyCombos.isDefault(gs.keyBindDrop) && dev.fzkc.fzhud.feature.KeyCombos.key(gs.keyBindJump, 1) == 0);
+            gs.showDebugInfo = true;
+            Modules.debugScreen.enabled = true;
+            Modules.debugLRender.value = false;
+            Modules.debugRMods.value = false;
+        }
+        if (w == 110) shot(mc, "keys_f3");
+        if (w == 115) {
+            Modules.debugLRender.value = true;
+            Modules.debugRMods.value = true;
+            gs.showDebugInfo = false;
+            LOG.info("keys done");
+            mc.shutdown();
+        }
+    }
+
+    private static void check(String what, boolean ok) {
+        LOG.info((ok ? "PASS " : "FAIL ") + what);
     }
 }
