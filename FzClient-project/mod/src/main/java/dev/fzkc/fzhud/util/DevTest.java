@@ -60,6 +60,7 @@ public class DevTest {
         else if ("hitbox".equals(MODE)) hitbox(mc, w);
         else if ("keys".equals(MODE)) keys(mc, w);
         else if ("f3win".equals(MODE)) f3win(mc, w);
+        else if ("winkey".equals(MODE)) { if (w == 40) Modules.winKey.enabled = true; if (w == 1400) { Modules.winKey.enabled = false; LOG.info("winkey done"); mc.shutdown(); } }
     }
 
     /** FastStart: everything loaded at the title screen, one line each (to compare a start with and without it). */

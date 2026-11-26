@@ -107,6 +107,15 @@ public class FzHud {
         // only with the FzClient Launcher: in any other launcher nothing below runs (the mixins are off too)
         if (!dev.fzkc.fzhud.boot.LaunchGuard.ok()) {
             MinecraftForge.EVENT_BUS.register(new dev.fzkc.fzhud.boot.LockedNotice());
+            // the key bindings above exist but are not registered: their category would leave an empty row in the
+            // game's Controls list, which crashes it (NullPointerException in GuiListExtended)
+            try {
+                java.util.Set<String> categories = net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(
+                        KeyBinding.class, null, "keybindSet", "field_151473_c");
+                categories.remove("FzClient");
+            } catch (Throwable ignored) {
+                // nothing else to do then
+            }
             return;
         }
         dev.fzkc.fzhud.boot.LaunchGuard.consumeTicket();

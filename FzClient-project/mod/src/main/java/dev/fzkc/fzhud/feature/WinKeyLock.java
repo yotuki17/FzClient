@@ -43,6 +43,7 @@ public final class WinKeyLock {
         LongPtr CallNextHookEx(Pointer hook, int code, LongPtr wParam, Pointer lParam);
         boolean UnhookWindowsHookEx(Pointer hook);
         int GetMessageW(Pointer msg, Pointer hwnd, int min, int max);
+        LongPtr SetTimer(Pointer hwnd, LongPtr id, int ms, Pointer proc);
     }
 
     interface Kernel32 extends StdCallLibrary {
@@ -50,8 +51,13 @@ public final class WinKeyLock {
         int GetCurrentThreadId();
     }
 
-    private static final int WH_KEYBOARD_LL = 13, VK_LWIN = 0x5B, VK_RWIN = 0x5C, LLKHF_UP = 0x80;
+    private static final int WH_KEYBOARD_LL = 13, VK_LWIN = 0x5B, VK_RWIN = 0x5C, LLKHF_UP = 0x80, WM_TIMER = 0x0113;
+    /** How often the hook is put back (see the message loop). */
+    private static final int REHOOK_MS = 2000;
+    private static final LongPtr SWALLOW = new LongPtr(1);
     private static final boolean WINDOWS = System.getProperty("os.name", "").startsWith("Windows");
+    /** Dev check (-Dfzclient.winkeytest): F24 stands in for the Windows key, the focus counts as given, every event is logged. */
+    private static final boolean TEST = System.getProperty("fzclient.winkeytest") != null;
 
     /** Locked now (the switch key flips it). */
     private static volatile boolean locked;
@@ -119,20 +125,21 @@ public final class WinKeyLock {
                     try {
                         if (code >= 0 && lParam != null) {
                             int vk = lParam.getInt(0);
-                            int side = vk == VK_LWIN ? 0 : vk == VK_RWIN ? 1 : -1;
+                            int side = vk == VK_LWIN || TEST && vk == 0x87 ? 0 : vk == VK_RWIN ? 1 : -1;
+                            if (TEST && side >= 0) LOG.info("winkey event vk=" + vk + " flags=" + lParam.getInt(8) + " enabled=" + enabled + " locked=" + locked + " focused=" + focused);
                             if (side >= 0) {
                                 boolean up = (lParam.getInt(8) & LLKHF_UP) != 0;
                                 if (!up) {
-                                    if (enabled && locked && focused) {
+                                    if (enabled && locked && (focused || TEST)) {
                                         swallowed[side] = true;
-                                        return new LongPtr(1);
+                                        return SWALLOW;
                                     }
                                     swallowed[side] = false;
                                 } else if (swallowed[side]) {
                                     // only the key-up of a key-down we swallowed: Windows never saw it go down.
                                     // A key-up of a key-down Windows did see always goes through (no stuck Win).
                                     swallowed[side] = false;
-                                    return new LongPtr(1);
+                                    return SWALLOW;
                                 }
                             }
                         }
@@ -150,9 +157,32 @@ public final class WinKeyLock {
             }
             hookOk = true;
             LOG.info("Windows key lock ready");
+            Pointer module = kernel32.GetModuleHandleW(null);
             Memory msg = new Memory(64);
-            // the hook is called through this thread's message loop
-            while (user32.GetMessageW(msg, null, 0, 0) > 0) { }
+            // Windows silently drops a keyboard hook that once answers too slowly (Java pauses for garbage collection,
+            // world loading...), and then the Windows key works again with no sign of it. So while the module is on the
+            // hook is put back every 2 seconds: a new one first, then the old one goes.
+            user32.SetTimer(null, new LongPtr(0), REHOOK_MS, null);
+            int timers = 0;
+            int r;
+            while ((r = user32.GetMessageW(msg, null, 0, 0)) > 0) {
+                if (msg.getInt(Pointer.SIZE) != WM_TIMER) continue;   // MSG: hwnd, then message
+                timers++;
+
+                if (TEST && timers == 3) {
+                    user32.UnhookWindowsHookEx(hook[0]);   // as if Windows had dropped it
+                    LOG.info("winkey test: hook dropped");
+                    continue;
+                }
+                if (!enabled) continue;
+                Pointer fresh = user32.SetWindowsHookExW(WH_KEYBOARD_LL, proc, module, 0);
+                if (TEST) LOG.info("winkey rehook " + timers + " -> " + fresh);
+                if (fresh != null) {
+                    user32.UnhookWindowsHookEx(hook[0]);
+                    hook[0] = fresh;
+                }
+            }
+            LOG.warn("Windows key lock: message loop ended (" + r + ")");
             hookOk = false;
             user32.UnhookWindowsHookEx(hook[0]);
         }, "FzClient-WinKey");
