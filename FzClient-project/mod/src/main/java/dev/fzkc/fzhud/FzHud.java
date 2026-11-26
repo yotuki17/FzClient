@@ -329,6 +329,7 @@ public class FzHud {
         Performance.tick();
         dev.fzkc.fzhud.feature.LauncherLink.tick(mc);
         RawInput.tick();
+        dev.fzkc.fzhud.feature.SideButtons.tick();
         Glass.tick();
         DiscordVoice.tick();
         if (mc.theWorld != lastWorld) {

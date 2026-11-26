@@ -63,7 +63,7 @@ public class Snaplook {
     /** The key (or mouse button, stored as button - 100) is held right now. */
     private static boolean isDown(int code) {
         try {
-            return code < 0 ? org.lwjgl.input.Mouse.isButtonDown(code + 100) : Keyboard.isKeyDown(code);
+            return code < 0 ? SideButtons.isDown(code + 100) : Keyboard.isKeyDown(code);
         } catch (Exception e) {
             return false;
         }

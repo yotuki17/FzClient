@@ -60,6 +60,7 @@ public class DevTest {
         else if ("hitbox".equals(MODE)) hitbox(mc, w);
         else if ("keys".equals(MODE)) keys(mc, w);
         else if ("f3win".equals(MODE)) f3win(mc, w);
+        else if ("xbutton".equals(MODE)) xbutton(mc, w);
         else if ("winkey".equals(MODE)) { if (w == 40) Modules.winKey.enabled = true; if (w == 1400) { Modules.winKey.enabled = false; LOG.info("winkey done"); mc.shutdown(); } }
     }
 
@@ -682,6 +683,83 @@ public class DevTest {
             Modules.winKey.enabled = false;
             mc.gameSettings.showDebugInfo = false;
             LOG.info("f3win done");
+            mc.shutdown();
+        }
+    }
+
+    /** The LWJGL side-button events seen (button, down), recorded and eaten in xbutton mode. */
+    private final java.util.List<int[]> seen = new java.util.ArrayList<int[]>();
+
+    public class XListener {
+        @SubscribeEvent
+        public void onMouse(net.minecraftforge.client.event.MouseEvent e) {
+            if (e.button < 0) return;
+            seen.add(new int[] {e.button, e.buttonstate ? 1 : 0});
+            LOG.info("mouse event: button " + e.button + (e.buttonstate ? " down" : " up"));
+            e.setCanceled(true);   // the game never acts on these (no focus grab on the test window)
+        }
+    }
+
+    interface PostUser32 extends com.sun.jna.win32.StdCallLibrary {
+        boolean PostMessageW(com.sun.jna.Pointer hwnd, int msg, WinLong w, WinLong l);
+    }
+
+    public static class WinLong extends com.sun.jna.IntegerType {
+        public WinLong() { this(0); }
+        public WinLong(long v) { super(com.sun.jna.Pointer.SIZE, v); }
+    }
+
+    private static void post(int msg, long wParam) {
+        try {
+            java.lang.reflect.Field f = org.lwjgl.opengl.Display.class.getDeclaredField("display_impl");
+            f.setAccessible(true);
+            Object impl = f.get(null);
+            java.lang.reflect.Field h = impl.getClass().getDeclaredField("hwnd");
+            h.setAccessible(true);
+            long hwnd = h.getLong(impl);
+            PostUser32 u = (PostUser32) com.sun.jna.Native.loadLibrary("user32", PostUser32.class);
+            boolean ok = u.PostMessageW(new com.sun.jna.Pointer(hwnd), msg, new WinLong(wParam), new WinLong(0));
+            LOG.info("posted 0x" + Integer.toHexString(msg) + " wParam 0x" + Long.toHexString(wParam) + " ok=" + ok);
+        } catch (Throwable t) {
+            LOG.info("FAIL post: " + t);
+        }
+    }
+
+    private int[] last() {
+        return seen.isEmpty() ? new int[] {-1, -1} : seen.get(seen.size() - 1);
+    }
+
+    /** Side buttons: LWJGL's own mistake without the fix, the right button with it (messages to this window only). */
+    private void xbutton(Minecraft mc, int w) {
+        final int DOWN = 0x20B, UP = 0x20C;
+        if (w == 40) {
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new XListener());
+            Modules.fixSideButtons.value = false;
+        }
+        if (w == 45) post(DOWN, (1L << 16) | 0x21);   // side button 1 while the left button is held
+        if (w == 48) check("without the fix LWJGL reports Button 5 (index 4) for side button 1 + left click", last()[0] == 4 && last()[1] == 1);
+        if (w == 49) post(UP, (1L << 16) | 0x01);
+        if (w == 52) {
+            check("release reported as Button 4 (index 3)", last()[0] == 3 && last()[1] == 0);
+            Modules.fixSideButtons.value = true;
+        }
+        if (w == 55) post(DOWN, (1L << 16) | 0x21);
+        if (w == 58) check("with the fix: side button 1 + left click = Button 4 down", last()[0] == 3 && last()[1] == 1);
+        if (w == 59) post(UP, (1L << 16) | 0x01);
+        if (w == 62) check("with the fix: Button 4 up", last()[0] == 3 && last()[1] == 0);
+        if (w == 63) post(DOWN, (1L << 16) | 0x24);   // side button 1 + Shift
+        if (w == 66) check("with the fix: side button 1 + Shift = Button 4", last()[0] == 3 && last()[1] == 1);
+        if (w == 67) post(UP, (1L << 16) | 0x04);
+        if (w == 70) post(DOWN, (2L << 16) | 0x4A);   // side button 2 + right click + Ctrl
+        if (w == 73) check("with the fix: side button 2 + right click + Ctrl = Button 5", last()[0] == 4 && last()[1] == 1);
+        if (w == 74) post(UP, (2L << 16) | 0x0A);
+        if (w == 77) check("with the fix: Button 5 up", last()[0] == 4 && last()[1] == 0);
+        if (w == 78) post(DOWN, (1L << 16) | 0x20);   // plain side button 1 (worked before too)
+        if (w == 81) check("plain side button 1 = Button 4", last()[0] == 3 && last()[1] == 1);
+        if (w == 82) post(UP, 1L << 16);
+        if (w == 86) {
+            check("events seen: " + seen.size(), seen.size() == 10);
+            LOG.info("xbutton done");
             mc.shutdown();
         }
     }

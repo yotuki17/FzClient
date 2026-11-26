@@ -496,6 +496,7 @@ public final class Modules {
     public static final BoolSetting fixMouseDelay = fixes.add(new BoolSetting("mousedelay", "マウスの遅れを直す（狙った所にちゃんと当たる）", true));
     public static final BoolSetting fixResourcePack = fixes.add(new BoolSetting("resourcepack", "サーバーのリソースパックを使った攻撃を防ぐ", true));
     public static final BoolSetting fixHotbarMouse = fixes.add(new BoolSetting("hotbarmouse", "インベントリでマウスボタンのホットバーキーでも入れ替えできるようにする", true));
+    public static final BoolSetting fixSideButtons = fixes.add(new BoolSetting("sidebuttons", "マウスのサイドボタン（Button 4 / 5）がクリックや Shift と同時押しでも正しく反応するようにする", true));
 
     // ---- Branding (window title, icon, loading logo, main menu)
     public static final Module branding = new Module("branding", "FzClient Branding", Category.UTILITY,

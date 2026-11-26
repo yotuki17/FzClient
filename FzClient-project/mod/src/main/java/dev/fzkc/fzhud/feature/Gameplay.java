@@ -7,7 +7,6 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
 /** Per-tick logic for toggle sprint/sneak, fullbright and the block-hit swing. */
 public final class Gameplay {
@@ -113,7 +112,7 @@ public final class Gameplay {
         if (kb.isKeyDown()) return true;
         int code = kb.getKeyCode();
         try {
-            return code < 0 ? Mouse.isButtonDown(code + 100) : code > 0 && Keyboard.isKeyDown(code);
+            return code < 0 ? SideButtons.isDown(code + 100) : code > 0 && Keyboard.isKeyDown(code);
         } catch (Exception e) {
             return false;
         }
@@ -125,7 +124,7 @@ public final class Gameplay {
             int code = KeyCombos.key(kb, s);
             if (code == 0) continue;
             try {
-                physical |= code < 0 ? Mouse.isButtonDown(code + 100) : Keyboard.isKeyDown(code);
+                physical |= code < 0 ? SideButtons.isDown(code + 100) : Keyboard.isKeyDown(code);
             } catch (Exception ignored) {
                 // not held then
             }

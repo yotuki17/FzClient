@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -125,7 +124,7 @@ public final class KeyCombos {
     }
 
     private static boolean down(int key) {
-        if (key < 0) return key + 100 >= 0 && Mouse.isButtonDown(key + 100);
+        if (key < 0) return SideButtons.isDown(key + 100);
         return key > 0 && key < Keyboard.KEYBOARD_SIZE && Keyboard.isKeyDown(key);
     }
 
