@@ -44,11 +44,14 @@ public final class WinKeyLock {
         boolean UnhookWindowsHookEx(Pointer hook);
         int GetMessageW(Pointer msg, Pointer hwnd, int min, int max);
         LongPtr SetTimer(Pointer hwnd, LongPtr id, int ms, Pointer proc);
+        Pointer GetForegroundWindow();
+        int GetWindowThreadProcessId(Pointer hwnd, Pointer pid);
     }
 
     interface Kernel32 extends StdCallLibrary {
         Pointer GetModuleHandleW(WString name);
         int GetCurrentThreadId();
+        int GetCurrentProcessId();
     }
 
     private static final int WH_KEYBOARD_LL = 13, VK_LWIN = 0x5B, VK_RWIN = 0x5C, LLKHF_UP = 0x80, WM_TIMER = 0x0113;
@@ -70,6 +73,8 @@ public final class WinKeyLock {
     private static boolean started, failed, startDone;
     /** Left / right Windows key went down while locked (only then is its key-up swallowed too). Hook thread only. */
     private static final boolean[] swallowed = new boolean[2];
+    /** Win key presses written to the log (the first few of a session, to see why one got through). */
+    private static int logged;
     /** Kept here so the callback is never garbage collected while Windows still calls it (set once). */
     private static LowLevelProc proc;
 
@@ -86,6 +91,7 @@ public final class WinKeyLock {
         while (KEY.isPressed()) {
             if (!on || failed) continue;
             locked = !locked;
+            LOG.info("Windows key lock " + (locked ? "on" : "off") + " (switch key)");
             if (Modules.winKeyMsg.get() && mc.thePlayer != null) {
                 mc.thePlayer.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "[FzClient] "
                         + EnumChatFormatting.YELLOW + Lang.t(locked ? "Windows キーを無効にしました" : "Windows キーを使えるようにしました")));
@@ -117,8 +123,10 @@ public final class WinKeyLock {
             LOG.warn("Windows key lock unavailable: " + t);
             return;
         }
+        final int me = kernel32.GetCurrentProcessId();
         Thread thread = new Thread(() -> {
             final Pointer[] hook = new Pointer[1];
+            final Memory pid = new Memory(4);
             proc = new LowLevelProc() {   // a class, not a lambda: JNA looks the method up by reflection
                 @Override
                 public LongPtr callback(int code, LongPtr wParam, Pointer lParam) {
@@ -130,11 +138,16 @@ public final class WinKeyLock {
                             if (side >= 0) {
                                 boolean up = (lParam.getInt(8) & LLKHF_UP) != 0;
                                 if (!up) {
-                                    if (enabled && locked && (focused || TEST)) {
-                                        swallowed[side] = true;
-                                        return SWALLOW;
+                                    // the window in front is the game's own (asked of Windows right now, not the
+                                    // game's idea of its focus, which borderless / full screen can get wrong)
+                                    boolean front = TEST || ours(user32, pid, me);
+                                    boolean swallow = enabled && locked && front;
+                                    if (!swallowed[side] && logged < 30 && enabled) {   // not every auto-repeat
+                                        logged++;
+                                        LOG.info("Windows key: game in front=" + front + " locked=" + locked + " -> " + (swallow ? "swallowed" : "passed"));
                                     }
-                                    swallowed[side] = false;
+                                    swallowed[side] = swallow;
+                                    if (swallow) return SWALLOW;
                                 } else if (swallowed[side]) {
                                     // only the key-up of a key-down we swallowed: Windows never saw it go down.
                                     // A key-up of a key-down Windows did see always goes through (no stuck Win).
@@ -157,6 +170,12 @@ public final class WinKeyLock {
             }
             hookOk = true;
             LOG.info("Windows key lock ready");
+            Pointer game = dev.fzkc.fzhud.util.Win32Window.hwnd();
+            if (game != null) {
+                pid.setInt(0, 0);
+                user32.GetWindowThreadProcessId(game, pid);
+                LOG.info("Windows key lock: game window is this process = " + (pid.getInt(0) == me) + ", in front = " + ours(user32, pid, me));
+            }
             Pointer module = kernel32.GetModuleHandleW(null);
             Memory msg = new Memory(64);
             // Windows silently drops a keyboard hook that once answers too slowly (Java pauses for garbage collection,
@@ -188,5 +207,14 @@ public final class WinKeyLock {
         }, "FzClient-WinKey");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    /** The foreground window belongs to this process (the game). */
+    private static boolean ours(User32 user32, Pointer pid, int me) {
+        Pointer fg = user32.GetForegroundWindow();
+        if (fg == null) return false;
+        pid.setInt(0, 0);
+        user32.GetWindowThreadProcessId(fg, pid);
+        return pid.getInt(0) == me;
     }
 }
