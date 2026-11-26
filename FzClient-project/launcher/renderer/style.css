@@ -372,6 +372,7 @@ input[type=range] { flex: 1; accent-color: var(--cyan); }
 .cp .none { display: grid; place-items: center; color: var(--muted); border: 1px dashed var(--line); font-size: 18px; }
 .cp span { font-size: 11px; text-align: center; line-height: 1.3; }
 .page.drop .stage, .page.drop .lib { outline: 2px dashed var(--cyan); outline-offset: 4px; }
+#page-mods.drop { outline: 2px dashed var(--cyan); outline-offset: -6px; border-radius: 12px; }
 @media (max-width: 860px) { .skinwrap { grid-template-columns: minmax(0, 1fr); } .stage { position: relative; } }
 
 /* ---------- optimize */

@@ -605,6 +605,37 @@ $('modUpdateAll').onclick = () => runUpdate(null);
 $('modCheck').onclick = async () => { toast(t('更新を確認中…')); await loadMods(true); if ($('modUpdateAll').disabled) toast(t('すべて最新です')); };
 $('modAdd').onclick = async () => { const n = await fz.mods.add(); if (n) { toast(t('{0} 個の MOD を追加しました', n)); loadMods(); } };
 $('modFolder').onclick = () => fz.open.folder('mods');
+
+// drop .jar files anywhere on the MOD page
+(function modDrop() {
+  const page = $('page-mods');
+  const files = e => [...(e.dataTransfer ? e.dataTransfer.items : [])].some(i => i.kind === 'file');
+  page.addEventListener('dragover', e => { if (!files(e)) return; e.preventDefault(); page.classList.add('drop'); });
+  page.addEventListener('dragleave', e => { if (!page.contains(e.relatedTarget)) page.classList.remove('drop'); });
+  page.addEventListener('drop', async e => {
+    e.preventDefault();
+    page.classList.remove('drop');
+    const list = [...e.dataTransfer.files];
+    if (!list.length) return;
+    try {
+      const r = await fz.mods.addDropped(list);
+      if (r.added) {
+        document.querySelector('#page-mods .tab[data-tab="have"]').click();
+        loadMods();
+      }
+      // one toast (a second one would replace the first at once)
+      const names = l => l.slice(0, 3).map(s => s.name).join(', ') + (l.length > 3 ? ' …' : '');
+      const notJar = r.skipped.filter(s => s.why === 'notjar'), there = r.skipped.filter(s => s.why === 'there');
+      const failed = r.skipped.filter(s => s.why !== 'notjar' && s.why !== 'there');
+      const msg = [];
+      if (r.added) msg.push(t('{0} 個の MOD を追加しました', r.added));
+      if (notJar.length) msg.push(t('MOD の jar ではないので入れませんでした: {0}', names(notJar)));
+      if (there.length) msg.push(t('もう MOD フォルダにあります: {0}', names(there)));
+      if (failed.length) msg.push(failed[0].name + ': ' + errText(failed[0].why));
+      if (msg.length) toast(msg.join(' / '), r.skipped.length > 0);
+    } catch (err) { toast(errText(err), true); }
+  });
+})();
 $('modAuto').onchange = () => save({ autoUpdateMods: $('modAuto').checked });
 fz.mods.onAutoUpdated(n => toast(t('{0} 個の MOD を更新しました', n)));
 

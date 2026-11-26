@@ -1,6 +1,6 @@
 'use strict';
 // The only bridge between the page and the launcher: a fixed list of calls, nothing else.
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('fz', {
   platform: process.platform,   // 'win32' / 'darwin': the page hides what a Mac does not have
@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('fz', {
   mods: {
     toggle: file => ipcRenderer.invoke('mods:toggle', file),
     add: () => ipcRenderer.invoke('mods:add'),
+    /** Files dropped on the page (File objects): only their paths go to the launcher, which checks them. */
+    addDropped: files => ipcRenderer.invoke('mods:addPaths', [...files].map(f => { try { return webUtils.getPathForFile(f); } catch { return ''; } })),
     installed: checkUpdates => ipcRenderer.invoke('mods:installed', checkUpdates),
     search: (query, offset, src) => ipcRenderer.invoke('mods:search', query, offset, src),
     installedProjects: src => ipcRenderer.invoke('mods:installedProjects', src),

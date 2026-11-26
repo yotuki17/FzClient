@@ -299,6 +299,42 @@ ipcMain.handle('mods:add', async () => {
   return r.filePaths.length;
 });
 
+/**
+ * .jar files dropped on the MOD page. Only real jar files (a zip) are copied; OptiFine goes the OptiFine way
+ * (an older OptiFine is moved out, two of them crash the game). Resolves with { added, skipped: [{ name, why }] }:
+ * why is 'notjar', 'there' (already in mods/) or the error text.
+ */
+ipcMain.handle('mods:addPaths', async (e, paths) => {
+  if (!Array.isArray(paths)) throw new Error('bad list');
+  if (running) throw new Error('Minecraft を閉じてから変更してください');
+  const dir = modsDir();
+  fs.mkdirSync(dir, { recursive: true });
+  let added = 0;
+  const skipped = [];
+  for (const p of paths.slice(0, 100)) {
+    if (typeof p !== 'string' || !p) continue;
+    const name = path.basename(p);
+    try {
+      // no network paths (\\host\share): opening one would make Windows sign in to that host
+      if (!path.isAbsolute(p) || /^[\\/]{2}/.test(p) || !/\.jar$/i.test(name)) { skipped.push({ name, why: 'notjar' }); continue; }
+      const st = fs.statSync(p);
+      if (!st.isFile() || st.size < 22 || st.size > 500 * 1024 * 1024) { skipped.push({ name, why: 'notjar' }); continue; }
+      const head = Buffer.alloc(2);
+      const fd = fs.openSync(p, 'r');
+      try { fs.readSync(fd, head, 0, 2, 0); } finally { fs.closeSync(fd); }
+      if (head.toString('latin1') !== 'PK') { skipped.push({ name, why: 'notjar' }); continue; }
+      if (path.resolve(path.dirname(p)).toLowerCase() === path.resolve(dir).toLowerCase()) { skipped.push({ name, why: 'there' }); continue; }   // already in mods/
+      if (/optifine/i.test(name)) await optifine.addJar(p, dir);
+      else fs.copyFileSync(p, path.join(dir, name));
+      added++;
+    } catch (err) {
+      log('[mods] drop ' + name + ': ' + err.message);
+      skipped.push({ name, why: err.message });
+    }
+  }
+  return { added, skipped };
+});
+
 // ---------------------------------------------------------------- Modrinth
 const plainFile = f => typeof f === 'string' && f === path.basename(f) && /\.jar(\.disabled)?$/i.test(f);
 const SOURCES = { modrinth, curseforge };

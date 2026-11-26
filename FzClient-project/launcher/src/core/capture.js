@@ -29,6 +29,8 @@ const ENCODERS = [
   { name: 'Media Foundation', codec: 'h264_mf', vf: 'hwdownload,format=bgra,format=nv12', opts: ['-b:v', '20M'] },
 ];
 const SEG = /^seg(\d{6})\.ts$/;
+// No new piece for this long: the window being captured is gone (see tick). Doubles while it does not help.
+const STALL_MS = 8000;
 
 const stamp = () => {
   const d = new Date(), p = n => String(n).padStart(2, '0');
@@ -55,6 +57,10 @@ class Capture {
     this.waiting = [];       // saves waiting for their last piece: { from, to, name, stopAfter }
     this.joining = new Set();
     this.fullscreen = false; // what the game says (F11): the window is made again then
+    this.lastNewest = -1;    // the newest piece at the last look, and since when
+    this.newestAt = 0;
+    this.stallWait = STALL_MS;
+    this.stalled = new Set(); // pieces the watchdog gave up on: a frozen picture with up to a minute of sound
     this.ticks = 0;
     this.timer = setInterval(() => this.tick(), 250);
   }
@@ -100,15 +106,22 @@ class Capture {
     this.sound('start');
   }
 
-  /** Saves the last N seconds (only while they are being kept). */
+  /**
+   * Saves the last N seconds (only while they are being kept). They may span several runs of ffmpeg: it is started
+   * again when the game connects, goes fullscreen... (a save right after the start used to keep only the seconds
+   * since then). While ffmpeg is being started again the pieces written so far are saved.
+   */
   saveReplay() {
     const o = this.options();
-    if (!this.running || !o.replay) {
+    if (!o.replay) {
       this.setStatus('「直前の数十秒をいつも残しておく」を ON にしてください');
       return;
     }
-    const to = this.newest();
-    this.waiting.push({ from: Math.max(this.base, to - Math.ceil(o.replaySeconds / 2) + 1), to, name: `FzClient_replay_${stamp()}.mp4`, stopAfter: false });
+    const to = this.newest(), count = this.replayPieces();
+    // the oldest piece that may be needed (the newest one may still be empty now): kept until the save is done
+    const mine = this.pieces().map(p => p[0]).filter(i => i >= this.firstPiece() && i <= to && !this.stalled.has(i)).sort((a, b) => a - b);
+    const from = mine.length ? mine[Math.max(0, mine.length - count - 1)] : to;
+    this.waiting.push({ from, to, count, name: `FzClient_replay_${stamp()}.mp4`, stopAfter: false });
     this.setStatus('保存しています…');
     this.sound('save');
   }
@@ -148,14 +161,53 @@ class Capture {
       }
     }
     if (!wanted && !this.recording && !this.waiting.length && this.running) this.stop();
+    if (this.running) this.watchStall(newest);
 
     if (++this.ticks % 40 === 0) this.cleanUp(newest, wanted);
     if (this.recording && this.ticks % 4 === 0) this.changed();   // the clock on the button
   }
 
+  /**
+   * The capture holds on to the window it found when it started. At the start of the game that can be a window
+   * that is gone a moment later: no more pictures come, only the sound, so the piece never ends, a replay waits for
+   * it forever and the clip is black (turning the replay off and on again helped, because that starts it again).
+   * When no new piece came for a while ffmpeg is started again; it then finds the window there is now.
+   */
+  watchStall(newest) {
+    const now = Date.now();
+    if (newest !== this.lastNewest) {
+      this.lastNewest = newest;
+      this.newestAt = now;
+      if (newest > this.base) this.stallWait = STALL_MS;   // pieces come again (the first one of a run always appears)
+      return;
+    }
+    if (now - Math.max(this.newestAt, this.startedAt) < this.stallWait) return;
+    this.log(`[capture] no new picture for ${Math.round(this.stallWait / 1000)} s: started again`);
+    this.stallWait = Math.min(this.stallWait * 2, 60000);   // e.g. the game is minimized: do not start again every 8 s
+    this.newestAt = now;
+    if (newest >= 0) this.stalled.add(newest);   // left out of saves: it would be a long black or frozen stretch
+    this.stop();
+    setTimeout(() => {
+      if (!this.helper && !this.closed && !this.gaveUp && (this.options().replay || this.recording || this.waiting.length)) this.start();
+    }, 600);
+  }
+
+  /** Pieces in one replay (2 seconds each). */
+  replayPieces() {
+    return Math.ceil(this.options().replaySeconds / 2);
+  }
+
+  /** The first piece of this game: pieces before it are left over from an earlier start. */
+  firstPiece() {
+    return this.runs.length ? this.runs[0] : this.base;
+  }
+
   /** Deletes the pieces nothing needs any more. */
   cleanUp(newest, replay) {
-    let keepFrom = replay ? newest - Math.ceil(this.options().replaySeconds / 2) - 2 : newest - 1;
+    // for a replay the newest pieces by count: the numbers have gaps where ffmpeg was started again
+    const nums = this.pieces().map(p => p[0]).filter(i => !this.stalled.has(i)).sort((a, b) => a - b);
+    const keep = this.replayPieces() + 2;
+    let keepFrom = !replay ? newest - 1 : nums.length > keep ? nums[nums.length - keep] : -Infinity;
     if (this.recording) keepFrom = Math.min(keepFrom, this.recordFrom);
     for (const s of this.waiting) keepFrom = Math.min(keepFrom, s.from);
     for (const f of this.joining) keepFrom = Math.min(keepFrom, f);
@@ -245,7 +297,8 @@ class Capture {
   /** Joins pieces [from, to] into one mp4 in the recordings folder (no re-encoding). */
   join(s) {
     const size = f => { try { return fs.statSync(f).size; } catch { return 0; } };
-    const parts = this.pieces().filter(([i, f]) => i >= s.from && i <= s.to && size(f) > 0).sort((a, b) => a[0] - b[0]);
+    let parts = this.pieces().filter(([i, f]) => i >= s.from && i <= s.to && !this.stalled.has(i) && size(f) > 0).sort((a, b) => a[0] - b[0]);
+    if (s.count) parts = parts.slice(-s.count);   // a replay: the last N seconds
     if (s.stopAfter && !this.options().replay && !this.recording && !this.waiting.length) this.stop();
     if (!parts.length) {
       this.setStatus('保存できませんでした（録画がまだありません）');
