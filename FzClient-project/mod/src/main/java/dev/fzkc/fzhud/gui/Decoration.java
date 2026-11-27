@@ -13,8 +13,8 @@ import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
 /**
- * The bird and the FzClient logo in the corner of the menus. Every screen draws it through here, so the UI page
- * ("ロゴ" section) controls all of them at once: where it shows, the text and bird colours and the size.
+ * The FzClient badge and logo text in the corner of the menus. Every screen draws it through here, so the UI page
+ * ("ロゴ" section) controls all of them at once: where it shows, the text colour and the size.
  * <ul>
  *   <li>{@link #corner}: FzClient's own menus (already drawing in virtual pixels).</li>
  *   <li>{@link #draw}: Minecraft's own screens (pause menu, inventory, creative), from FzHud's DrawScreenEvent.Post.
@@ -25,7 +25,6 @@ import org.lwjgl.opengl.GL11;
 public final class Decoration {
     private Decoration() {}
 
-    private static final ResourceLocation BIRD = new ResourceLocation("fzclient", "textures/bird.png");          // 255x153
     private static final ResourceLocation SPLASH = new ResourceLocation("fzclient", "textures/splash_text.png");   // 288x94
 
     private static GuiScreen last;
@@ -87,17 +86,25 @@ public final class Decoration {
         if (light) GlStateManager.enableLighting();
     }
 
-    /** Bird + text, bottom-right (bottom-left while the menus sit on the right). */
+    /** Badge + text, bottom-right (bottom-left while the menus sit on the right). */
     private static void paint(float vw, float vh, float alpha) {
         float s = Modules.uiLogoSize.get() / 100f;
-        float birdW = 40 * s, birdH = birdW * 153f / 255f;
+        float badge = 24 * s, gap = 4 * s;
         float logoW = 90 * s, logoH = logoW * 94f / 288f;
-        // the text starts over the bird's tail; together 125 px wide at 100 %
-        float x = Ui.menuOnRight() ? 10 : vw - 130 * s;
+        // badge, a small gap, then the text; together 118 px wide at 100 %
+        float x = Ui.menuOnRight() ? 10 : vw - 124 * s;
         float y = vh - 35 * s;
         Minecraft mc = Minecraft.getMinecraft();
-        image(mc, BIRD, x, y, birdW, birdH, Modules.uiLogoBirdColor.get(), alpha);
-        image(mc, SPLASH, x + 35 * s, y, logoW, logoH, Modules.uiLogoColor.get(), alpha);
+        // the badge sits on the text's line (the script letters fill about the middle of their image)
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+        GlStateManager.color(1f, 1f, 1f, alpha);
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y + (logoH - badge) / 2f, 0);
+        dev.fzkc.fzhud.util.Badge.draw(badge);
+        GlStateManager.popMatrix();
+        GlStateManager.color(1f, 1f, 1f, 1f);
+        image(mc, SPLASH, x + badge + gap, y, logoW, logoH, Modules.uiLogoColor.get(), alpha);
     }
 
     private static void image(Minecraft mc, ResourceLocation tex, float x, float y, float w, float h, int argb, float alpha) {

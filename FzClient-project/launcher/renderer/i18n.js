@@ -139,6 +139,7 @@ const EN = {
   'NEW：Tab List の設定で「名前と統計の間」「統計どうしの間」を 0〜20 で調整できるように': 'NEW: Tab List settings to adjust the gap between name and stats and between stats (0-20)',
   '改善：Overlay を軽量化（タブの統計の計算を 1 秒 20 回 → 4 回・毎回の作り直しをやめてカクつきを減らした）': 'Better: lighter Overlay (tab stats worked out 4 times a second instead of 20, cached instead of rebuilt, fewer stutters)',
   'NEW：リキュー（R キーで同じゲームにもう一度入る）': 'NEW: Requeue (press R to join the same game again)',
+  'NEW：メニュー右下のロゴも新しいアイコンに（色の設定は FzClient の文字の色に）': 'New icon in the menu corner logo too (the color setting now colors the FzClient text)',
   '修正：ネームタグとタブの FzClient アイコンの画質が粗かった問題': 'Fix: the FzClient icon on nametags and the tab list looked low quality',
   'NEW：ネームタグとタブの FzClient アイコンを新しいデザインに': 'New FzClient icon on nametags and the tab list',
   'NEW：Windows キーの無効中も Win + ほかのキーのショートカットは使えるように（設定で切り替え）': 'Windows key shortcuts (Win + another key) now work while the Windows key lock is on (a setting)',

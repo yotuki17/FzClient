@@ -423,7 +423,7 @@ public class DevTest {
         pv.devShow(d, g, m, p, list);
     }
 
-    /** The FzClient badge on your own nametag (F5 from the front) and in the tab list, at GUI scales 2, 3 and 4. */
+    /** The FzClient badge on your own nametag (F5 from the front) and in the tab list at GUI scales 2, 3 and 4, then the menu corner logo. */
     private void badge(Minecraft mc, int w) {
         if (w == 40) {
             Modules.nametags.enabled = true;
@@ -447,7 +447,18 @@ public class DevTest {
             if (w == b) mc.gameSettings.guiScale = g;
             if (w == b + 30) shot(mc, "badge_gs" + g);
         }
-        if (w == 200) { LOG.info("badge done"); mc.shutdown(); }
+        // the corner logo on the pause menu: white text, then coloured text (GUI scale 2)
+        if (w == 200) {
+            mc.gameSettings.guiScale = 2;
+            Modules.uiLogoPlace.index = 0;
+            Modules.uiLogoColor.rgb = 0xFFFFFF;
+            Modules.uiLogoColor.chroma = false;
+            mc.displayGuiScreen(new net.minecraft.client.gui.GuiIngameMenu());
+        }
+        if (w == 230) shot(mc, "badge_logo_white");
+        if (w == 235) Modules.uiLogoColor.rgb = 0x5CE1E6;
+        if (w == 260) shot(mc, "badge_logo_color");
+        if (w == 270) { LOG.info("badge done"); mc.shutdown(); }
     }
 
     private static void shot(Minecraft mc, String name) {
