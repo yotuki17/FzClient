@@ -149,10 +149,10 @@ public final class Nametags {
         }
     }
 
-    /** FzClient bird (128x71, transparent) in front of your own name. */
+    /** FzClient badge (32x32, white on transparent) in front of FzClient users' names. */
     private static final net.minecraft.util.ResourceLocation ICON =
             new net.minecraft.util.ResourceLocation("fzclient", "textures/tab_icon.png");
-    private static final float ICON_H = 7f, ICON_W = ICON_H * 128f / 71f, ICON_GAP = 2f;
+    private static final float ICON_H = 8f, ICON_W = ICON_H, ICON_GAP = 2f;
 
     private static void label(EntityPlayer entity, String text, double x, double y, double z, boolean sneaking, boolean icon) {
         Minecraft mc = Minecraft.getMinecraft();
@@ -201,8 +201,8 @@ public final class Nametags {
             GlStateManager.color(1f, 1f, 1f, 1f);
             GlStateManager.pushMatrix();
             GlStateManager.translate(-half, (8f - ICON_H) / 2f - 0.5f, 0f);
-            GlStateManager.scale(ICON_W / 128f, ICON_H / 71f, 1f);
-            net.minecraft.client.gui.Gui.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, 128, 71, 128, 71);
+            GlStateManager.scale(ICON_W / 32f, ICON_H / 32f, 1f);
+            net.minecraft.client.gui.Gui.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, 32, 32, 32, 32);
             GlStateManager.popMatrix();
         }
         GlStateManager.enableLighting();
