@@ -159,6 +159,7 @@ public final class Modules {
     public static final Module winKey = new Module("winkey", "Windows Key Lock", Category.UTILITY,
             "ゲーム中は Windows キーを効かなくする（切り替えキーでオン・オフ）", false);
     public static final BoolSetting winKeyStart = winKey.add(new BoolSetting("start", "起動した時から無効にしておく", true));
+    public static final BoolSetting winKeyCombos = winKey.add(new BoolSetting("combos", "Win + ほかのキーのショートカット（Win + Shift + S など）は使えるようにする", true));
     public static final BoolSetting winKeyMsg = winKey.add(new BoolSetting("msg", "切り替えた時にチャットに表示", true));
 
     // ---- Hotbar scroll limits

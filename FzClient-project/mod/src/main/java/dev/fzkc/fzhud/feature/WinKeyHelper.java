@@ -18,7 +18,8 @@ import java.io.InputStreamReader;
  * hundred milliseconds, and the game's Java stops now and then (garbage collection, loading), after which Windows
  * stopped calling the hook for good. This process does nothing else, so it always answers in time.
  *
- * Args: the game's process id. stdin: "1" = lock on, "0" = off; when stdin ends (the game closed) this ends too.
+ * Args: the game's process id. stdin: "1" = lock on, "2" = lock on but Win + another key still works (only the Start
+ * menu of a Windows key pressed on its own is stopped), "0" = off; when stdin ends (the game closed) this ends too.
  * stderr: a few lines for the game's log.
  */
 public final class WinKeyHelper {
@@ -42,6 +43,7 @@ public final class WinKeyHelper {
         Pointer GetForegroundWindow();
         int GetWindowThreadProcessId(Pointer hwnd, Pointer pid);
         short GetAsyncKeyState(int vk);
+        int SendInput(int count, Pointer inputs, int size);
     }
 
     interface Kernel32 extends StdCallLibrary {
@@ -52,12 +54,22 @@ public final class WinKeyHelper {
     private static final LongPtr SWALLOW = new LongPtr(1);
     /** Dev check: F24 stands in for the Windows key and the game counts as in front. */
     private static final boolean TEST = System.getProperty("fzclient.winkeytest") != null;
+    /** Marks the key events this process sends itself (KBDLLHOOKSTRUCT.dwExtraInfo). */
+    private static final long MARK = 0x465A4B4CL;
+    /** An unassigned key: pressed between the Windows key's down and up, Windows opens no Start menu. */
+    private static final int VK_MASK = 0xE8;
 
-    private static volatile boolean locked;
-    private static volatile int swallowedCount, passedCount;
+    private static volatile boolean locked, combos;
+    private static volatile int swallowedCount, passedCount, shortcutCount;
     private static final boolean[] swallowed = new boolean[2];
     /** The key is held (seen going down, not yet up): its auto-repeats keep the first press's decision. */
     private static final boolean[] down = new boolean[2];
+    /** Combos mode: this press is watched (its Start menu is stopped at the release unless it became a shortcut). */
+    private static final boolean[] watched = new boolean[2];
+    /** When each Windows key last came down (the event's time, ms). */
+    private static final int[] lastDown = new int[2];
+    /** Another key went down while a Windows key was held (Win + X: a shortcut, left to Windows). */
+    private static boolean other;
     private static LowLevelProc proc;   // strong reference while the hook is installed
 
     public static void main(String[] args) throws Exception {
@@ -70,7 +82,11 @@ public final class WinKeyHelper {
             try {
                 BufferedReader in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
                 String line;
-                while ((line = in.readLine()) != null) locked = "1".equals(line.trim());
+                while ((line = in.readLine()) != null) {
+                    String v = line.trim();
+                    combos = "2".equals(v);
+                    locked = combos || "1".equals(v);
+                }
             } catch (Exception ignored) {
                 // the game is gone
             }
@@ -81,13 +97,15 @@ public final class WinKeyHelper {
 
         // a line now and then for the game's log (never from inside the hook, which must answer at once)
         Thread report = new Thread(() -> {
-            int s = 0, p = 0;
+            int s = 0, p = 0, c = 0;
             while (true) {
                 try { Thread.sleep(5000); } catch (InterruptedException e) { return; }
-                if (s != swallowedCount || p != passedCount) {
+                if (s != swallowedCount || p != passedCount || c != shortcutCount) {
                     s = swallowedCount;
                     p = passedCount;
-                    System.err.println("Windows key presses: " + s + " swallowed, " + p + " passed (game not in front or lock off)");
+                    c = shortcutCount;
+                    System.err.println("Windows key presses: " + s + " stopped, " + c + " used in shortcuts, " + p
+                            + " passed (game not in front or lock off)");
                 }
             }
         }, "report");
@@ -100,21 +118,33 @@ public final class WinKeyHelper {
             @Override
             public LongPtr callback(int code, LongPtr wParam, Pointer lParam) {
                 try {
-                    if (code >= 0 && lParam != null) {
+                    if (code >= 0 && lParam != null && extra(lParam) != MARK) {
                         int vk = lParam.getInt(0);
+                        boolean up = (lParam.getInt(8) & LLKHF_UP) != 0;
                         int side = vk == VK_LWIN || TEST && vk == 0x87 ? 0 : vk == VK_RWIN ? 1 : -1;
                         if (side >= 0) {
-                            boolean up = (lParam.getInt(8) & LLKHF_UP) != 0;
+                            int time = lParam.getInt(12);
                             if (!up) {
-                                if (!down[side]) {
+                                // a release this hook never saw (Win + L locks the PC, and no hook runs on the
+                                // lock screen) must not turn the next press into an "auto-repeat" of the old one:
+                                // a key Windows has seen is still down while it repeats, and repeats come fast
+                                boolean stale = down[side] && (time - lastDown[side] > 1500
+                                        || !swallowed[side] && (user32.GetAsyncKeyState(vk) & 0x8000) == 0);
+                                lastDown[side] = time;
+                                if (!down[side] || stale) {
                                     // a fresh press: decided once, the auto-repeats follow it. A key Windows already
                                     // has down (held before the game came to the front or this process started)
                                     // is left alone, or Windows would never see it come up.
-                                    down[side] = true;
                                     boolean held = (user32.GetAsyncKeyState(vk) & 0x8000) != 0;
-                                    swallowed[side] = !held && locked && (TEST || front(user32, pid, game));
+                                    boolean act = !held && locked && (TEST || front(user32, pid, game));
+                                    if (!down[1 - side] || stale) other = false;
+                                    down[side] = true;
+                                    // combos: Windows sees the key, so Win + X still works; only the Start menu
+                                    // of a press on its own is stopped, at the release
+                                    watched[side] = act && combos;
+                                    swallowed[side] = act && !combos;
                                     if (swallowed[side]) swallowedCount++;
-                                    else passedCount++;
+                                    else if (!act) passedCount++;
                                 }
                                 if (swallowed[side]) return SWALLOW;
                             } else {
@@ -124,7 +154,24 @@ public final class WinKeyHelper {
                                     swallowed[side] = false;
                                     return SWALLOW;
                                 }
+                                if (watched[side]) {
+                                    watched[side] = false;
+                                    if (other) {
+                                        shortcutCount++;
+                                    } else {
+                                        // on its own: this release is held back and sent again after an unused
+                                        // key, so Windows takes it as a shortcut and opens no Start menu
+                                        // (if Windows refuses what we send, the real release goes on instead: a
+                                        // Start menu is better than a Windows key left held down)
+                                        if (mask(user32, vk)) {
+                                            swallowedCount++;
+                                            return SWALLOW;
+                                        }
+                                    }
+                                }
                             }
+                        } else if (!up && (down[0] || down[1])) {
+                            other = true;   // Win + this key
                         }
                     }
                 } catch (Throwable ignored) {
@@ -152,6 +199,30 @@ public final class WinKeyHelper {
             }
         }
         user32.UnhookWindowsHookEx(hook[0]);
+    }
+
+    /** KBDLLHOOKSTRUCT: vkCode, scanCode, flags, time, then dwExtraInfo (pointer-sized, at 16 either way). */
+    private static long extra(Pointer k) {
+        return Pointer.SIZE == 8 ? k.getLong(16) : k.getInt(16) & 0xFFFFFFFFL;
+    }
+
+    /** Sends the unused key down and up, then the Windows key's release (all marked as ours). */
+    private static boolean mask(User32 user32, int vk) {
+        // INPUT: type, then KEYBDINPUT (wVk, wScan, dwFlags, time, dwExtraInfo) after the union's alignment
+        int size = Pointer.SIZE == 8 ? 40 : 28, ki = Pointer.SIZE == 8 ? 8 : 4;
+        int winFlag = vk == VK_LWIN || vk == VK_RWIN ? 1 : 0;   // KEYEVENTF_EXTENDEDKEY
+        int[][] keys = {{VK_MASK, 0}, {VK_MASK, 2}, {vk, 2 | winFlag}};   // 2 = KEYEVENTF_KEYUP
+        Memory in = new Memory((long) size * keys.length);
+        in.clear();
+        for (int i = 0; i < keys.length; i++) {
+            long b = (long) i * size;
+            in.setInt(b, 1);                              // INPUT_KEYBOARD
+            in.setShort(b + ki, (short) keys[i][0]);     // wVk
+            in.setInt(b + ki + 4, keys[i][1]);           // dwFlags
+            if (Pointer.SIZE == 8) in.setLong(b + ki + 16, MARK);
+            else in.setInt(b + ki + 12, (int) MARK);
+        }
+        return user32.SendInput(keys.length, in, size) == keys.length;
     }
 
     /** The window in front belongs to the game's process. */

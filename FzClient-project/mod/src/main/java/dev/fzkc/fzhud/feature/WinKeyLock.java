@@ -65,7 +65,7 @@ public final class WinKeyLock {
         }
         if (failed) return;
         if (on && (helper == null || ++ticks % 40 == 0 && !alive())) start();
-        int want = on && locked ? 1 : 0;
+        int want = on && locked ? (Modules.winKeyCombos.get() ? 2 : 1) : 0;
         if (helperIn != null && want != sent) send(want);
     }
 
