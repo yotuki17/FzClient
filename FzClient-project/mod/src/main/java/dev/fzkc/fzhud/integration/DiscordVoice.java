@@ -77,9 +77,13 @@ public final class DiscordVoice {
     private static final String REDIRECT = "http://localhost";
     private static final String SCOPES = "rpc%20rpc.voice.read";
     private static final JsonObject POISON = new JsonObject();
+    /** Dev check: talk to a fake Discord on this pipe name (+ "0") instead of the real one, without logging in. */
+    private static final String TEST_PIPE = System.getProperty("fzclient.vctest");
 
     private static final Object LOCK = new Object();
     private static final Map<String, Member> members = new LinkedHashMap<String, Member>();
+    /** Who is talking right now, also for people not (yet) in the list: kept when the list is read again. */
+    private static final java.util.Set<String> talking = new java.util.HashSet<String>();
     private static volatile String channelName;
     private static volatile String selfId = "";
     private static volatile boolean connected;
@@ -138,8 +142,8 @@ public final class DiscordVoice {
         String cid = "", secret = "";
         boolean on = hud != null && hud.enabled
                 && System.getProperty("os.name", "").toLowerCase().startsWith("windows");
-        if (System.getProperty("fzclient.discordipc") != null) on = false;   // a test: never the real Discord
-        if (on) cid = sharedId();
+        if (System.getProperty("fzclient.discordipc") != null && TEST_PIPE == null) on = false;   // a test: never the real Discord
+        if (on) cid = TEST_PIPE != null ? "1" : sharedId();
         String key = cid.isEmpty() ? "" : cid;
 
         if (key.equals(runningFor)) {
@@ -192,6 +196,7 @@ public final class DiscordVoice {
     private static void clear() {
         synchronized (LOCK) {
             members.clear();
+            talking.clear();
         }
         channelName = null;
         selfId = "";
@@ -275,7 +280,13 @@ public final class DiscordVoice {
 
         void run() throws Exception {
             // 1) an access token (from the file, refreshed, or through the browser)
-            JsonObject token = obtainToken();
+            JsonObject token;
+            if (TEST_PIPE != null) {
+                token = new JsonObject();
+                token.addProperty("access_token", "test");
+            } else {
+                token = obtainToken();
+            }
 
             // 2) talk to the Discord app
             pipe = openPipe();
@@ -314,16 +325,17 @@ public final class DiscordVoice {
             notice(dev.fzkc.fzhud.util.Lang.t("つながりました"));
 
             request("SUBSCRIBE", "VOICE_CHANNEL_SELECT", null, 10000);
-            resync();
+            needResync = true;
 
             while (alive()) {
-                JsonObject f = readFrame(pipe); // waits until Discord reports something
-                if (!alive()) break;
-                handle(f);
-                if (needResync) {
+                // a move noticed while reading the channel is handled now, before waiting for Discord again
+                while (needResync && alive()) {
                     needResync = false;
                     resync();
                 }
+                JsonObject f = readFrame(pipe); // waits until Discord reports something
+                if (!alive()) break;
+                handle(f);
             }
         }
 
@@ -442,24 +454,43 @@ public final class DiscordVoice {
 
         // ---- the voice channel ----
 
+        /**
+         * Reads the channel you are in again (joined / left / moved). Discord's voice events don't say which channel
+         * they are about, so the old channel's are unsubscribed first: otherwise the people of the channel you left
+         * keep coming back into the list.
+         */
         void resync() throws Exception {
-            JsonObject r = request("GET_SELECTED_VOICE_CHANNEL", null, null, 10000);
-            JsonElement data = r.get("data");
-            if ("ERROR".equals(str(r, "evt")) || data == null || data.isJsonNull() || !data.isJsonObject()) {
-                synchronized (LOCK) {
-                    members.clear();
+            JsonObject ch = selectedChannel();
+            String id = ch == null ? null : str(ch, "id");
+            if (id == null ? subscribed != null : !id.equals(subscribed)) {
+                if (subscribed != null) {
+                    String old = subscribed;
+                    subscribed = null;
+                    voiceEvents("UNSUBSCRIBE", old);
+                    synchronized (LOCK) {
+                        talking.clear();   // the old channel's "stopped talking" won't come any more
+                    }
                 }
-                channelName = null;
-                subscribed = null;
-                log("今はボイスチャンネルに入っていません");
-                return;
+                if (id != null) {
+                    voiceEvents("SUBSCRIBE", id);
+                    subscribed = id;
+                    // read again now that only this channel's events come: nothing from the old one, nothing missed
+                    ch = selectedChannel();
+                    if (ch == null || !id.equals(str(ch, "id"))) {
+                        needResync = true;   // moved again meanwhile
+                        return;
+                    }
+                }
             }
-            JsonObject ch = data.getAsJsonObject();
-            String id = str(ch, "id");
-            channelName = str(ch, "name");
             synchronized (LOCK) {
                 members.clear();
             }
+            if (ch == null) {
+                channelName = null;
+                log("今はボイスチャンネルに入っていません");
+                return;
+            }
+            channelName = str(ch, "name");
             JsonElement vs = ch.get("voice_states");
             if (vs != null && vs.isJsonArray()) {
                 JsonArray arr = vs.getAsJsonArray();
@@ -467,16 +498,25 @@ public final class DiscordVoice {
                     if (arr.get(i).isJsonObject()) putMember(arr.get(i).getAsJsonObject());
                 }
             }
-            if (id != null && !id.equals(subscribed)) {
-                for (String evt : new String[]{"VOICE_STATE_CREATE", "VOICE_STATE_UPDATE", "VOICE_STATE_DELETE",
-                        "SPEAKING_START", "SPEAKING_STOP"}) {
-                    JsonObject a = new JsonObject();
-                    a.addProperty("channel_id", id);
-                    request("SUBSCRIBE", evt, a, 10000);
-                }
-                subscribed = id;
-            }
             log("ボイスチャンネル「" + channelName + "」を表示します");
+        }
+
+        /** The voice channel you are in (null = none). */
+        JsonObject selectedChannel() throws Exception {
+            JsonObject r = request("GET_SELECTED_VOICE_CHANNEL", null, null, 10000);
+            JsonElement data = r.get("data");
+            if ("ERROR".equals(str(r, "evt")) || data == null || !data.isJsonObject()) return null;
+            return data.getAsJsonObject();
+        }
+
+        /** SUBSCRIBE / UNSUBSCRIBE the voice events of one channel. */
+        void voiceEvents(String cmd, String channel) throws Exception {
+            for (String evt : new String[]{"VOICE_STATE_CREATE", "VOICE_STATE_UPDATE", "VOICE_STATE_DELETE",
+                    "SPEAKING_START", "SPEAKING_STOP"}) {
+                JsonObject a = new JsonObject();
+                a.addProperty("channel_id", channel);
+                request(cmd, evt, a, 10000);
+            }
         }
 
         void handle(JsonObject f) {
@@ -720,12 +760,15 @@ public final class DiscordVoice {
             m.deaf = deaf;
             m.stream = stream;
             m.avatar = avatar;
+            m.speaking = talking.contains(id);
         }
     }
 
     private static void setSpeaking(String id, boolean on) {
         if (id == null) return;
         synchronized (LOCK) {
+            if (on) talking.add(id);
+            else talking.remove(id);
             Member m = members.get(id);
             if (m != null) m.speaking = on;
         }
@@ -811,6 +854,14 @@ public final class DiscordVoice {
     }
 
     private static RandomAccessFile openPipe() {
+        if (TEST_PIPE != null) {
+            try {
+                return new RandomAccessFile("\\\\.\\pipe\\" + TEST_PIPE + "0", "rw");
+            } catch (Exception e) {
+                System.err.println("[FzClient] Discord VC test pipe: " + e);
+                return null;
+            }
+        }
         for (int i = 0; i < 10; i++) {
             try {
                 return new RandomAccessFile("\\\\.\\pipe\\discord-ipc-" + i, "rw");

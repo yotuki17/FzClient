@@ -93,6 +93,8 @@ public final class NativeIme {
 
     private static boolean active;
     private static GuiScreen activeFor;
+    /** The window has no IME (switched off in-game); given back when the in-chat input is switched off. */
+    private static boolean detached;
 
     /** Text currently being converted (shown in-game) and the IME's caret inside it. */
     private static String composition = "";
@@ -127,15 +129,31 @@ public final class NativeIme {
         if (!supported()) return;
         Minecraft mc = Minecraft.getMinecraft();
         GuiScreen screen = mc.currentScreen;
-        boolean want = inChatMode() && wantsText(screen);
+        boolean chatMode = inChatMode();
+        boolean want = chatMode && wantsText(screen);
         try {
-            if (want || active) ensureHook();
+            // hooked from the start (not only once the chat has been opened), so the 半角/全角 key can't switch the
+            // IME on in-game before the first chat either
+            if (chatMode || active || detached) ensureHook();
             if (hwnd == null) return;
             if (want != active) {
                 setEnabled(want, screen);
             } else if (want && screen != activeFor) {
                 activeFor = screen;
                 onScreenOpened(screen);
+            }
+            if (!active) {
+                // in-game and on screens without a text box (inventory...) the IME stays off, so keys always reach
+                // the game; another screen that is typing into a box (server name, world name, creative search)
+                // gets Windows' own IME, and with the in-chat input switched off it works everywhere, as without FzClient
+                boolean off = chatMode && !typing(screen);
+                if (off && !detached) {
+                    imm32.ImmAssociateContext(hwnd, null);
+                    detached = true;
+                } else if (!off && detached) {
+                    imm32.ImmAssociateContextEx(hwnd, null, IACE_DEFAULT);
+                    detached = false;
+                }
             }
             if (pending.length() > 0) {
                 String text = pending.toString();
@@ -145,6 +163,35 @@ public final class NativeIme {
         } catch (Throwable t) {
             disable(t);
         }
+    }
+
+    private static Class<?> fieldsOf;
+    private static Field[] textFields = new Field[0];
+
+    /** The screen has a text box that is being typed into (found by type, so any screen works). */
+    private static boolean typing(GuiScreen screen) {
+        if (screen == null) return false;
+        try {
+            if (screen.getClass() != fieldsOf) {
+                java.util.List<Field> found = new java.util.ArrayList<Field>();
+                for (Class<?> c = screen.getClass(); c != null && c != GuiScreen.class && c != Object.class; c = c.getSuperclass()) {
+                    for (Field f : c.getDeclaredFields()) {
+                        if (GuiTextField.class.isAssignableFrom(f.getType()) && !java.lang.reflect.Modifier.isStatic(f.getModifiers())) {
+                            f.setAccessible(true);
+                            found.add(f);
+                        }
+                    }
+                }
+                textFields = found.toArray(new Field[0]);
+                fieldsOf = screen.getClass();
+            }
+            for (Field f : textFields) {
+                GuiTextField tf = (GuiTextField) f.get(screen);
+                if (tf != null && tf.isFocused() && tf.getVisible()) return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     private static void ensureHook() throws Exception {
@@ -173,6 +220,7 @@ public final class NativeIme {
         if (prevProc == null || prevProc.longValue() == 0) throw new IllegalStateException("could not hook the window");
         // LWJGL starts with the IME usable; keep it off in-game until a text screen opens
         imm32.ImmAssociateContext(hwnd, null);
+        detached = true;
     }
 
     private static long currentHwnd() {
@@ -204,6 +252,7 @@ public final class NativeIme {
         composition = "";
         if (on) {
             imm32.ImmAssociateContextEx(hwnd, null, IACE_DEFAULT);
+            detached = false;
             onScreenOpened(screen);
         } else {
             Pointer himc = imm32.ImmGetContext(hwnd);
@@ -212,6 +261,7 @@ public final class NativeIme {
                 imm32.ImmReleaseContext(hwnd, himc);
             }
             imm32.ImmAssociateContext(hwnd, null);
+            detached = true;
             pending.setLength(0);
         }
     }
@@ -411,6 +461,7 @@ public final class NativeIme {
         System.err.println("[FzClient] in-chat Japanese input disabled, falling back to the input box: " + t);
         try {
             if (hwnd != null) imm32.ImmAssociateContextEx(hwnd, null, IACE_DEFAULT);
+            detached = false;
         } catch (Throwable ignored) {
         }
     }

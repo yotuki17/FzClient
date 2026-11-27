@@ -61,6 +61,8 @@ public class DevTest {
         else if ("keys".equals(MODE)) keys(mc, w);
         else if ("f3win".equals(MODE)) f3win(mc, w);
         else if ("xbutton".equals(MODE)) xbutton(mc, w);
+        else if ("ime".equals(MODE)) ime(mc, w);
+        else if ("vc".equals(MODE)) vc(mc, w);
         else if ("badge".equals(MODE)) badge(mc, w);
         else if ("winkey".equals(MODE)) { if (w == 40) Modules.winKey.enabled = true; if (w == 1400) { Modules.winKey.enabled = false; LOG.info("winkey done"); mc.shutdown(); } }
     }
@@ -459,6 +461,58 @@ public class DevTest {
         if (w == 235) Modules.uiLogoColor.rgb = 0x5CE1E6;
         if (w == 260) shot(mc, "badge_logo_color");
         if (w == 270) { LOG.info("badge done"); mc.shutdown(); }
+    }
+
+    interface Imm32 extends com.sun.jna.win32.StdCallLibrary {
+        com.sun.jna.Pointer ImmGetContext(com.sun.jna.Pointer hwnd);
+        boolean ImmReleaseContext(com.sun.jna.Pointer hwnd, com.sun.jna.Pointer himc);
+    }
+
+    /** Whether the game window has an IME right now (it should only while a text screen is open). */
+    private static String imeState() {
+        try {
+            java.lang.reflect.Field f = org.lwjgl.opengl.Display.class.getDeclaredField("display_impl");
+            f.setAccessible(true);
+            Object impl = f.get(null);
+            java.lang.reflect.Field h = impl.getClass().getDeclaredField("hwnd");
+            h.setAccessible(true);
+            com.sun.jna.Pointer hwnd = new com.sun.jna.Pointer(h.getLong(impl));
+            Imm32 imm = (Imm32) com.sun.jna.Native.loadLibrary("imm32", Imm32.class);
+            com.sun.jna.Pointer c = imm.ImmGetContext(hwnd);
+            if (c == null) return "none";
+            imm.ImmReleaseContext(hwnd, c);
+            return "yes";
+        } catch (Throwable t) {
+            return "error " + t;
+        }
+    }
+
+    /** The in-chat IME: none in-game before the first chat, yes in the chat, none after it, yes everywhere when switched off. */
+    private void ime(Minecraft mc, int w) {
+        if (w == 40) LOG.info("ime before chat: " + imeState());
+        if (w == 50) mc.displayGuiScreen(new net.minecraft.client.gui.GuiChat());
+        if (w == 70) LOG.info("ime in chat: " + imeState());
+        if (w == 80) mc.displayGuiScreen(null);
+        if (w == 100) LOG.info("ime after chat: " + imeState());
+        if (w == 110) Modules.imeOn.value = false;
+        if (w == 130) LOG.info("ime setting off: " + imeState());
+        if (w == 140) Modules.imeOn.value = true;
+        if (w == 160) LOG.info("ime setting on again: " + imeState());
+        if (w == 170) mc.displayGuiScreen(new net.minecraft.client.gui.GuiScreenAddServer(null, new net.minecraft.client.multiplayer.ServerData("a", "b", false)));
+        if (w == 190) LOG.info("ime add server (text box): " + imeState());
+        if (w == 200) mc.displayGuiScreen(new net.minecraft.client.gui.inventory.GuiInventory(mc.thePlayer));
+        if (w == 220) { LOG.info("ime inventory: " + imeState()); mc.displayGuiScreen(null); mc.shutdown(); }
+    }
+
+    /** Discord VC against the fake Discord (-Dfzclient.vctest): logs the channel and the people every 2 seconds. */
+    private void vc(Minecraft mc, int w) {
+        if (w == 20) dev.fzkc.fzhud.hud.DiscordVcHud.instance.enabled = true;
+        if (w % 40 == 0) {
+            StringBuilder sb = new StringBuilder();
+            for (dev.fzkc.fzhud.integration.DiscordVoice.Member m : dev.fzkc.fzhud.integration.DiscordVoice.snapshot()) sb.append(m.name).append(' ');
+            LOG.info("vc channel=" + dev.fzkc.fzhud.integration.DiscordVoice.channel() + " members=[" + sb.toString().trim() + "]");
+        }
+        if (w == 1000) mc.shutdown();
     }
 
     private static void shot(Minecraft mc, String name) {
