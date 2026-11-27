@@ -61,6 +61,7 @@ public class DevTest {
         else if ("keys".equals(MODE)) keys(mc, w);
         else if ("f3win".equals(MODE)) f3win(mc, w);
         else if ("xbutton".equals(MODE)) xbutton(mc, w);
+        else if ("badge".equals(MODE)) badge(mc, w);
         else if ("winkey".equals(MODE)) { if (w == 40) Modules.winKey.enabled = true; if (w == 1400) { Modules.winKey.enabled = false; LOG.info("winkey done"); mc.shutdown(); } }
     }
 
@@ -420,6 +421,33 @@ public class DevTest {
             default: break;
         }
         pv.devShow(d, g, m, p, list);
+    }
+
+    /** The FzClient badge on your own nametag (F5 from the front) and in the tab list, at GUI scales 2, 3 and 4. */
+    private void badge(Minecraft mc, int w) {
+        if (w == 40) {
+            Modules.nametags.enabled = true;
+            Modules.tagSelf.value = true;
+            Modules.tagFzIcon.value = true;
+            mc.gameSettings.thirdPersonView = 2;
+            mc.thePlayer.rotationPitch = 0f;
+            try {
+                java.lang.reflect.Field f = dev.fzkc.fzhud.FzHud.class.getDeclaredField("tab");
+                f.setAccessible(true);
+                dev.fzkc.fzhud.hud.TabList tab = (dev.fzkc.fzhud.hud.TabList) f.get(null);
+                tab.enabled = true;
+                tab.toggleMode.value = true;
+                dev.fzkc.fzhud.FzHud.tabToggled = true;
+            } catch (Exception e) {
+                LOG.info("badge: no tab " + e);
+            }
+        }
+        for (int g = 2; g <= 4; g++) {
+            int b = 40 + (g - 1) * 40;
+            if (w == b) mc.gameSettings.guiScale = g;
+            if (w == b + 30) shot(mc, "badge_gs" + g);
+        }
+        if (w == 200) { LOG.info("badge done"); mc.shutdown(); }
     }
 
     private static void shot(Minecraft mc, String name) {

@@ -26,9 +26,7 @@ import java.util.List;
 /** Compact tab list: player heads, names and numeric ping, in a themed panel. */
 public class TabList extends HudElement {
     private static final float PAD = 5f, ROW = 10f, HEAD = 8f, COL_GAP = 8f;
-    /** FzClient badge shown next to FzClient users' names (32x32, white on transparent). */
-    private static final net.minecraft.util.ResourceLocation ICON =
-            new net.minecraft.util.ResourceLocation("fzclient", "textures/tab_icon.png");
+    /** FzClient badge (dev.fzkc.fzhud.util.Badge) shown next to FzClient users' names. */
     private static final float ICON_H = 8f, ICON_W = ICON_H, ICON_GAP = 2f;
     private static final int MAX_PLAYERS = 80;
     private static Field headerField, footerField;
@@ -519,16 +517,12 @@ public class TabList extends HudElement {
             float nx = x + headW;
             if (fzIcon.get() && isMe[i]) {
                 // FzClient badge in front of FzClient users' names
-                mc.getTextureManager().bindTexture(ICON);
-                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
-                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_LINEAR);
                 GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
                 GlStateManager.color(1f, 1f, 1f, alpha);
                 GlStateManager.pushMatrix();
                 GlStateManager.translate(nx, ry + (8f - ICON_H) / 2f, 0);
-                GlStateManager.scale(ICON_W / 32f, ICON_H / 32f, 1f);
-                Gui.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, 32, 32, 32, 32);
+                dev.fzkc.fzhud.util.Badge.draw(ICON_H);
                 GlStateManager.popMatrix();
                 GlStateManager.color(1f, 1f, 1f, 1f);
                 nx += ICON_W + ICON_GAP;

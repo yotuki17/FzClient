@@ -149,9 +149,7 @@ public final class Nametags {
         }
     }
 
-    /** FzClient badge (32x32, white on transparent) in front of FzClient users' names. */
-    private static final net.minecraft.util.ResourceLocation ICON =
-            new net.minecraft.util.ResourceLocation("fzclient", "textures/tab_icon.png");
+    /** FzClient badge (dev.fzkc.fzhud.util.Badge) in front of FzClient users' names. */
     private static final float ICON_H = 8f, ICON_W = ICON_H, ICON_GAP = 2f;
 
     private static void label(EntityPlayer entity, String text, double x, double y, double z, boolean sneaking, boolean icon) {
@@ -193,16 +191,12 @@ public final class Nametags {
             fr.drawString(text, tx, 0, 0xFFFFFFFF, shadow);
         }
         if (icon) {
-            mc.getTextureManager().bindTexture(ICON);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
             GlStateManager.color(1f, 1f, 1f, 1f);
             GlStateManager.pushMatrix();
             GlStateManager.translate(-half, (8f - ICON_H) / 2f - 0.5f, 0f);
-            GlStateManager.scale(ICON_W / 32f, ICON_H / 32f, 1f);
-            net.minecraft.client.gui.Gui.drawModalRectWithCustomSizedTexture(0, 0, 0, 0, 32, 32, 32, 32);
+            dev.fzkc.fzhud.util.Badge.draw(ICON_H);
             GlStateManager.popMatrix();
         }
         GlStateManager.enableLighting();
