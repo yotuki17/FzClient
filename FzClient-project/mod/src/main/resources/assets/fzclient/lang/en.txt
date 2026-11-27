@@ -599,7 +599,7 @@ Minecraft のログインに失敗しました	Minecraft sign-in failed
 すべての画面	All screens
 FzClient のメニューだけ	FzClient menus only
 出さない	Hidden
-ロゴの文字（FzClient）の色	Logo text (FzClient) color
+ロゴの色（アイコンと FzClient の文字）	Logo color (icon and FzClient text)
 ロゴの大きさ	Logo size
 カテゴリの位置	Category position
 上（横並び）	Top (tabs)

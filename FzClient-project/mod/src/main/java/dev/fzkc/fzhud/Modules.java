@@ -396,7 +396,7 @@ public final class Modules {
     /** Where the badge + FzClient logo goes in the corner: every screen (also pause menu / inventory), FzClient's menus only, nowhere. */
     public static final ChoiceSetting uiLogoPlace = glassUi.add(new ChoiceSetting("logoplace", "ロゴを出す場所", 0,
             "すべての画面", "FzClient のメニューだけ", "出さない"));
-    public static final ColorSetting uiLogoColor = glassUi.add(new ColorSetting("logocolor", "ロゴの文字（FzClient）の色", 0xFFFFFFFF));
+    public static final ColorSetting uiLogoColor = glassUi.add(new ColorSetting("logocolor", "ロゴの色（アイコンと FzClient の文字）", 0xFFFFFFFF));
     public static final SliderSetting uiLogoSize = glassUi.add(new SliderSetting("logosize", "ロゴの大きさ", 50, 200, 10, 100, "%"));
 
     // ---- Hit Delay Fix (1.8.9 ignores clicks for 10 ticks after a missed swing)

@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL11;
 
 /**
  * The FzClient badge and logo text in the corner of the menus. Every screen draws it through here, so the UI page
- * ("ロゴ" section) controls all of them at once: where it shows, the text colour and the size.
+ * ("ロゴ" section) controls all of them at once: where it shows, the colour (badge and text) and the size.
  * <ul>
  *   <li>{@link #corner}: FzClient's own menus (already drawing in virtual pixels).</li>
  *   <li>{@link #draw}: Minecraft's own screens (pause menu, inventory, creative), from FzHud's DrawScreenEvent.Post.
@@ -98,7 +98,8 @@ public final class Decoration {
         // the badge sits on the text's line (the script letters fill about the middle of their image)
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.color(1f, 1f, 1f, alpha);
+        int c = dev.fzkc.fzhud.render.R.solid(Modules.uiLogoColor.get());   // the same colour as the text
+        GlStateManager.color(((c >> 16) & 0xFF) / 255f, ((c >> 8) & 0xFF) / 255f, (c & 0xFF) / 255f, alpha);
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y + (logoH - badge) / 2f, 0);
         dev.fzkc.fzhud.util.Badge.draw(badge);
