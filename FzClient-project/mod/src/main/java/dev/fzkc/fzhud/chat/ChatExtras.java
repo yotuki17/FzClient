@@ -26,7 +26,7 @@ import org.lwjgl.input.Mouse;
  * </ul>
  */
 public final class ChatExtras {
-    private static final int TAB_H = 11;
+    static final int TAB_H = 11;
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {

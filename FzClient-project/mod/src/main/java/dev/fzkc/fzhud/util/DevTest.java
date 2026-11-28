@@ -70,6 +70,7 @@ public class DevTest {
         else if ("chunks".equals(MODE)) ChunkBench.tick(mc, w);
         else if ("vc".equals(MODE)) vc(mc, w);
         else if ("badge".equals(MODE)) badge(mc, w);
+        else if ("cmds".equals(MODE)) cmds(mc, w);
         else if ("winkey".equals(MODE)) { if (w == 40) Modules.winKey.enabled = true; if (w == 1400) { Modules.winKey.enabled = false; LOG.info("winkey done"); mc.shutdown(); } }
     }
 
@@ -508,6 +509,27 @@ public class DevTest {
         if (w == 190) LOG.info("ime add server (text box): " + imeState());
         if (w == 200) mc.displayGuiScreen(new net.minecraft.client.gui.inventory.GuiInventory(mc.thePlayer));
         if (w == 220) { LOG.info("ime inventory: " + imeState()); mc.displayGuiScreen(null); mc.shutdown(); }
+    }
+
+    /** Command suggestions: logs the rows for a few texts (an old sent command must not show), and one screenshot. */
+    private void cmds(Minecraft mc, int w) {
+        if (w == 30 && System.getProperty("fzclient.cheats") != null) net.minecraft.server.MinecraftServer.getServer().getConfigurationManager().setCommandsAllowedForAll(true);
+        if (w == 40) {
+            mc.ingameGUI.getChatGUI().addToSentMessages("/oldgonecmd hello");
+            mc.ingameGUI.getChatGUI().addToSentMessages("/zzhistory test");
+        }
+        // one text every 4 ticks: asked, then logged 3 ticks later (single player answers come from the server thread)
+        String[] texts = {"/", "/o", "/zz", "/g", "/ga", "/gamemode ", "/gamemode c", "/tp ", "/give " + mc.thePlayer.getName() + " diamond_s", "/setblock ", "/fz", "/pv ", "/fzs"};
+        int i = (w - 60) / 4, k = (w - 60) % 4;
+        if (w >= 60 && i < texts.length) {
+            dev.fzkc.fzhud.chat.CommandSuggest cs = dev.fzkc.fzhud.chat.CommandSuggest.instance;
+            if (k == 0) cs.testRows(texts[i]);
+            if (k == 3) LOG.info("cmds '" + texts[i] + "' -> " + cs.testRows(texts[i]));
+        }
+        int end = 60 + 4 * texts.length;
+        if (w == end) mc.displayGuiScreen(new net.minecraft.client.gui.GuiChat("/g"));
+        if (w == end + 20) shot(mc, "cmds_g");
+        if (w == end + 30) { mc.displayGuiScreen(null); LOG.info("cmds done"); mc.shutdown(); }
     }
 
     /** Discord VC against the fake Discord (-Dfzclient.vctest): logs the channel and the people every 2 seconds. */

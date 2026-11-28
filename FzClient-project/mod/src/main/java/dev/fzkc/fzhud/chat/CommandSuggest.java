@@ -6,7 +6,9 @@ import dev.fzkc.fzhud.util.Lang;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.command.ICommand;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -26,24 +28,47 @@ import java.util.Map;
  * what each does (/p invite, /f remove...), and player names that fit there - friends, guild and party members,
  * people you messaged, and the players in the tab list (see {@link KnownNames}).
  * <p>
- *  - commands you used before (from the chat's own sent-message history, newest first),
- *  - the commands of FzClient and other client-side mods,
- *  - a short list of the main Hypixel commands, only while you are on Hypixel.
+ * The commands listed are (no history: the sent messages are kept across restarts, so old commands - even ones
+ * of mods that are gone - kept coming back):
+ *  - a short list of the main Hypixel commands, only while you are on Hypixel,
+ *  - Minecraft's own commands: in single player the ones you may use there (all of them with cheats on), on other
+ *    servers the few anyone may use,
+ *  - the commands of FzClient and other client-side mods (their main names, not every alias).
  * <p>
  * Up / Down pick an entry, Tab fills it in (Enter still sends what is typed). When the list is not showing, Tab
- * and the arrow keys work as usual. It asks the server for nothing: no extra packets are sent.
+ * and the arrow keys work as usual, and while you go through your sent messages with Up / Down the list stays
+ * out of the way. It asks the server for nothing: no extra packets are sent.
  */
 public class CommandSuggest {
-    /** Main Hypixel commands (only offered on Hypixel). Not complete - your own history adds the rest over time. */
+    /** Main Hypixel commands (only offered on Hypixel). */
     private static final String[] HYPIXEL = {
             "party", "p", "msg", "w", "tell", "r", "reply", "friend", "f", "guild", "g", "lobby", "l", "hub",
             "play", "stats", "ignore", "report", "achievements", "chat", "limbo", "tip", "tipall"};
 
-    private static final String SRC_MOD = "MOD", SRC_HYPIXEL = "Hypixel";
+    private static final String SRC_MOD = "MOD", SRC_HYPIXEL = "Hypixel", SRC_MC = "Minecraft";
+    /** Minecraft commands anyone may use on a server (the rest need operator rights there). */
+    private static final String[] VANILLA_SERVER = {"help", "list", "me", "msg", "tell", "w", "trigger"};
 
     private static Field inputField;
+    /** The registered instance (dev checks read its rows). */
+    public static CommandSuggest instance;
+
+    public CommandSuggest() {
+        instance = this;
+    }
+
+    /** Dev check: the rows shown for this text, as "shown [tag]". */
+    public List<String> testRows(String text) {
+        List<String> out = new ArrayList<>();
+        lastText = "";
+        for (String[] r : suggestions(text)) out.add(r[2] + " [" + r[1] + "] -> " + r[0]);
+        return out;
+    }
     private int sel;
     private String lastText = "";
+    /** The text Up / Down put in from the sent messages: no list for it, so Up / Down keep going through them. */
+    private String historyText;
+    private boolean historyKey;
 
     /** The chat's text box (it is protected in vanilla, so it is read with reflection). */
     private static GuiTextField field(GuiChat gui) {
@@ -70,21 +95,109 @@ public class CommandSuggest {
         return dev.fzkc.fzhud.stats.Stats.onHypixel();
     }
 
-    private static final String SRC_HISTORY = "履歴";
+    /** True in single player (and when you host a LAN world): Minecraft's commands run here. */
+    private static MinecraftServer localServer() {
+        Minecraft mc = Minecraft.getMinecraft();
+        return mc.isSingleplayer() ? MinecraftServer.getServer() : null;
+    }
 
-    /** First words of the commands you sent, newest first (the chat's own sent-message history). */
-    private static List<String> usedCommands() {
-        List<String> out = new ArrayList<>();
-        try {
-            List<String> sent = Minecraft.getMinecraft().ingameGUI.getChatGUI().getSentMessages();
-            for (int i = sent.size() - 1; i >= 0 && out.size() < 40; i--) {
-                String s = sent.get(i);
-                if (s == null || !s.startsWith("/") || s.length() < 2) continue;
-                int sp = s.indexOf(' ');
-                String name = (sp < 0 ? s.substring(1) : s.substring(1, sp)).toLowerCase(Locale.ROOT);
-                if (!name.isEmpty() && !out.contains(name)) out.add(name);
+    /** You as the local server sees you (what the commands check rights on and complete for). */
+    private static EntityPlayerMP localPlayer(MinecraftServer server) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (server == null || mc.thePlayer == null || server.getConfigurationManager() == null) return null;
+        return server.getConfigurationManager().getPlayerByUsername(mc.thePlayer.getName());
+    }
+
+    /** Last list of the local server's commands you may use (worked out on the server's thread). */
+    private volatile List<String> localCmds = Collections.emptyList();
+    private long localAt;
+
+    /**
+     * Names of Minecraft's commands you may use here, sorted. In single player they are asked from the server's
+     * own thread (its commands read its state, which that thread is changing) at most once a second; the list
+     * shown is the last answer.
+     */
+    private List<String> vanillaCommands() {
+        final MinecraftServer server = localServer();
+        if (server == null) return onHypixel() ? Collections.<String>emptyList() : java.util.Arrays.asList(VANILLA_SERVER);
+        long now = System.currentTimeMillis();
+        if (now - localAt >= 1000) {
+            localAt = now;
+            try {
+                server.addScheduledTask(() -> {
+                    try {
+                        EntityPlayerMP me = localPlayer(server);
+                        java.util.Set<String> names = new java.util.TreeSet<>();
+                        for (Object o : server.getCommandManager().getCommands().values()) {
+                            ICommand c = (ICommand) o;
+                            if (me == null || c.canCommandSenderUseCommand(me)) names.add(c.getCommandName().toLowerCase(Locale.ROOT));
+                        }
+                        localCmds = new ArrayList<>(names);
+                    } catch (Throwable ignored) {
+                    }
+                });
+            } catch (Throwable ignored) {
             }
-        } catch (Throwable ignored) {
+        }
+        return localCmds;
+    }
+
+    /** What the local server answered for one text: {text, rows}. Swapped as one, so the rows match the text. */
+    private static final class Answer {
+        final String text;
+        final List<String> rows;
+
+        Answer(String text, List<String> rows) {
+            this.text = text;
+            this.rows = rows;
+        }
+    }
+
+    private volatile Answer localAnswer = new Answer("", Collections.<String>emptyList());
+    private String localAsked = "";
+
+    /**
+     * Single player: what Minecraft's own command offers next for this text (game modes, names, items...). Asked
+     * once per text on the server's thread, like the game's own Tab (which sends it to the server); until the
+     * answer is there, nothing.
+     */
+    private List<String> localCompletion(final String text, final String raw, final String[] args) {
+        Answer a = localAnswer;
+        if (a.text.equals(text)) return a.rows;
+        if (!text.equals(localAsked)) {
+            localAsked = text;
+            final MinecraftServer server = localServer();
+            Minecraft mc = Minecraft.getMinecraft();
+            // the block you look at, as the game's own Tab sends it (coordinates of /setblock, /fill...)
+            final net.minecraft.util.BlockPos pos = mc.objectMouseOver != null
+                    && mc.objectMouseOver.typeOfHit == net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
+                    ? mc.objectMouseOver.getBlockPos() : null;
+            try {
+                server.addScheduledTask(() -> {
+                    List<String> rows = Collections.emptyList();
+                    try {
+                        ICommand c = (ICommand) server.getCommandManager().getCommands().get(raw);
+                        EntityPlayerMP me = localPlayer(server);
+                        if (c != null && me != null && c.canCommandSenderUseCommand(me)) {
+                            List<String> opts = c.addTabCompletionOptions(me, args, pos);
+                            if (opts != null) rows = new ArrayList<>(opts);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                    localAnswer = new Answer(text, rows);
+                });
+            } catch (Throwable ignored) {
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    /** Main names of the client-side commands (FzClient and other mods), sorted; aliases are left out. */
+    private static java.util.Set<String> clientCommands() {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        for (Map.Entry<String, ICommand> e : ClientCommandHandler.instance.getCommands().entrySet()) {
+            String main = e.getValue().getCommandName();
+            if (main != null && main.equalsIgnoreCase(e.getKey())) out.add(main.toLowerCase(Locale.ROOT));
         }
         return out;
     }
@@ -96,6 +209,10 @@ public class CommandSuggest {
     private List<String[]> suggestions(String text) {
         List<String[]> out = new ArrayList<>();
         if (text == null || !text.startsWith("/")) return out;
+        if (historyText != null) {
+            if (text.equals(historyText)) return out;   // going through the sent messages with Up / Down
+            historyText = null;   // typed or changed since: the list works again
+        }
 
         if (!text.equals(lastText)) {
             lastText = text;
@@ -104,21 +221,20 @@ public class CommandSuggest {
         if (text.indexOf(' ') >= 0) return arguments(text);
         String prefix = text.substring(1).toLowerCase(Locale.ROOT);
 
-        // all candidates in priority order: your history, Hypixel commands, client commands.
+        // all candidates in priority order: Hypixel commands, Minecraft's commands, client commands.
         // (Client commands used to come first: with a few mods installed they filled every row and /p, /party...
         // never showed.)
         boolean hypixel = Modules.cmdHypixel.get() && onHypixel();
-        java.util.Set<String> client = new java.util.TreeSet<>();
-        for (String n : ClientCommandHandler.instance.getCommands().keySet()) client.add(n.toLowerCase(Locale.ROOT));
+        java.util.Set<String> client = clientCommands();
         java.util.Set<String> hy = new java.util.HashSet<>(java.util.Arrays.asList(HYPIXEL));
+        List<String> mcCmds = vanillaCommands();
         Map<String, String> all = new LinkedHashMap<>();
-        // what is typed exactly, when it is a known command, comes first
+        // what is typed exactly, when it is a known command, comes first (a client command answers before the server)
         if (client.contains(prefix)) all.put(prefix, SRC_MOD);
         else if (hypixel && hy.contains(prefix)) all.put(prefix, SRC_HYPIXEL);
-        for (String n : usedCommands()) {
-            if (!all.containsKey(n)) all.put(n, client.contains(n) ? SRC_MOD : hy.contains(n) ? SRC_HYPIXEL : SRC_HISTORY);
-        }
+        else if (mcCmds.contains(prefix)) all.put(prefix, SRC_MC);
         if (hypixel) for (String n : HYPIXEL) if (!all.containsKey(n)) all.put(n, SRC_HYPIXEL);
+        for (String n : mcCmds) if (!all.containsKey(n)) all.put(n, client.contains(n) ? SRC_MOD : SRC_MC);
         for (String n : client) if (!all.containsKey(n)) all.put(n, SRC_MOD);
 
         int max = (int) Modules.cmdRows.get();
@@ -258,6 +374,11 @@ public class CommandSuggest {
             if (index == 2 && cmd.equals("party") && sub.equals("chat")) return out;
             String[] from = nameSources(cmd, sub, index);
             if (from != null) for (String[] n : KnownNames.names(from)) all.add(new String[]{n[0], n[1], n[0]});
+        } else if (localServer() != null) {
+            // single player: Minecraft's own command completes for itself (game modes, player names, items...)
+            String[] args = new String[words.length - 1];
+            System.arraycopy(words, 1, args, 0, args.length);
+            for (String o : localCompletion(text, raw, args)) all.add(new String[]{o, SRC_MC, o});
         } else if (index == 1 && (raw.equals("msg") || raw.equals("tell") || raw.equals("w"))) {
             for (String[] n : KnownNames.names(KnownNames.ONLINE)) all.add(new String[]{n[0], n[1], n[0]});
         }
@@ -300,7 +421,8 @@ public class CommandSuggest {
         int cut = text.lastIndexOf(' ') + 1;
         float x = Math.min(2f + (cut > 0 ? R.width(text.substring(0, cut)) : 0f), event.gui.width - w - 2f);
         x = Math.max(2f, x);
-        float y = event.gui.height - 16f - h;
+        // above the chat tabs when they show (they would cover the last rows)
+        float y = (ChatExtras.tabsOn() ? event.gui.height - 14f - ChatExtras.TAB_H - 3f : event.gui.height - 16f) - h;
 
         R.rounded(x, y, w, h, 3f, 0xE0101A1E);
         float ry = y + pad;
@@ -321,10 +443,14 @@ public class CommandSuggest {
         if (!Keyboard.getEventKeyState()) return;
         GuiTextField f = field((GuiChat) event.gui);
         if (f == null) return;
-        List<String[]> list = suggestions(f.getText());
-        if (list.isEmpty()) return; // nothing showing: the keys keep their normal job
-
         int key = Keyboard.getEventKey();
+        List<String[]> list = suggestions(f.getText());
+        if (list.isEmpty()) {
+            // nothing showing: the keys keep their normal job; Up / Down bring back a sent message, which gets no list
+            if (key == Keyboard.KEY_UP || key == Keyboard.KEY_DOWN) historyKey = true;
+            return;
+        }
+
         if (key == Keyboard.KEY_DOWN) {
             sel = (sel + 1) % list.size();
             event.setCanceled(true);
@@ -338,5 +464,20 @@ public class CommandSuggest {
             sel = 0;
             event.setCanceled(true); // instead of the server's tab completion
         }
+    }
+
+    @SubscribeEvent
+    public void onKeyDone(GuiScreenEvent.KeyboardInputEvent.Post event) {
+        if (!historyKey) return;
+        historyKey = false;
+        if (!(event.gui instanceof GuiChat)) return;
+        GuiTextField f = field((GuiChat) event.gui);
+        if (f != null) historyText = f.getText();
+    }
+
+    @SubscribeEvent
+    public void onOpen(net.minecraftforge.client.event.GuiOpenEvent event) {
+        historyText = null;   // a new chat starts with the list working
+        historyKey = false;
     }
 }
