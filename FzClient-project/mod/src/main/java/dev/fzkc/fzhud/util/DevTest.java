@@ -23,6 +23,11 @@ public class DevTest {
     private int ticks, worldAt;
 
     @SubscribeEvent
+    public void onRender(TickEvent.RenderTickEvent event) {
+        if (event.phase == TickEvent.Phase.START && "chunks".equals(MODE)) ChunkBench.frame();
+    }
+
+    @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
@@ -62,6 +67,7 @@ public class DevTest {
         else if ("f3win".equals(MODE)) f3win(mc, w);
         else if ("xbutton".equals(MODE)) xbutton(mc, w);
         else if ("ime".equals(MODE)) ime(mc, w);
+        else if ("chunks".equals(MODE)) ChunkBench.tick(mc, w);
         else if ("vc".equals(MODE)) vc(mc, w);
         else if ("badge".equals(MODE)) badge(mc, w);
         else if ("winkey".equals(MODE)) { if (w == 40) Modules.winKey.enabled = true; if (w == 1400) { Modules.winKey.enabled = false; LOG.info("winkey done"); mc.shutdown(); } }
